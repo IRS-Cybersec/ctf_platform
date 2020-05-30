@@ -1,0 +1,26 @@
+{
+  "name": "ctf_platform",
+  "version": "1.0.0",
+  "description": "A rewriting of a perfectly fine platform and a waste of time in general",
+  "main": "api/api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IRS-Cybersec/ctf_platform.git"
+  },
+  "author": "sheepymeh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/IRS-Cybersec/ctf_platform/issues"
+  },
+  "homepage": "https://github.com/IRS-Cybersec/ctf_platform#readme",
+  "dependencies": {
+    "argon2": "^0.26.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "mongodb": "^3.5.8"
+  }
+}
