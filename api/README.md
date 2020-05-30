@@ -563,10 +563,10 @@ Authenticated // Permissions: 1
 	"tags": [
 		"TAG"
 	],
-	"hints": [
+	"hints": {
 		"hint": "HINT",
 		"cost": "HINT_COST (int)"
-	],
+	},
 	"max_attempts": "int",
 	"visibility": "bool",
 }
