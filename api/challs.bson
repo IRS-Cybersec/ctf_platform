@@ -1,0 +1,101 @@
+{
+  $jsonSchema: {
+    required: [
+      'name',
+      'category',
+      'description',
+      'points',
+      'max_attempts',
+      'flags',
+      'solves',
+      'visibility',
+      'author',
+      'created'
+    ],
+    properties: {
+      name: {
+        bsonType: 'string'
+      },
+      category: {
+        bsonType: 'string'
+      },
+      tags: {
+        bsonType: 'array',
+        minItems: 1,
+        uniqueItems: true,
+        items: {
+          bsonType: 'string'
+        }
+      },
+      hints: {
+        bsonType: 'array',
+        uniqueItems: true,
+        items: {
+          bsonType: 'object',
+          required: [
+            'hint',
+            'cost',
+            'purchased'
+          ],
+          additionalProperties: false,
+          properties: {
+            hint: {
+              bsonType: 'string'
+            },
+            cost: {
+              bsonType: 'int'
+            },
+            purchased: {
+              bsonType: 'array',
+              items: {
+                bsonType: 'string'
+              }
+            }
+          }
+        }
+      },
+      description: {
+        bsonType: 'string'
+      },
+      points: {
+        bsonType: 'int'
+      },
+      max_attempts: {
+        bsonType: 'int'
+      },
+      visbility: {
+        bsonType: 'bool'
+      },
+      flags: {
+        bsonType: 'array',
+        minItems: 1,
+        uniqueItems: true,
+        items: {
+          bsonType: 'string'
+        }
+      },
+      files: {
+        bsonType: 'array',
+        minItems: 1,
+        uniqueItems: true,
+        items: {
+          bsonType: 'string'
+        }
+      },
+      solves: {
+        bsonType: 'array',
+        minItems: 0,
+        uniqueItems: true,
+        items: {
+          bsonType: 'string'
+        }
+      },
+      author: {
+        bsonType: 'string'
+      },
+      created: {
+        bsonType: 'timestamp'
+      }
+    }
+  }
+}

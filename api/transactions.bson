@@ -1,0 +1,42 @@
+{
+  $jsonSchema: {
+    required: [
+      'author',
+      'challenge',
+      'timestamp',
+      'type',
+      'points'
+    ],
+    properties: {
+      author: {
+        bsonType: 'string'
+      },
+      challenge: {
+        bsonType: 'string'
+      },
+      timestamp: {
+        bsonType: 'timestamp'
+      },
+      type: {
+        bsonType: 'string',
+        'enum': [
+          'submission',
+          'hint'
+        ]
+      },
+      points: {
+        bsonType: 'int'
+      },
+      correct: {
+        bsonType: 'bool'
+      },
+      submission: {
+        bsonType: 'string'
+      },
+      hint_id: {
+        bsonType: 'int',
+        minimum: 0
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const fs = require('fs');
-const MongoClient = require('mongodb').MongoClient;
+const MongoDB = require('mongodb');
 
 const app = express();
 app.use(express.json());
@@ -18,7 +18,7 @@ app.use(cors({
 	origin: 'http://localhost'
 }));
 
-MongoClient.connect('mongodb://localhost:27017', {
+MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	useNewUrlParser: true,
 	useUnifiedTopology: true
 }).then(client => {
@@ -124,12 +124,16 @@ MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 	app.get('/account/type', async (req, res) => {
-		try {
-			if (!req.session.type) res.send({
+		if (!req.session.type) {
+			res.status(400);
+			res.send({
 				success: false,
 				error: 'not_logged_in'
 			});
-			else switch (req.session.type) {
+			return;
+		}
+		try {
+			switch (req.session.type) {
 				case 0:
 					res.send({
 						success: true,
@@ -280,14 +284,14 @@ MongoClient.connect('mongodb://localhost:27017', {
 				await collections.challs.updateOne(
 					{name: req.body.chall},
 					{'$push': updateRef}
-				)
+				);
 				await collections.transactions.insertOne({
 					author: req.session.username,
 					challenge: req.body.chall,
 					type: 'hint',
-					timestamp: new Date(),
+					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
 					points: -hints[req.body.id].cost,
-					hint_id: req.body.id
+					hint_id: parseInt(req.body.id)
 				});
 				res.send({
 					success: true,
@@ -309,7 +313,7 @@ MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			const chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {flags: 1, _id: 0}});
+			const chall = await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -318,35 +322,72 @@ MongoClient.connect('mongodb://localhost:27017', {
 				});
 				return;
 			}
-			async function addPoints() {
+			if (chall.solves.includes(req.session.username)) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'submitted'
+				});
+				return;
+			}
+			async function insertTransaction(correct = false, blocked = false) {
 				await collections.transactions.insertOne({
 					author: req.session.username,
 					challenge: req.body.chall,
-					type: 'hint',
-					timestamp: new Date(),
-					points: -hints[req.body.id].cost,
-					hint_id: req.body.id
+					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					type: blocked ? 'blocked_submission' : 'submission',
+					points: correct ? chall.points : 0,
+					correct: correct,
+					submission: req.body.flag
 				});
+				if (correct && !blocked) {
+					await collections.users.updateOne(
+						{username: req.session.username},
+						{'$inc': {score: chall.points}},
+					);
+					await collections.challs.updateOne(
+						{name: req.body.chall},
+						{'$push': {solves: req.session.username}}
+					);
+				}
+			}
+			if (chall.max_attempts != 0) {
+				const attempts = (await collections.transactions.find({
+					author: req.session.username,
+					challenge: req.body.chall,
+					type: 'submission'
+				}).toArray()).length;
+				if (attempts >= chall.max_attempts) {
+					await insertTransaction(false, true);
+					res.send({
+						success: false,
+						error: 'exceeded'
+					});
+					return;
+				}
 			}
 			let solved = false;
-			if (flags.includes(req.params.flag)) {
-				await addPoints();
+			if (chall.flags.includes(req.body.flag)) {
+				await insertTransaction(true);
 				res.send({success: true});
 				solved = true;
 			}
+			// for "double-blind" CTFs - ask me if you want to
 			else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
-				if (argon2.verify(flag, req.params.flag)) {
-					addPoints();
+				if (argon2.verify(flag, req.body.flag)) {
+					insertTransaction(true);
 					res.send({success: true});
 					solved = true;
 					return;
 				}
 			});
-			if (!solved) res.send({
-				success: false,
-				error: 'wrong_flag'
-			});
-			res.send(chall);
+			if (!solved) {
+				insertTransaction(false);
+				res.send({
+					success: false,
+					error: 'ding dong your flag is wrong'
+				});
+			}
 		}
 		catch (err) {
 			console.error(err);
@@ -361,11 +402,63 @@ MongoClient.connect('mongodb://localhost:27017', {
 			});
 			return;
 		}
+		if (req.session.type < 1) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'perms'
+			});
+			return;
+		}
 		try {
+			let doc = {
+				name: req.body.name,
+				category: req.body.category,
+				description: req.body.description,
+				points: parseInt(req.body.points),
+				flags: req.body.flags,
 
+				author: req.session.username,
+				created: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+				solves: [],
+				max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
+				visibility: req.body.visibility ? (req.body.visibility == true) : true
+			};
+			if (req.body.tags) doc.tags = req.body.tags;
+			if (req.body.hints) {
+				doc.hints = req.body.hints;
+				doc.hints.forEach(hint => {
+					if (!hint.cost) throw {errmsg: 'Document failed validation'};
+					hint.cost = parseInt(hint.cost);
+					hint.purchased = [];
+				});
+			}
+			// files?
+
+			console.log(doc);
+
+			await collections.challs.insertOne(doc);
+			res.send({success: true});
 		}
 		catch (err) {
-			console.error(err);
+			if (err.errmsg) {
+				if (err.errmsg.includes('duplicate key error collection')) res.send({
+					success: false,
+					error: 'exists'
+				});
+				else if (err.errmsg == 'Document failed validation') res.send({
+					success: false,
+					error: 'validation'
+				});
+				else res.send({
+					success: false,
+					error: 'unknown'
+				});
+			}
+			else res.send({
+				success: false,
+				error: 'unknown'
+			});
 		}
 	});
 
