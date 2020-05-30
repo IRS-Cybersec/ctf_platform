@@ -21,7 +21,8 @@
         bsonType: 'string',
         'enum': [
           'submission',
-          'hint'
+          'hint',
+          'blocked_submission'
         ]
       },
       points: {
@@ -31,6 +32,9 @@
         bsonType: 'bool'
       },
       submission: {
+        bsonType: 'string'
+      },
+      reason: {
         bsonType: 'string'
       },
       hint_id: {

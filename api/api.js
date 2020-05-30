@@ -64,7 +64,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.post('/account/taken/username', async (req, res) => {
 		try {
 			res.send({
-				success: ture,
+				success: true,
 				taken: await collections.users.findOne({username: req.body.username}, {projection: {_id: 1}}) ? true : false
 			});
 		}
@@ -75,7 +75,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.post('/account/taken/email', async (req, res) => {
 		try {
 			res.send({
-				success: ture,
+				success: true,
 				taken: await collections.users.findOne({email: req.body.email}, {projection: {_id: 1}}) ? true : false
 			});
 		}
@@ -122,42 +122,45 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.get('/account/type', async (req, res) => {
 		if (!req.session.type) {
-			res.status(400);
+			res.status(403);
 			res.send({
 				success: false,
-				error: 'not_logged_in'
+				error: 'auth'
 			});
 			return;
 		}
-		try {
-			switch (req.session.type) {
-				case 0:
-					res.send({
-						success: true,
-						type: 'user'
-					});
-					break;
-				case 1:
-					res.send({
-						success: true,
-						type: 'elevated'
-					});
-					break;
-				case 2:
-					res.send({
-						success: true,
-						type: 'admin'
-					});
-					break;
-				default:
-					break;
-			}
-		}
-		catch (err) {
-			console.error(err);
+		switch (req.session.type) {
+			case 0:
+				res.send({
+					success: true,
+					type: 'user'
+				});
+				break;
+			case 1:
+				res.send({
+					success: true,
+					type: 'elevated'
+				});
+				break;
+			case 2:
+				res.send({
+					success: true,
+					type: 'admin'
+				});
+				break;
+			default:
+				break;
 		}
 	});
-	app.get('/account/score/:id', async (req, res) => {
+	app.get('/account/score/:username', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
 		try {
 			// what should i include here? score? solves?
 		}
@@ -209,7 +212,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			console.error(err);
 		}
 	});
-	app.post('/account/list', async (req, res) => {
+	app.get('/account/list', async (req, res) => {
 		if (!req.session.username) {
 			res.status(403);
 			res.send({
@@ -226,7 +229,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			});
 		}
 		try {
-			res.send(await collections.users.find(null, {projection: {password: 0, _id: 0}}));
+			res.send({
+				success: true,
+				list: (await collections.users.find(null, {projection: {password: 0, _id: 0}}).toArray())
+			});
 		}
 		catch (err) {
 			console.error(err);
@@ -251,10 +257,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 		if (req.body.type < 0 || req.body.type > 2) {
 			logoutList.push(req.body.username);
-			res.status(403);
+			res.status(400);
 			res.send({
 				success: false,
-				error: 'permissions'
+				error: 'outofrange'
 			});
 			return;
 		}
@@ -297,7 +303,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					points: chall.points,
 					solved: chall.solves.includes(req.session.username)
 				}));
-			res.send(resChalls);
+			res.send({
+				success: true,
+				challenges: resChalls
+			});
 		}
 		catch (err) {
 			console.error(err);
@@ -327,7 +336,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				else delete hint.hint;
 				delete hint.purchased;
 			});
-			res.send(chall);
+			res.send({
+				success: true,
+				chall: chall
+			});
 		}
 		catch (err) {
 			console.error(err);
@@ -499,7 +511,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.status(403);
 			res.send({
 				success: false,
-				error: 'perms'
+				error: 'permissions'
 			});
 			return;
 		}
@@ -563,7 +575,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			res.send(await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray());
+			res.send({
+				success: true,
+				scores: await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray()
+			});
 		}
 		catch (err) {
 			console.error(err);
