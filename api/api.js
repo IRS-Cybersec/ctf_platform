@@ -2,21 +2,33 @@ const argon2 = require('argon2');
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
-const fs = require('fs');
 const MongoDB = require('mongodb');
 
 const app = express();
 app.use(express.json());
+// TEST LOGOUTLIST AFTER GUI CREATED
+let logoutList = [];
+app.use(cors({
+	credentials: true,
+	origin: 'http://localhost'
+}));
 app.use(session({
 	resave: false,
 	saveUninitialized: false,
 	secret: 'supermassivepowerfulsecretuwu',
 	// cookie: {secure: true}
 }));
-app.use(cors({
-	credentials: true,
-	origin: 'http://localhost'
-}));
+app.use((req, res, next) => {
+	if (logoutList.includes(req.session.username)) {
+		req.session.destroy();
+		logoutList.splice(logoutList.indexOf(req.session.username), 1);
+		res.send({
+			success: false,
+			error: 'session_expired'
+		});
+	}
+	else next();
+});
 
 MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	useNewUrlParser: true,
@@ -28,6 +40,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		challs: db.collection('challs'),
 		transactions: db.collection('transactions')
 	};
+	console.info('MongoDB connected');
 
 	app.post('/account/create', async (req, res) => {
 		try {
@@ -35,37 +48,17 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				username: req.body.username,
 				email: req.body.email,
 				password: await argon2.hash(req.body.password),
-				type: 0
+				type: 0,
+				score: 0
 			});
 			res.send({success: true});
 		}
 		catch (err) {
-			if (err.errmsg) {
-				if (err.errmsg.includes('duplicate key error collection')) {
-					if (Object.keys(err.keyPattern).includes('email'))
-						res.send({
-							success: false,
-							error: 'email'
-						});
-					else if (Object.keys(err.keyPattern).includes('username'))
-						res.send({
-							success: false,
-							error: 'username'
-						});
-					else res.send({
-						success: false,
-						error: 'unknown'
-					});
-				}
-				else res.send({
-					success: false,
-					error: 'unknown'
-				})
-			}
-			else res.send({
+			res.send({
 				success: false,
 				error: 'unknown'
 			});
+			console.error(err);
 		}
 	});
 	app.post('/account/taken/username', async (req, res) => {
@@ -102,7 +95,11 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				else if (await argon2.verify(user.password, req.body.password)) {
 					req.session.username = req.body.username;
 					req.session.type = user.type;
-					res.send({success: true});
+					logoutList.splice(logoutList.indexOf(req.session.username), 1);
+					res.send({
+						success: true,
+						permissions: user.type
+					});
 				}
 				else res.send({
 					success: false,
@@ -160,17 +157,112 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			console.error(err);
 		}
 	});
-	app.get('/account/profile', async (req, res) => {
+	app.get('/account/score/:id', async (req, res) => {
 		try {
-			
+			// what should i include here? score? solves?
 		}
 		catch (err) {
 			console.error(err);
 		}
 	});
-	app.post('/account/promote', async (req, res) => {
+	app.post('/account/password', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
 		try {
-			
+			const user = await collections.users.findOne({username: req.session.username}, {projection: {password: 1, _id: 0}});
+			if (!user) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'notfound'
+				});
+			}
+			if (req.body.new_password == '') {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'empty_password'
+				});
+			}
+			else if (await argon2.verify(user.password, req.body.password)) {
+				await collections.users.updateOne(
+					{username: req.session.username},
+					{'$set': {password: await argon2.hash(req.body.new_password)}}
+				);
+				res.send({success: true});
+			}
+			else {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'password'
+				});
+			}
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.post('/account/list', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type != 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+		}
+		try {
+			res.send(await collections.users.find(null, {projection: {password: 0, _id: 0}}));
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.post('/account/permissions', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type != 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		if (req.body.type < 0 || req.body.type > 2) {
+			logoutList.push(req.body.username);
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		try {
+			res.send((await collections.users.updateOne(
+				{username: req.body.username},
+				{'$set': {type: parseInt(req.body.type)}}
+			)).matchedCount == 0 ? {success: false, error: 'not_found'} : {success: true});
 		}
 		catch (err) {
 			console.error(err);
@@ -197,8 +289,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 		try {
 			let resChalls = [];
-			const challs = (await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1, _id: 0}}).toArray()).forEach(chall =>
+			(await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray()).forEach(chall =>
 				resChalls.push({
+					id: chall._id,
 					name: chall.name,
 					category: chall.category,
 					points: chall.points,
@@ -220,7 +313,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			const chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {visibility: 0, flags: 0, _id: 0}});
+			const chall = await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.params.chall)}, {projection: {visibility: 0, flags: 0, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -250,7 +343,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			let hints = (await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {hints: 1, _id: 0}}));
+			let hints = (await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.body.chall)}, {projection: {hints: 1, _id: 0}}));
 			if (!hints) {
 				res.status(400);
 				res.send({
@@ -282,7 +375,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				const updateRef = {};
 				updateRef[`hints.${req.body.id}.purchased`] = req.session.username;
 				await collections.challs.updateOne(
-					{name: req.body.chall},
+					{_id: MongoDB.ObjectID(req.body.chall)},
 					{'$push': updateRef}
 				);
 				await collections.transactions.insertOne({
@@ -313,7 +406,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			const chall = await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0}});
+			const chall = await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.body.chall)}, {projection: {points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -346,7 +439,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 						{'$inc': {score: chall.points}},
 					);
 					await collections.challs.updateOne(
-						{name: req.body.chall},
+						{_id: MongoDB.ObjectID(req.body.chall)},
 						{'$push': {solves: req.session.username}}
 					);
 				}
@@ -435,8 +528,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}
 			// files?
 
-			console.log(doc);
-
 			await collections.challs.insertOne(doc);
 			res.send({success: true});
 		}
@@ -463,14 +554,22 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 
 	app.get('/scoreboard', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
 		try {
-			
+			res.send(await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray());
 		}
 		catch (err) {
 			console.error(err);
 		}
 	});
-app.listen(20001, () => console.info('Server started!'));
+app.listen(20001, () => console.info('Web server started'));
 }).catch(err => {
 	console.error(err);
 	console.error('\n\nError while connecting to MongoDB, exiting');
