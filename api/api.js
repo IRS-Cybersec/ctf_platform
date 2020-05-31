@@ -576,7 +576,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				created: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
 				solves: [],
 				max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
-				visibility: req.body.visibility ? (req.body.visibility == true) : true
+				visibility: req.body.visibility ? true : false
 			};
 			if (req.body.tags) doc.tags = req.body.tags;
 			if (req.body.hints) {
