@@ -7,6 +7,7 @@ app.use(cors({
 	origin: 'http://localhost'
 }));
 ```
+It has not been acertained that the `.find()` method returns _all_ results. Create a GitHub issue if the responses seem to be limited to the first 20.
 
 ## Common Responses
 
@@ -201,34 +202,6 @@ No input required
 No special error codes
 ```
 
-### `/account/score/:username`
-
-**HAS NOT BEEN IMPLEMENTED AND IS SUBJECT TO CHANGE**
-
-Returns the score of a requested user.  
-Authenticated
-
-#### Input
-
-```
-GET: /account/score/USERNAME_OF_USER_TO_CHECK
-```
-
-#### Output
-
-```json
-{
-	"success": true,
-	"score": "int"
-}
-```
-
-#### Errors
-
-```
-No special error codes
-```
-
 ### `/account/password`
 
 Change the password of the user  
@@ -332,8 +305,6 @@ Authenticated // Permissions: 2
 
 ### `/account/delete`
 
-**HAS NOT BEEN IMPLEMENTED AND IS SUBJECT TO CHANGE**
-
 Deletes an account  
 Authenticated // Permissions: 2 for some features
 
@@ -341,8 +312,7 @@ Authenticated // Permissions: 2 for some features
 
 ```json
 {
-	"username": "USERNAME OF USER TO BE DELETED (optional)",
-	"password": "PASSWORD OF LOGGED IN USER"
+	"username": "USERNAME OF USER TO BE DELETED (optional)"
 }
 ```
 
@@ -358,21 +328,17 @@ Authenticated // Permissions: 2 for some features
 
 * If `username` is empty, the current user will be deleted
 * `username` can only be defined by a user with permissions level 2
+* This endpoint is very slow
 
 #### Errors
 
 | Error Code    | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to delete another user |
-| `password`    | The password supplied is wrong                               |
 
 ## Challenges
 
-The `CHALLENGE_ID` is a MongoDB Object ID string like `5ed22cfe3a46bd32fc4cf15c`
-
 ### `/challenge/list`
-
-**REQUIRES UPDATES**
 
 Show all available challenges  
 Authenticated
@@ -390,14 +356,12 @@ No input required
 	"success": true,
 	"challenges": [
 		{
-			"id": "CHALLENGE_ID",
 			"name": "CHALLENGE_NAME",
 			"category": "CHALLENGE_CATEGORY",
 			"points": "int",
 			"solved": "bool"
 		},
 		{
-			"id": "CHALLENGE_ID",
 			"name": "CHALLENGE_NAME",
 			"category": "CHALLENGE_CATEGORY",
 			"points": "int",
@@ -410,7 +374,51 @@ No input required
 #### Remarks
 
 * Only shows challenges with `visibility: true`
-* Currently, there is no API endpoint to get challenges with `visibility: false`
+
+#### Errors
+
+```
+No special error codes
+```
+
+### `/challenge/list_all`
+
+Show all challenges  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+No input required
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"challenges": [
+		{
+			"name": "CHALLENGE_NAME",
+			"category": "CHALLENGE_CATEGORY",
+			"points": "int",
+			"solves": "array",
+			"visibility": true
+		},
+		{
+			"name": "CHALLENGE_NAME",
+			"category": "CHALLENGE_CATEGORY",
+			"points": "int",
+			"solves": "array",
+			"visibility": true
+		}
+	]
+}
+```
+
+#### Remarks
+
+* Shows all challenges, including those with `visibility: false`
 
 #### Errors
 
@@ -426,7 +434,7 @@ Authenticated
 #### Input
 
 ```
-GET: /account/score/CHALLENGE_ID
+GET: /account/score/CHALLENGE_NAME
 ```
 
 #### Output
@@ -484,7 +492,7 @@ Authenticated
 ```
 {
 	"id": "int",
-	"chall": "CHALLENGE_ID"
+	"chall": "CHALLENGE_NAME"
 }
 ```
 
@@ -505,7 +513,7 @@ Authenticated
 
 | Error Code   | Definition                                                   |
 | ------------ | ------------------------------------------------------------ |
-| `notfound`   | The `CHALLENGE_ID` specified was invalid                     |
+| `notfound`   | The `CHALLENGE_NAME` specified was invalid                     |
 | `bought`     | This hint has already been bought by the user and can be accessed through `/challenge/show/:chall` |
 | `outofrange` | The `id` field is too large or too small (minimum is 0)      |
 
@@ -519,7 +527,7 @@ Authenticated
 ```
 {
 	"flag": "FLAG_TO_BE_SUBMITTED",
-	"chall": "CHALLENGE_ID"
+	"chall": "CHALLENGE_NAME"
 }
 ```
 
@@ -539,7 +547,7 @@ Authenticated
 
 | Error Code                     | Definition                                                   |
 | ------------------------------ | ------------------------------------------------------------ |
-| `notfound`                     | The `CHALLENGE_ID` specified was invalid                     |
+| `notfound`                     | The `CHALLENGE_NAME` specified was invalid                     |
 | `submitted`                    | This challenge was already solved                            |
 | `exceeded`                     | The user has already exceeded the maximum number of attempts allowed |
 | `ding dong your flag is wrong` | oops                                                         |
@@ -595,6 +603,64 @@ Authenticated // Permissions: 1
 | `exists`      | **UNUSED** Another challenge already exists with this name   |
 | `validation`  | The input was malformed                                      |
 
+### `/challenge/visibility/chall`
+
+Set the visibility of a challenge  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+{
+	"visibility": "bool",
+	"chall": "CHALLENGE_NAME"
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Errors
+
+| Error Code    | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to change a challenge visibility |
+
+### `/challenge/visibility/category`
+
+Set the visibility of all challenges in a category  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+{
+	"visibility": "bool",
+	"category": "CATEGORY_NAME"
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Errors
+
+| Error Code    | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to change a challenge visibility |
+
 ### Miscellaneous
 
 ### `/scoreboard`
@@ -634,3 +700,80 @@ No input required
 * This endpoint is probably very slow (needs to look through every document)
 * `points` is non-zero
 
+### `/scoreboard/:username`
+
+**HAS NOT BEEN IMPLEMENTED AND IS SUBJECT TO CHANGE**
+
+Returns the score history of a requested user  
+Authenticated
+
+#### Input
+
+```
+GET: /scoreboard/USERNAME_OF_USER_TO_CHECK
+```
+
+#### Output
+
+```json
+{
+    "success": true,
+    "scores": [
+        {
+            "challenge": "CHALLENGE_NAME",
+            "type": "submission/hint",
+            "timestamp": "TIMESTAMP",
+            "points": "int"
+        },
+        {
+            "challenge": "CHALLENGE_NAME",
+            "type": "submission/hint",
+            "timestamp": "TIMESTAMP",
+            "points": "int"
+        }
+    ]
+}
+```
+
+#### Errors
+
+```
+No special error codes
+```
+
+### `submissions`
+
+Returns all recorded submissions  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+No input required
+```
+
+#### Output
+
+```json
+{
+    "success": true,
+    "submissions": [
+        {
+            "_id": "SUBMISSION_ID (like 5ed326c62d0f6f32a834f049)",
+            "author": "SUBMITTOR",
+            "challenge": "CHALLENGE_NAME",
+            "timestamp": "TIMESTAMP",
+            "type": "submission/blocked_submission",
+            "points": "int",
+            "correct": "bool",
+            "submission": "SUBMITTED_FLAG"
+        }
+    ]
+}
+```
+
+#### Errors
+
+| Error Code    | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `permissions` | The logged-in user does not have sufficient permissions to view submissions |

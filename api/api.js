@@ -8,10 +8,11 @@ const app = express();
 app.use(express.json());
 // TEST LOGOUTLIST AFTER GUI CREATED
 let logoutList = [];
-app.use(cors({
-	credentials: true,
-	origin: 'http://localhost'
-}));
+// app.use(cors({
+// 	credentials: true,
+// 	origin: 'http://localhost'
+// }));
+app.use(cors());
 app.use(session({
 	resave: false,
 	saveUninitialized: false,
@@ -120,8 +121,53 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			console.error(err);
 		}
 	});
+	app.post('/account/delete', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		try {
+			let userToDelete = req.session.username;
+			if (req.body.username) {
+				if (req.session.type < 2) {
+					res.status(403);
+					res.send({
+						success: false,
+						error: 'permissions'
+					});
+					return;
+				}
+				userToDelete = req.body.username;
+			}
+			if ((await collections.users.deleteOne({username: userToDelete})).deletedCount == 0) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'not_found'
+				});
+				return;
+			}
+			await collections.challs.updateMany({}, {
+				'$pull': {
+					'solves': userToDelete,
+					'hints.$[].purchased': userToDelete
+				}
+			});
+			await collections.challs.deleteMany({author: userToDelete});
+			await collections.transactions.deleteMany({author: userToDelete});
+			if (userToDelete == req.session.username) req.session.destroy();
+			res.send({success: true});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
 	app.get('/account/type', async (req, res) => {
-		if (!req.session.type) {
+		if (!req.session.username) {
 			res.status(403);
 			res.send({
 				success: false,
@@ -150,22 +196,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				break;
 			default:
 				break;
-		}
-	});
-	app.get('/account/score/:username', async (req, res) => {
-		if (!req.session.username) {
-			res.status(403);
-			res.send({
-				success: false,
-				error: 'auth'
-			});
-			return;
-		}
-		try {
-			// what should i include here? score? solves?
-		}
-		catch (err) {
-			console.error(err);
 		}
 	});
 	app.post('/account/password', async (req, res) => {
@@ -221,12 +251,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			});
 			return;
 		}
-		if (req.session.type != 2) {
+		if (req.session.type < 2) {
 			res.status(403);
 			res.send({
 				success: false,
 				error: 'permissions'
 			});
+			return;
 		}
 		try {
 			res.send({
@@ -247,7 +278,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			});
 			return;
 		}
-		if (req.session.type != 2) {
+		if (req.session.type < 2) {
 			res.status(403);
 			res.send({
 				success: false,
@@ -274,14 +305,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			console.error(err);
 		}
 	});
-	app.post('/account/delete', async (req, res) => {
-		try {
-			
-		}
-		catch (err) {
-			console.error(err);
-		}
-	});
 
 	// Note to self: there should be a better way of doing this
 	app.get('/challenge/list', async (req, res) => {
@@ -297,7 +320,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			let resChalls = [];
 			(await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray()).forEach(chall =>
 				resChalls.push({
-					id: chall._id,
 					name: chall.name,
 					category: chall.category,
 					points: chall.points,
@@ -306,6 +328,33 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				challenges: resChalls
+			});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.get('/challenge/list_all', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type < 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		try {
+			res.send({
+				success: true,
+				challenges: (await collections.challs.find({}, {projection: {name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0}}).toArray())
 			});
 		}
 		catch (err) {
@@ -322,7 +371,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			const chall = await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.params.chall)}, {projection: {visibility: 0, flags: 0, _id: 0}});
+			const chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {visibility: 0, flags: 0, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -355,7 +404,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			let hints = (await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.body.chall)}, {projection: {hints: 1, _id: 0}}));
+			let hints = (await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {hints: 1, _id: 0}}));
 			if (!hints) {
 				res.status(400);
 				res.send({
@@ -387,7 +436,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				const updateRef = {};
 				updateRef[`hints.${req.body.id}.purchased`] = req.session.username;
 				await collections.challs.updateOne(
-					{_id: MongoDB.ObjectID(req.body.chall)},
+					{name: req.body.chall},
 					{'$push': updateRef}
 				);
 				await collections.transactions.insertOne({
@@ -418,7 +467,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			return;
 		}
 		try {
-			const chall = await collections.challs.findOne({visibility: true, _id: MongoDB.ObjectID(req.body.chall)}, {projection: {points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0}});
+			const chall = await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -451,7 +500,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 						{'$inc': {score: chall.points}},
 					);
 					await collections.challs.updateOne(
-						{_id: MongoDB.ObjectID(req.body.chall)},
+						{name: req.body.chall},
 						{'$push': {solves: req.session.username}}
 					);
 				}
@@ -478,14 +527,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				solved = true;
 			}
 			// for "double-blind" CTFs - ask me if you want to
-			else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
-				if (argon2.verify(flag, req.body.flag)) {
-					insertTransaction(true);
-					res.send({success: true});
-					solved = true;
-					return;
-				}
-			});
+			// else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
+			// 	if (argon2.verify(flag, req.body.flag)) {
+			// 		insertTransaction(true);
+			// 		res.send({success: true});
+			// 		solved = true;
+			// 		return;
+			// 	}
+			// });
 			if (!solved) {
 				insertTransaction(false);
 				res.send({
@@ -564,6 +613,60 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			});
 		}
 	});
+	app.post('/challenge/visibility/chall', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type < 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		try {
+			res.send((await collections.challs.updateOne(
+				{name: req.body.chall},
+				{'$set': {visibility: req.body.visibility == true}}
+			)).matchedCount == 0 ? {success: false, error: 'not_found'} : {success: true});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.post('/challenge/visibility/category', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type < 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		try {
+			res.send((await collections.challs.updateMany(
+				{category: req.body.category},
+				{'$set': {visibility: req.body.visibility == true}}
+			)).matchedCount == 0 ? {success: false, error: 'not_found'} : {success: true});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
 
 	app.get('/scoreboard', async (req, res) => {
 		if (!req.session.username) {
@@ -578,6 +681,52 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				scores: await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray()
+			});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.get('/scoreboard/:username', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		try {
+			res.send({
+				success: true,
+				scores: await collections.transactions.find({points: {'$ne': 0}, author: req.params.username}, {projection: {points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0}}).toArray()
+			});
+		}
+		catch (err) {
+			console.error(err);
+		}
+	});
+	app.get('/submissions', async (req, res) => {
+		if (!req.session.username) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'auth'
+			});
+			return;
+		}
+		if (req.session.type < 2) {
+			res.status(403);
+			res.send({
+				success: false,
+				error: 'permissions'
+			});
+			return;
+		}
+		try {
+			res.send({
+				success: true,
+				submissions: await collections.transactions.find({'$or': [{type: 'submission'}, {type: 'blocked_submission'}]}).toArray()
 			});
 		}
 		catch (err) {
