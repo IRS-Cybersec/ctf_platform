@@ -53,6 +53,14 @@ function errors(err, res) {
 			});
 			return true;
 	}
+	if (err.errmsg == 'Document failed validation') {
+		res.status(400);
+		res.send({
+			success: false,
+			error: 'validation'
+		});
+		return true;
+	}
 	if (err.message.includes('BadSignature')) {
 		res.status(401);
 		res.send({
@@ -107,7 +115,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.findOne({username: req.body.username}, {projection: {_id: 1}}) ? true : false
+				taken: await collections.users.count({username: req.body.username}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -118,7 +126,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.findOne({email: req.body.email}, {projection: {_id: 1}}) ? true : false
+				taken: await collections.users.count({email: req.body.email}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -345,6 +353,29 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
+	app.get('/v1/challenge/show/:chall/detailed', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			const chall = await collections.challs.findOne({name: req.params.chall}, {projection: {_id: 0}});
+			if (!chall) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'notfound'
+				});
+				return;
+			}
+			res.send({
+				success: true,
+				chall: chall
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
 	app.post('/v1/challenge/hint', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
@@ -419,11 +450,11 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}
 			// test
 			if (chall.max_attempts != 0) {
-				if ((await collections.transactions.find({
+				if (await collections.transactions.count({
 					author: username,
 					challenge: req.body.chall,
 					type: 'submission'
-				}, {projection: {_id: 1}}).toArray()).length >= chall.max_attempts) throw new Error('Exceeded');
+				 }) >= chall.max_attempts) throw new Error('Exceeded');
 			}
 			let solved = false;
 			if (chall.flags.includes(req.body.flag)) {
@@ -519,10 +550,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					success: false,
 					error: 'exists'
 				});
-				else if (err.errmsg == 'Document failed validation') res.send({
-					success: false,
-					error: 'validation'
-				});
 				else res.send({
 					success: false,
 					error: 'unknown'
@@ -557,6 +584,42 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				{category: req.body.category},
 				{'$set': {visibility: req.body.visibility == true}}
 			)).matchedCount == 0 ? {success: false, error: 'not_found'} : {success: true});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/challenge/edit', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			let updateObj = {};
+			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility'];
+			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
+			if ((await collections.challs.updateOne(
+				{name: req.body.chall},
+				{'$set': updateObj}
+			)).matchedCount > 0) res.send({success: true});
+			else throw new Error('NotFound');
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/challenge/edit/category', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			let updateObj = {};
+			if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
+			if (req.body.new_name != undefined) updateObj.category = req.body.new_name;
+			if ((await collections.challs.updateMany(
+				{category: req.body.category},
+				{'$set': updateObj}
+			)).matchedCount > 0) res.send({success: true});
+			else throw new Error('NotFound');
 		}
 		catch (err) {
 			errors(err, res);

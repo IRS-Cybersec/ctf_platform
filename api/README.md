@@ -438,11 +438,12 @@ GET: /account/score/CHALLENGE_NAME
 		],
 		"hints": [
 			{
-				"hint": "HINT_CONTENTS"
+				"hint": "HINT_CONTENTS" // hint 1
 			},
 			{
-				"cost": "int"
+				"cost": "int" // hint 2
 			}
+			// etc
 		]
 	}
 }
@@ -451,8 +452,6 @@ GET: /account/score/CHALLENGE_NAME
 #### Remarks
 
 * Only shows challenges with `visibility: true`
-* Currently, there is no API endpoint to get challenges with `visibility: false`
-* There is also no way to get all the info (e.g. flags) for the admin panel
 * Missing information: number of attempts used up
 * Hints: if the hint has been bought, the object will print the hint directly. If not, the `cost` key will be an integer of the number of points needed
 
@@ -461,6 +460,65 @@ GET: /account/score/CHALLENGE_NAME
 ```
 No special errors
 ```
+
+### `/v1/challenge/show/:chall/detailed`
+
+Get all the details of a challenge  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+GET: /account/score/CHALLENGE_NAME/detailed
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"challenge": {
+		"name": "CHALLENGE_NAME",
+		"category": "CHALLENGE_CATEGORY",
+		"description": "CHALLENGE_DESCRIPTION (HTML)",
+		"points": "int",
+		"author": "CHALLENGE_AUTHOR",
+		"created": "CREATION_TIMESTAMP",
+		"solves": [
+			"USERNAME_OF_SOLVER"
+		],
+		"max_attempts": "int (0 means unlimited)",
+		"tags": [
+			"CHALLENGE_TAG"
+		],
+		"visibility": "bool",
+		"flags": [
+			"FLAG"
+		],
+		"hints": [
+			{
+				"hint": "HINT_CONTENTS",
+				"cost": "int",
+				"purchased": [
+					"USERNAME"
+				]
+			},
+			{
+				"hint": "HINT_CONTENTS",
+				"cost": "int",
+				"purchased": [
+					"USERNAME"
+				]
+			}
+		]
+	}
+}
+```
+
+#### Errors
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `permissions` | The logged-in user does not have sufficient permissions to create a new challenge |
 
 ### `/v1/challenge/hint`
 
@@ -651,12 +709,87 @@ Authenticated // Permissions: 2
 Edit a challenge  
 Authenticated // Permissions: 2
 
+#### Input
+```json
+{
+	"chall": "CHALLENGE_NAME",
+	"name": "NEW_CHALLENGE_NAME",
+	"category": "NEW_CATEGORIES",
+	"description": "NEW_CHALLENGE_DESCRIPTION (HTML)",
+	"points": "NEW_POINTS (int)",
+	"flags": [
+		"NEW_FLAG"
+	],
+	"tags": [
+		"NEW_TAG"
+	],
+	"hints": [{
+		"hint": "NEW_HINT",
+		"cost": "NEW_HINT_COST (int)",
+		"purchased": [
+			"USERNAME (required, even if empty)"
+		]
+	}],
+	"max_attempts": "int",
+	"visibility": "bool",
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Remarks
+
+* All fields other than `chall` are optional.
+* **All entries must be filled with the original data as well**
+  * e.g. to add a new flag, input `["old flag", "new flag"]`
+  * Deletes hint purchases **without compensation** if this is not done (but can also be used to award hints to users)
+* No way to edit solves yet
+* This endpoint allows duplicate names: should this be allowed? (slows the service down slightly to check)
+* File uploads have not been implemented
+* Validation must be done on the client side as the server does not produce meaning output (integers are passed **not** through `parseInt` - perform on client side)
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
+
 ### `/v1/challenge/edit/category`
 
 **IN DEVELOPMENT**
 
 Edit a category's metadata  
 Authenticated // Permissions: 2
+
+#### Input
+```
+{
+	"category": "CATEGORY_NAME",
+	"new_name": "NEW_CATEGORY_NAME (optional)",
+	"visibility": "bool (optional)"
+}
+```
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
 
 ### Miscellaneous
 
