@@ -143,7 +143,7 @@ Login endpoint
 {
 	"success": true,
 	"permissions": "int from 0-2",
-    "token": "TOKEN_STRING"
+	"token": "TOKEN_STRING"
 }
 ```
 
@@ -574,7 +574,7 @@ Authenticated
 ```json
 {
 	"success": true,
-    "data": "correct/ding dong your flag is wrong"
+	"data": "correct/ding dong your flag is wrong"
 }
 ```
 
@@ -675,6 +675,7 @@ Authenticated // Permissions: 2
 ### `/v0/challenge/visibility/category`
 
 **DEPRECATED. USE `/v1/challenge/edit/category` INSTEAD**
+
 Set the visibility of all challenges in a category  
 Authenticated // Permissions: 2
 
@@ -703,8 +704,6 @@ Authenticated // Permissions: 2
 | `permissions` | The logged-in user does not have sufficient permissions to change a challenge visibility |
 
 ### `/v1/challenge/edit`
-
-**IN DEVELOPMENT**
 
 Edit a challenge  
 Authenticated // Permissions: 2
@@ -762,8 +761,6 @@ Authenticated // Permissions: 2
 | `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
 
 ### `/v1/challenge/edit/category`
-
-**IN DEVELOPMENT**
 
 Edit a category's metadata  
 Authenticated // Permissions: 2
@@ -847,21 +844,21 @@ GET: /scoreboard/USERNAME_OF_USER_TO_CHECK
 
 ```json
 {
-    "success": true,
-    "scores": [
-        {
-            "challenge": "CHALLENGE_NAME",
-            "type": "submission/hint",
-            "timestamp": "TIMESTAMP",
-            "points": "int"
-        },
-        {
-            "challenge": "CHALLENGE_NAME",
-            "type": "submission/hint",
-            "timestamp": "TIMESTAMP",
-            "points": "int"
-        }
-    ]
+	"success": true,
+	"scores": [
+		{
+			"challenge": "CHALLENGE_NAME",
+			"type": "submission/hint",
+			"timestamp": "TIMESTAMP",
+			"points": "int"
+		},
+		{
+			"challenge": "CHALLENGE_NAME",
+			"type": "submission/hint",
+			"timestamp": "TIMESTAMP",
+			"points": "int"
+		}
+	]
 }
 ```
 
@@ -886,19 +883,19 @@ No input required
 
 ```json
 {
-    "success": true,
-    "submissions": [
-        {
-            "_id": "SUBMISSION_ID (like 5ed326c62d0f6f32a834f049)",
-            "author": "SUBMITTOR",
-            "challenge": "CHALLENGE_NAME",
-            "timestamp": "TIMESTAMP",
-            "type": "submission/blocked_submission",
-            "points": "int",
-            "correct": "bool",
-            "submission": "SUBMITTED_FLAG"
-        }
-    ]
+	"success": true,
+	"submissions": [
+		{
+			"_id": "SUBMISSION_ID (like 5ed326c62d0f6f32a834f049)",
+			"author": "SUBMITTOR",
+			"challenge": "CHALLENGE_NAME",
+			"timestamp": "TIMESTAMP",
+			"type": "submission/blocked_submission",
+			"points": "int",
+			"correct": "bool",
+			"submission": "SUBMITTED_FLAG"
+		}
+	]
 }
 ```
 
