@@ -9,15 +9,15 @@ import { Link } from 'react-router-dom';
 const { Meta } = Card;
 
 const categoryImages = {
-  Forensics: "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
-  Pwn: "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
-  RE: "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
-  Web: "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
-  Yeetqiodhiuwqhdiuqwhdihqwfbwsfiiqwfhqf: "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
+  "Forensics": "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
+  "Pwn": "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
+  "RE": "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
+  "Web": "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
+  "Yeetqiodhiuwqhdi uqwhdihqwfbwsfiiqwfhqf": "https://redpiranha.net/sites/default/files/revslider/image/digital_forensics_slide_1.jpg",
 
 }
 
-const Categories = ["Forensics", "Pwn", "RE", "Web", "Forensics", "Forensics", "Forensics", "Forensics", "Forensics", "Yeetqiodhiuwqhdiuqwhdihqwfbwsfiiqwfhqf"]
+const Categories = ["Forensics", "Pwn", "RE", "Web", "Forensics", "Forensics", "Forensics", "Forensics", "Forensics", "Yeetqiodhiuwqhdi uqwhdihqwfbwsfiiqwfhqf"]
 
 
 class challenges extends React.Component {
@@ -68,12 +68,14 @@ class challenges extends React.Component {
                     <Meta
                       title={
                         <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                          <h1 style={{ color: "white", fontSize: "1.2vw", width: "15ch", backgroundColor: "red" }}>{item}</h1>
-                          <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>20/25</h2>
-                          <Progress type="circle" percent={75} width="3.2vw" strokeColor={{
-                            '0%': '#177ddc',
-                            '100%': '#49aa19',
-                          }} style={{marginLeft: "0.8vw", fontSize: "1vw"}} />
+                          <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item}</h1>
+                          <div style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column"}}>
+                            <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>20/25</h2>
+                            <Progress type="circle" percent={75} width="3.2vw" strokeColor={{
+                              '0%': '#177ddc',
+                              '100%': '#49aa19',
+                            }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
+                          </div>
                         </div>
                       }
                     />
