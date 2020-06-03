@@ -1,13 +1,18 @@
-# API Documentation
+# API Documentation (v1)
+
+**API v1 is still unstable**
 
 The API runs on port `20001`. Please check the CORS settings in `api.js`:
+
 ```javascript
 app.use(cors({
 	credentials: true,
 	origin: 'http://localhost'
 }));
 ```
-It has not been acertained that the `.find()` method returns _all_ results. Create a GitHub issue if the responses seem to be limited to the first 20.
+All authenticated endpoints require an `Authentication` header with the token retrieved from the login endpoint.
+
+_It has not been ascertained that the `.find()` method returns _all_ results. Create a GitHub issue if the responses seem to be limited to the first 20._
 
 ## Common Responses
 
@@ -16,15 +21,16 @@ It has not been acertained that the `.find()` method returns _all_ results. Crea
 | `{"success": true}`                         | The request was successfully completed                       |
 | `{"success": false, "error": "ERROR_CODE"}` | The request was unsuccessful due to the error stated in `error` |
 
-| Error Code        | Definition                                                   |
-| ----------------- | ------------------------------------------------------------ |
-| `unknown`         | The reason for the failure is not documented                 |
-| `session_expired` | The user was logged out due to a permissions change (**this has not been tested**) |
-| `auth`            | The endpoint is authenticated but the user has not logged in |
+| Error           | Error Code | Definition                                                   |
+| --------------- | ---------- | ------------------------------------------------------------ |
+| `unknown`       | 500        | The reason for the failure is not documented                 |
+| `missing-token` | 401        | The request did not send an `Authorization` header, but the endpoint is authenticated |
+| `wrong-token`   | 401        | The token sent has either expired or been tampered with      |
+| `permissions`   | 403        | The user does not have sufficient permissions to run the operation |
 
 ## Accounts
 
-### `/account/create`
+### `/v1/account/create`
 
 Creates a new account
 
@@ -53,10 +59,10 @@ Creates a new account
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/account/taken/username`
+### `/v1/account/taken/username`
 
 Checks if a username has been taken
 
@@ -84,10 +90,10 @@ Checks if a username has been taken
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/account/taken/email`
+### `/v1/account/taken/email`
 
 Checks if an email address has been taken
 
@@ -115,10 +121,10 @@ Checks if an email address has been taken
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/account/login`
+### `/v1/account/login`
 
 Login endpoint
 
@@ -136,49 +142,23 @@ Login endpoint
 ```json
 {
 	"success": true,
-	"permissions": "int from 0-2"
+	"permissions": "int from 0-2",
+	"token": "TOKEN_STRING"
 }
 ```
 
 #### Remarks
 
-* Sets a session cookie
-
 #### Errors
 
-| Error Code | Definition                           |
-| ---------- | ------------------------------------ |
-| `username` | The username submitted was not found |
-| `password` | The password submitted was wrong     |
+| Error            | Definition                           |
+| ---------------- | ------------------------------------ |
+| `wrong-username` | The username submitted was not found |
+| `wrong-password` | The password submitted was wrong     |
 
-### `/account/logout`
+### `/v1/account/type`
 
-Creates a new account  
-Authenticated
-
-#### Input
-
-```
-No input required
-```
-
-#### Output
-
-```json
-{
-	"success": true
-}
-```
-
-#### Errors
-
-```
-No special error codes
-```
-
-### `/account/type`
-
-Returns the permissions level of the logged-in user  
+Returns the updated permissions level of the logged-in user  
 Authenticated
 
 #### Input
@@ -192,17 +172,17 @@ No input required
 ```json
 {
 	"success": true,
-	"type": "user/elevated/admin]"
+	"type": "int from 0-2"
 }
 ```
 
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/account/password`
+### `/v1/account/password`
 
 Change the password of the user  
 Authenticated
@@ -226,13 +206,13 @@ Authenticated
 
 #### Errors
 
-| Error Code       | Definition                                           |
+| Error            | Definition                                           |
 | ---------------- | ---------------------------------------------------- |
-| `notfound`       | The username specified was not found                 |
-| `empty_password` | The `new_password` field is empty                    |
-| `password`       | The `password` field does not match the old password |
+| `not-found`      | The username specified was not found                 |
+| `empty-password` | The `new_password` field is empty                    |
+| `wrong-password` | The `password` field does not match the old password |
 
-### `/account/list`
+### `/v1/account/list`
 
 List all accounts  
 Authenticated // Permissions: 2
@@ -270,11 +250,11 @@ Authenticated // Permissions: 2
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to list all users |
 
-### `/account/permissions`
+### `/v1/account/permissions`
 
 Changes the permissions of an account  
 Authenticated // Permissions: 2
@@ -298,12 +278,12 @@ Authenticated // Permissions: 2
 
 #### Errors
 
-| Error Code    | Definition                                                   |
-| ------------- | ------------------------------------------------------------ |
-| `permissions` | The logged-in user does not have sufficient permissions to change another user's permission |
-| `outofrange`  | `type` is not between 0 to 2                                 |
+| Error          | Definition                                                   |
+| -------------- | ------------------------------------------------------------ |
+| `permissions`  | The logged-in user does not have sufficient permissions to change another user's permission |
+| `out-of-range` | `type` is not between 0 to 2                                 |
 
-### `/account/delete`
+### `/v1/account/delete`
 
 Deletes an account  
 Authenticated // Permissions: 2 for some features
@@ -332,13 +312,13 @@ Authenticated // Permissions: 2 for some features
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to delete another user |
 
 ## Challenges
 
-### `/challenge/list`
+### `/v1/challenge/list`
 
 Show all available challenges  
 Authenticated
@@ -378,10 +358,10 @@ No input required
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/challenge/list_all`
+### `/v1/challenge/list_all`
 
 Show all challenges  
 Authenticated // Permissions: 2
@@ -423,10 +403,10 @@ No input required
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/challenge/show/:chall`
+### `/v1/challenge/show/:chall`
 
 Get the details of a challenge  
 Authenticated
@@ -458,11 +438,12 @@ GET: /account/score/CHALLENGE_NAME
 		],
 		"hints": [
 			{
-				"hint": "HINT_CONTENTS"
+				"hint": "HINT_CONTENTS" // hint 1
 			},
 			{
-				"cost": "int"
+				"cost": "int" // hint 2
 			}
+			// etc
 		]
 	}
 }
@@ -471,18 +452,75 @@ GET: /account/score/CHALLENGE_NAME
 #### Remarks
 
 * Only shows challenges with `visibility: true`
-* Currently, there is no API endpoint to get challenges with `visibility: false`
-* There is also no way to get all the info (e.g. flags) for the admin panel
 * Missing information: number of attempts used up
 * Hints: if the hint has been bought, the object will print the hint directly. If not, the `cost` key will be an integer of the number of points needed
 
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
-### `/challenge/hint`
+### `/v1/challenge/show/:chall/detailed`
+
+Get all the details of a challenge  
+Authenticated // Permissions: 2
+
+#### Input
+
+```
+GET: /account/score/CHALLENGE_NAME/detailed
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"challenge": {
+		"name": "CHALLENGE_NAME",
+		"category": "CHALLENGE_CATEGORY",
+		"description": "CHALLENGE_DESCRIPTION (HTML)",
+		"points": "int",
+		"author": "CHALLENGE_AUTHOR",
+		"created": "CREATION_TIMESTAMP",
+		"solves": [
+			"USERNAME_OF_SOLVER"
+		],
+		"max_attempts": "int (0 means unlimited)",
+		"tags": [
+			"CHALLENGE_TAG"
+		],
+		"visibility": "bool",
+		"flags": [
+			"FLAG"
+		],
+		"hints": [
+			{
+				"hint": "HINT_CONTENTS",
+				"cost": "int",
+				"purchased": [
+					"USERNAME"
+				]
+			},
+			{
+				"hint": "HINT_CONTENTS",
+				"cost": "int",
+				"purchased": [
+					"USERNAME"
+				]
+			}
+		]
+	}
+}
+```
+
+#### Errors
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `permissions` | The logged-in user does not have sufficient permissions to create a new challenge |
+
+### `/v1/challenge/hint`
 
 Buy a hint for a challenge  
 Authenticated
@@ -511,13 +549,13 @@ Authenticated
 
 #### Errors
 
-| Error Code   | Definition                                                   |
-| ------------ | ------------------------------------------------------------ |
-| `notfound`   | The `CHALLENGE_NAME` specified was invalid                     |
-| `bought`     | This hint has already been bought by the user and can be accessed through `/challenge/show/:chall` |
-| `outofrange` | The `id` field is too large or too small (minimum is 0)      |
+| Error          | Definition                                                   |
+| -------------- | ------------------------------------------------------------ |
+| `not-found`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `bought`       | This hint has already been bought by the user and can be accessed through `/v1/challenge/show/:chall` |
+| `out-of-range` | The `id` field is too large or too small (minimum is 0)      |
 
-### `/challenge/submit`
+### `/v1/challenge/submit`
 
 Submit a flag for a challenge  
 Authenticated
@@ -535,7 +573,8 @@ Authenticated
 
 ```json
 {
-	"success": true
+	"success": true,
+	"data": "correct/ding dong your flag is wrong"
 }
 ```
 
@@ -545,14 +584,13 @@ Authenticated
 
 #### Errors
 
-| Error Code                     | Definition                                                   |
-| ------------------------------ | ------------------------------------------------------------ |
-| `notfound`                     | The `CHALLENGE_NAME` specified was invalid                     |
-| `submitted`                    | This challenge was already solved                            |
-| `exceeded`                     | The user has already exceeded the maximum number of attempts allowed |
-| `ding dong your flag is wrong` | oops                                                         |
+| Error       | Definition                                                   |
+| ----------- | ------------------------------------------------------------ |
+| `not-found` | The `CHALLENGE_NAME` specified was invalid                   |
+| `submitted` | This challenge was already solved                            |
+| `exceeded`  | The user has already exceeded the maximum number of attempts allowed |
 
-#### `/challenge/new`
+#### `/v1/challenge/new`
 
 Create a new challenge  
 Authenticated // Permissions: 1
@@ -597,13 +635,15 @@ Authenticated // Permissions: 1
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to create a new challenge |
 | `exists`      | **UNUSED** Another challenge already exists with this name   |
 | `validation`  | The input was malformed                                      |
 
-### `/challenge/visibility/chall`
+### `/v0/challenge/visibility/chall`
+
+**DEPRECATED. USE `/v1/challenge/edit` INSTEAD**
 
 Set the visibility of a challenge  
 Authenticated // Permissions: 2
@@ -627,12 +667,14 @@ Authenticated // Permissions: 2
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
-| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `not-found`   | The `CHALLENGE_NAME` specified was invalid                   |
 | `permissions` | The logged-in user does not have sufficient permissions to change a challenge visibility |
 
-### `/challenge/visibility/category`
+### `/v0/challenge/visibility/category`
+
+**DEPRECATED. USE `/v1/challenge/edit/category` INSTEAD**
 
 Set the visibility of all challenges in a category  
 Authenticated // Permissions: 2
@@ -656,14 +698,99 @@ Authenticated // Permissions: 2
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
 | `permissions` | The logged-in user does not have sufficient permissions to change a challenge visibility |
 
+### `/v1/challenge/edit`
+
+Edit a challenge  
+Authenticated // Permissions: 2
+
+#### Input
+```json
+{
+	"chall": "CHALLENGE_NAME",
+	"name": "NEW_CHALLENGE_NAME",
+	"category": "NEW_CATEGORIES",
+	"description": "NEW_CHALLENGE_DESCRIPTION (HTML)",
+	"points": "NEW_POINTS (int)",
+	"flags": [
+		"NEW_FLAG"
+	],
+	"tags": [
+		"NEW_TAG"
+	],
+	"hints": [{
+		"hint": "NEW_HINT",
+		"cost": "NEW_HINT_COST (int)",
+		"purchased": [
+			"USERNAME (required, even if empty)"
+		]
+	}],
+	"max_attempts": "int",
+	"visibility": "bool",
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Remarks
+
+* All fields other than `chall` are optional.
+* **All entries must be filled with the original data as well**
+  * e.g. to add a new flag, input `["old flag", "new flag"]`
+  * Deletes hint purchases **without compensation** if this is not done (but can also be used to award hints to users)
+* No way to edit solves yet
+* This endpoint allows duplicate names: should this be allowed? (slows the service down slightly to check)
+* File uploads have not been implemented
+* Validation must be done on the client side as the server does not produce meaning output (integers are passed **not** through `parseInt` - perform on client side)
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
+
+### `/v1/challenge/edit/category`
+
+Edit a category's metadata  
+Authenticated // Permissions: 2
+
+#### Input
+```
+{
+	"category": "CATEGORY_NAME",
+	"new_name": "NEW_CATEGORY_NAME (optional)",
+	"visibility": "bool (optional)"
+}
+```
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
+
 ### Miscellaneous
 
-### `/scoreboard`
+### `/v1/scoreboard`
 
 Get all user score changes with timestamps  
 Authenticated
@@ -700,7 +827,7 @@ No input required
 * This endpoint is probably very slow (needs to look through every document)
 * `points` is non-zero
 
-### `/scoreboard/:username`
+### `/v1/scoreboard/:username`
 
 **HAS NOT BEEN IMPLEMENTED AND IS SUBJECT TO CHANGE**
 
@@ -717,28 +844,28 @@ GET: /scoreboard/USERNAME_OF_USER_TO_CHECK
 
 ```json
 {
-    "success": true,
-    "scores": [
-        {
-            "challenge": "CHALLENGE_NAME",
-            "type": "submission/hint",
-            "timestamp": "TIMESTAMP",
-            "points": "int"
-        },
-        {
-            "challenge": "CHALLENGE_NAME",
-            "type": "submission/hint",
-            "timestamp": "TIMESTAMP",
-            "points": "int"
-        }
-    ]
+	"success": true,
+	"scores": [
+		{
+			"challenge": "CHALLENGE_NAME",
+			"type": "submission/hint",
+			"timestamp": "TIMESTAMP",
+			"points": "int"
+		},
+		{
+			"challenge": "CHALLENGE_NAME",
+			"type": "submission/hint",
+			"timestamp": "TIMESTAMP",
+			"points": "int"
+		}
+	]
 }
 ```
 
 #### Errors
 
 ```
-No special error codes
+No special errors
 ```
 
 ### `submissions`
@@ -756,24 +883,24 @@ No input required
 
 ```json
 {
-    "success": true,
-    "submissions": [
-        {
-            "_id": "SUBMISSION_ID (like 5ed326c62d0f6f32a834f049)",
-            "author": "SUBMITTOR",
-            "challenge": "CHALLENGE_NAME",
-            "timestamp": "TIMESTAMP",
-            "type": "submission/blocked_submission",
-            "points": "int",
-            "correct": "bool",
-            "submission": "SUBMITTED_FLAG"
-        }
-    ]
+	"success": true,
+	"submissions": [
+		{
+			"_id": "SUBMISSION_ID (like 5ed326c62d0f6f32a834f049)",
+			"author": "SUBMITTOR",
+			"challenge": "CHALLENGE_NAME",
+			"timestamp": "TIMESTAMP",
+			"type": "submission/blocked_submission",
+			"points": "int",
+			"correct": "bool",
+			"submission": "SUBMITTED_FLAG"
+		}
+	]
 }
 ```
 
 #### Errors
 
-| Error Code    | Definition                                                   |
+| Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to view submissions |
