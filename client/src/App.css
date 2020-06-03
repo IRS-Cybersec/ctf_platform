@@ -1,0 +1,25 @@
+@keyframes buttonHover {
+    from {
+        background-color: #1765ad;
+    }
+    to {
+        background-color: #112a45;
+    }
+}
+
+.buttonHover:hover {
+    animation-name: buttonHover;
+    animation-duration: 0.35s;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+}
+
+.card-design {
+    border-color: #1890ff !important;
+    border-radius: 5px !important;
+    transition: 0.38s;
+}
+
+.card-design:hover {
+    opacity: 0.6;
+}
