@@ -1,11 +1,12 @@
 import React from 'react';
-import { Layout, Menu, Button, Avatar, Divider, message } from 'antd';
+import { Layout, Menu, Button, Avatar, Divider, message, Dropdown } from 'antd';
 import {
   FlagTwoTone,
   HomeTwoTone,
   FundTwoTone,
   NotificationTwoTone,
-  SmileTwoTone,
+  UserOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
@@ -20,6 +21,9 @@ const { Header, Content, Footer, Sider } = Layout;
 
 var previousLocation = ""
 
+
+
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -27,7 +31,7 @@ class App extends React.Component {
     this.state = {
       collapsed: false,
       current: "Home",
-      signedIn: false,
+      token: false,
       permissions: 0
     };
   }
@@ -37,20 +41,44 @@ class App extends React.Component {
     this.setState({ collapsed });
   }
 
-  // Handle any page changes via manual typing/direct access
+
   componentWillMount() {
+    // Handle any page changes via manual typing/direct access
     const page = this.props.location.pathname.slice(1);
 
     if (previousLocation !== page) {
       previousLocation = page
       this.setState({ current: page })
     }
+
+
+    // Handles "remember me" logins
+    if (!this.state.token) {
+      const token = localStorage.getItem("IRSCTF-token")
+      if (token !== null) {
+        this.setState({ token: token })
+      }
+    }
   }
 
-  handleLogin(receivedToken, permissions) {
+  // Callback function for Login component to set token and perms
+  handleLogin(receivedToken, permissions, remember) {
     this.setState({ token: receivedToken, permissions: permissions })
-    localStorage.setItem('IRSCTF-token', receivedToken)
-    message.success({ content: "Successfully logined. Welcome back to IRS Cybersec CTF Platform"})
+
+    if (remember === true) {
+      localStorage.setItem('IRSCTF-token', receivedToken)
+    }
+    else {
+      sessionStorage.setItem("IRSCTF-token", receivedToken);
+    }
+    message.success({ content: "Successfully logined. Welcome back to IRS Cybersec CTF Platform" })
+  }
+
+  handleLogout() {
+    sessionStorage.removeItem("IRSCTF-token")
+    localStorage.removeItem("IRSCTF-token")
+    this.setState({ token: false })
+    message.info({content: "Logged out. See you next time :D!"})
   }
 
 
@@ -59,7 +87,7 @@ class App extends React.Component {
       <div>
         {this.state.token && (
           <Layout style={{ height: "100vh", width: "100vw" }}>
-            <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse}>
+            <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse} style={{ width: "15vw" }}>
               <div style={{ height: "9vh", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
                 <img src="https://jloh02.github.io/images/CTF/cyberthon-2020/cyberthon.png" style={{ maxWidth: "13vw", maxHeight: "8vh", marginRight: "1vw" }}></img>
                 <Divider type="vertical" style={{ height: "6vh" }}></Divider>
@@ -108,17 +136,31 @@ class App extends React.Component {
             </Sider>
 
             <Layout style={{ width: "100vw", height: "100vh" }}>
-              <Header className="site-layout-background" style={{ height: "9vh" }}>
-                <div className="buttonHover"
-                  onClick={() => { this.props.history.push("/Profile") }}
-                  style={{ display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", height: "9vh", float: "right", paddingLeft: "1vw", paddingRight: "1vw", backgroundColor: "#1765ad", borderRadius: "5px", cursor: "pointer" }}>
-                  <h3 style={{ marginRight: "1vw" }}>Tkaixiang</h3>
-                  <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
-                </div>
+              <Header className="site-layout-background" style={{ height: "9vh", position: "fixed", zIndex: 1, width: "85vw" }}>
+                <Dropdown overlay={
+                  <Menu>
+                    <Menu.Item key="0">
+                      <NavLink to="/Profile">
+                        <span>Profile </span>
+                        <UserOutlined />
+                      </NavLink>
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item key="logout" onClick={this.handleLogout.bind(this)}>
+                      <span style={{ color: "#d32029" }}>Logout <LogoutOutlined /></span>
+                    </Menu.Item>
+                  </Menu>}
+                  trigger={['click']}>
+                  <div className="buttonHover"
+                    style={{ display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", height: "9vh", float: "right", paddingLeft: "1vw", paddingRight: "1vw", backgroundColor: "#1765ad", borderRadius: "5px", cursor: "pointer" }}>
+                    <h3 style={{ marginRight: "1vw" }}>Tkaixiang</h3>
+                    <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
+                  </div>
+                </Dropdown>
               </Header>
 
 
-              <Content style={{ margin: '10px 20px' }}>
+              <Content style={{ margin: '10vh 20px' }}>
                 <Switch>
                   <div>
                     <Route exact path='/' component={home} />

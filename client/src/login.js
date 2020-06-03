@@ -62,12 +62,12 @@ class Login extends React.Component {
         }).then((data) => {
             console.log(data)
             if (data.success === true) {
-                this.props.handleLogin(data.token, data.permissions)
+                this.props.handleLogin(data.token, data.permissions, values.remember)
             }
             else {
 
                 if (data.error === "wrong-username") {
-                    message.error({ content: "Oops. Wrong username"})
+                    message.error({ content: "Oops. Username does not exist"})
                 }
                 else if (data.error === "wrong-password") {
                     message.error({ content: "Oops. Wrong password"})
