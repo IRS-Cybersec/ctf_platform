@@ -6,16 +6,20 @@ import {
   FundTwoTone,
   NotificationTwoTone,
   UserOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  CodeTwoTone
 } from '@ant-design/icons';
 import './App.css';
-import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
+import { NavLink, Switch, Route, withRouter, useHistory, useLocation, Redirect } from 'react-router-dom';
 import home from "./home.js";
 import challenges from "./challenges.js";
-import profile from "./profile.js";
+import Profile from "./profile.js";
 import Scoreboard from "./Scoreboard.js";
 import announcements from "./announcements.js";
 import Login from "./login.js";
+import admin from "./admin.js";
+import Oops from "./oops.js";
+
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -32,6 +36,7 @@ class App extends React.Component {
       collapsed: false,
       current: "Home",
       token: false,
+      username: "",
       permissions: 0
     };
   }
@@ -55,15 +60,38 @@ class App extends React.Component {
     // Handles "remember me" logins
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
+
+      
       if (token !== null) {
-        this.setState({ token: token })
+
+          // Get permissions from server
+          fetch("https://api.irscybersec.tk/v1/account/type", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+          }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+          }).then((data) => {
+            if (data.success === true) {
+              const username = token.split(".")[0]
+              this.setState({ permissions: data.type, token: token, username: username})
+              message.success({content: "Session restored. Welcome back " + username})
+            }
+            else { 
+              //Might be a fake token since server does not have it, exit
+              this.setState({ token: false })
+              message.error({content: "Oops. Failed to restore session, please login again"})
+            }
+          }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting to the server" });
+          })
       }
     }
   }
 
   // Callback function for Login component to set token and perms
   handleLogin(receivedToken, permissions, remember) {
-    this.setState({ token: receivedToken, permissions: permissions })
+    const username = receivedToken.split(".")[0]
+    this.setState({ token: receivedToken, permissions: permissions, username: username })
 
     if (remember === true) {
       localStorage.setItem('IRSCTF-token', receivedToken)
@@ -71,14 +99,14 @@ class App extends React.Component {
     else {
       sessionStorage.setItem("IRSCTF-token", receivedToken);
     }
-    message.success({ content: "Successfully logined. Welcome back to IRS Cybersec CTF Platform" })
+    message.success({ content: "Logged In! Welcome " + username })
   }
 
   handleLogout() {
     sessionStorage.removeItem("IRSCTF-token")
     localStorage.removeItem("IRSCTF-token")
     this.setState({ token: false })
-    message.info({content: "Logged out. See you next time :D!"})
+    message.info({ content: "Logged out. See you next time :D!" })
   }
 
 
@@ -90,7 +118,7 @@ class App extends React.Component {
             <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse} style={{ width: "15vw" }}>
               <div style={{ height: "9vh", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
                 <img src="https://jloh02.github.io/images/CTF/cyberthon-2020/cyberthon.png" style={{ maxWidth: "13vw", maxHeight: "8vh", marginRight: "1vw" }}></img>
-                <Divider type="vertical" style={{ height: "6vh" }}></Divider>
+                <Divider type="vertical" style={{ height: "6vh", zIndex: 2 }}></Divider>
               </div>
               <Menu
                 selectedKeys={[this.state.current]}
@@ -132,6 +160,18 @@ class App extends React.Component {
                   </NavLink>
                 </Menu.Item>
 
+                <Menu.Divider />
+
+                {this.state.permissions === 2 && (
+
+                  <Menu.Item key="Admin" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center", color: "#d32029" }}>
+                    <NavLink to="/Admin">
+                      <CodeTwoTone style={{ fontSize: "1.4vw" }} twoToneColor="#d32029" />
+                      <span>Admin Panel</span>
+                    </NavLink>
+                  </Menu.Item>
+                )}
+
               </Menu>
             </Sider>
 
@@ -153,7 +193,7 @@ class App extends React.Component {
                   trigger={['click']}>
                   <div className="buttonHover"
                     style={{ display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", height: "9vh", float: "right", paddingLeft: "1vw", paddingRight: "1vw", backgroundColor: "#1765ad", borderRadius: "5px", cursor: "pointer" }}>
-                    <h3 style={{ marginRight: "1vw" }}>Tkaixiang</h3>
+                    <h3 style={{ marginRight: "1vw" }}>{this.state.username}</h3>
                     <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
                   </div>
                 </Dropdown>
@@ -162,13 +202,18 @@ class App extends React.Component {
 
               <Content style={{ margin: '10vh 20px' }}>
                 <Switch>
-                  <div>
                     <Route exact path='/' component={home} />
                     <Route exact path='/Challenges' component={challenges} />
                     <Route exact path='/Scoreboard' component={Scoreboard} />
                     <Route exact path='/Announcements' component={announcements} />
-                    <Route path='/Profile' component={profile} />
-                  </div>
+                    <Route path='/Profile' render={(props) => <Profile {...props} token={this.state.token} username={this.state.username} />} />
+                    <Route path='/Oops' component={Oops} />
+
+                    {this.state.permissions === 2 ? (
+                      <Route path='/Admin' component={admin} />
+                    ) : (
+                      <Redirect to="/Oops" />
+                    )}
 
 
                 </Switch>
