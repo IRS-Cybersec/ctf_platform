@@ -319,21 +319,20 @@ Authenticated // Permissions: 2 for some features
 
 ## Challenges
 
-### `/v1/challenge/list`
+### `/v1/challenge/list/:category`
 
 Show all available challenges  
 Authenticated
 
 #### Input
 
-```json
-{
-	"category": "CHALLENGE_CATEGORY (optional)"
-}
+```
+GET /v1/challenge/list/CATEGORY_NAME (optional)
 ```
 
 #### Output
 
+**Without `:category`**
 ```json
 {
 	"success": true,
@@ -353,6 +352,19 @@ Authenticated
 	]
 }
 ```
+**With `:category`**
+```json
+{
+	"success": true,
+	"challenges": [
+		{
+			"name": "CHALLENGE_NAME",
+			"points": "int",
+			"solved": "bool"
+		}
+	]
+}
+```
 
 #### Remarks
 
@@ -360,9 +372,9 @@ Authenticated
 
 #### Errors
 
-| Error       | Definition                                          |
-| ----------- | --------------------------------------------------- |
-| `not-found` | The category specified does not have any challenges |
+| Error       | Definition                                                    |
+| ----------- | ------------------------------------------------------------- |
+| `not-found` | No challenges were found (matching the criteria if specified) |
 
 ### `/v1/challenge/list_all`
 
@@ -417,7 +429,7 @@ Authenticated
 #### Input
 
 ```
-GET: /account/score/CHALLENGE_NAME
+GET: /v1/account/score/CHALLENGE_NAME
 ```
 
 #### Output
@@ -472,7 +484,7 @@ Authenticated // Permissions: 2
 #### Input
 
 ```
-GET: /account/score/CHALLENGE_NAME/detailed
+GET: /v1/account/score/CHALLENGE_NAME/detailed
 ```
 
 #### Output
@@ -840,7 +852,7 @@ Authenticated
 #### Input
 
 ```
-GET: /scoreboard/USERNAME_OF_USER_TO_CHECK
+GET: /v1/scoreboard/USERNAME_OF_USER_TO_CHECK
 ```
 
 #### Output

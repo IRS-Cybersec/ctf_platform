@@ -325,31 +325,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 
 	// Note to self: there should be a better way of doing this
-	app.get('/v1/challenge/list', async (req, res) => {
+	app.get('/v1/challenge/list/:category?', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			let challenges = req.body.category == undefined ?
-				await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray() :
-				await collections.challs.find({visibility: true, category: req.body.category}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray();
-			if (req.body.category && challenges.length == 0) throw new Error('NotFound')
-			challenges.forEach(chall => {
-				chall.solved = chall.solves.includes(username);
-				delete chall.solves;
-			});
-			res.send({
-				success: true,
-				challenges: challenges
-			});
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
-	app.get('/v1/challenge/list/category', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
+			let challenges = req.params.category == undefined ?
+				await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1, _id: 0}}).toArray() :
+				await collections.challs.find({visibility: true, category: req.params.category}, {projection: {name: 1, points: 1, solves: 1, _id: 0}}).toArray();
+			if (challenges.length == 0) throw new Error('NotFound')
 			challenges.forEach(chall => {
 				chall.solved = chall.solves.includes(username);
 				delete chall.solves;
