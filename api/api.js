@@ -13,7 +13,6 @@ app.use(express.json());
 // 	origin: 'http://localhost'
 // }));
 app.use(cors());
-console.info('Initialization complete');
 
 function errors(err, res) {
 	switch (err.message) {
@@ -53,14 +52,6 @@ function errors(err, res) {
 			});
 			return true;
 	}
-	if (err.errmsg == 'Document failed validation') {
-		res.status(400);
-		res.send({
-			success: false,
-			error: 'validation'
-		});
-		return true;
-	}
 	if (err.message.includes('BadSignature')) {
 		res.status(401);
 		res.send({
@@ -69,13 +60,27 @@ function errors(err, res) {
 		});
 		return true;
 	}
+	if (err.name == 'MongoError') {
+		switch (err.code) {
+			case 121:
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'validation'
+				});
+				return true;
+		}
+	}
+
 	res.status(500);
 	res.send({
 		success: false,
 		error: 'unknown'
 	});
 	console.log(err);
+	return false;
 }
+console.info('Initialization complete');
 
 MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	useNewUrlParser: true,
@@ -108,7 +113,33 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({success: true});
 		}
 		catch (err) {
-			errors(err, res);
+			if (err instanceof MongoError) {
+				switch (err.code) {
+					case 11000:
+						switch (Object.keys(err.keyPattern)[0]) {
+							case 'username':
+								res.status(403);
+								res.send({
+									success: false,
+									error: 'username-taken'
+								});
+								break;
+							case 'email':
+								res.status(403);
+								res.send({
+									success: false,
+									error: 'email-taken'
+								});
+								break;
+						}
+						res.send({
+							success: false,
+							error: 'validation'
+						});
+						return true;
+				}
+			}
+			else errors(err, res);
 		}
 	});
 	app.post('/v1/account/taken/username', async (req, res) => {
@@ -203,7 +234,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			});
 			await collections.challs.deleteMany({author: userToDelete});
 			await collections.transactions.deleteMany({author: userToDelete});
-			if (userToDelete == username) req.session.destroy();
+			if (permissions.includes(username)) delete permissions[username];
 			res.send({success: true});
 		}
 		catch (err) {
@@ -298,9 +329,29 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			let challenges = await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray();
+			let challenges = req.body.category == undefined ?
+				await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray() :
+				await collections.challs.find({visibility: true, category: req.body.category}, {projection: {name: 1, category: 1, points: 1, solves: 1}}).toArray();
+			if (req.body.category && challenges.length == 0) throw new Error('NotFound')
 			challenges.forEach(chall => {
-				chall.solved = chall.solves.includes(username)
+				chall.solved = chall.solves.includes(username);
+				delete chall.solves;
+			});
+			res.send({
+				success: true,
+				challenges: challenges
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/challenge/list/category', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			challenges.forEach(chall => {
+				chall.solved = chall.solves.includes(username);
 				delete chall.solves;
 			});
 			res.send({
@@ -524,8 +575,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.body.hints) {
 				doc.hints = req.body.hints;
 				doc.hints.forEach(hint => {
-					// if (!hint.cost) throw new Error('Document failed validation');
-					// hint.cost = parseInt(hint.cost);
+					if (!hint.cost) throw new Error('MissingHintCost');
+					hint.cost = parseInt(hint.cost);
 					hint.purchased = [];
 				});
 			}
@@ -545,20 +596,24 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({success: true});
 		}
 		catch (err) {
-			if (err.errmsg) {
-				if (err.errmsg.includes('duplicate key error collection')) res.send({
+			// if (err.errmsg) {
+			// 	if (err.errmsg.includes('duplicate key error collection')) res.send({
+			// 		success: false,
+			// 		error: 'exists'
+			// 	});
+			// }
+			// else res.send({
+			// 	success: false,
+			// 	error: 'unknown'
+			// });
+			if (err.message == 'MissingHintCost') {
+				res.status(400);
+				res.send({
 					success: false,
-					error: 'exists'
-				});
-				else res.send({
-					success: false,
-					error: 'unknown'
+					error: 'validation'
 				});
 			}
-			else res.send({
-				success: false,
-				error: 'unknown'
-			});
+			errors(err, res);
 		}
 	});
 	app.post('/v0/challenge/visibility/chall', async (req, res) => {
@@ -628,6 +683,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	app.get('/v1/scoreboard', async (req, res) => {
 		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			signer.unsign(req.headers.authorization);
 			res.send({
 				success: true,
@@ -640,6 +696,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.get('/v1/scoreboard/:username', async (req, res) => {
 		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			signer.unsign(req.headers.authorization);
 			res.send({
 				success: true,

@@ -58,9 +58,10 @@ Creates a new account
 
 #### Errors
 
-```
-No special errors
-```
+| Error            | Definition                               |
+| ---------------- | ---------------------------------------- |
+| `username-taken` | The username submitted is already in use |
+| `email-taken`    | The email submitted is already in use    |
 
 ### `/v1/account/taken/username`
 
@@ -325,8 +326,10 @@ Authenticated
 
 #### Input
 
-```
-No input required
+```json
+{
+	"category": "CHALLENGE_CATEGORY (optional)"
+}
 ```
 
 #### Output
@@ -357,9 +360,9 @@ No input required
 
 #### Errors
 
-```
-No special errors
-```
+| Error       | Definition                                          |
+| ----------- | --------------------------------------------------- |
+| `not-found` | The category specified does not have any challenges |
 
 ### `/v1/challenge/list_all`
 
