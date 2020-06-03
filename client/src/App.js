@@ -125,7 +125,7 @@ class App extends React.Component {
                     <Route exact path='/Challenges' component={challenges} />
                     <Route exact path='/Scoreboard' component={Scoreboard} />
                     <Route exact path='/Announcements' component={announcements} />
-                    <Route exact path='/Profile' component={profile} />
+                    <Route path='/Profile' component={profile} />
                   </div>
 
 
