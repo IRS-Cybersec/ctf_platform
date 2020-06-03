@@ -14,7 +14,7 @@ import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'rea
 const { Header, Content, Footer, Sider } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
-class profile extends React.Component {
+class Profile extends React.Component {
 
     constructor(props) {
         super(props);
@@ -72,7 +72,7 @@ class profile extends React.Component {
         var header = (
             <div style={{display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", float: "right"}}>
                 <Avatar style={{backgroundColor:"Red",marginRight: "3%"}} size={100} src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png"/>
-                <Title style={{backgroundColor:"blue"}}>{this.state.username}</Title>
+                <Title style={{backgroundColor:"blue"}}>{this.props.username}</Title>
             </div>
         );
 
@@ -98,4 +98,4 @@ class profile extends React.Component {
     }
 }
 
-export default profile;
+export default Profile;

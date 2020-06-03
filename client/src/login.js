@@ -50,7 +50,7 @@ class Login extends React.Component {
 
     handleLogin = values => {
         console.log('Received values of form: ', values);
-        fetch("https://api.irscybersec.tk//v1/account/login", {
+        fetch("https://api.irscybersec.tk/v1/account/login", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -70,7 +70,7 @@ class Login extends React.Component {
                     message.error({ content: "Oops. Username does not exist"})
                 }
                 else if (data.error === "wrong-password") {
-                    message.error({ content: "Oops. Wrong password"})
+                    message.error({ content: "Oops. Incorrect password"})
                 }
                 else {
                     message.error({ content: "Oops. Unknown error"})
@@ -78,7 +78,7 @@ class Login extends React.Component {
                 
             }
         }).catch((error) => {
-            message.error({ content: "Oops. There was an issue connecting with the server" });
+            message.error({ content: "Oops. There was an issue connecting to the server" });
         })
     }
 
@@ -147,7 +147,7 @@ class Login extends React.Component {
                         )}
                         {this.state.register && (
                             <div>
-                                <h1 style={{ color: "white", fontSize: "2vw" }}>Register <Icon type="unlock" theme="twoTone" /> </h1>
+                                <h1 style={{ color: "white", fontSize: "2vw" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="register_form"
                                     className="register-form"
@@ -203,8 +203,9 @@ class Login extends React.Component {
                                         <Input.Password placeholder="Confirm new password" />
                                     </Form.Item>
                                     <Form.Item>
-                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "1vw" }}>Register</Button>
-                            Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login</a>
+                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
+
+                            <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login Here!</a></p>
                                     </Form.Item>
                                 </Form>
                             </div>
