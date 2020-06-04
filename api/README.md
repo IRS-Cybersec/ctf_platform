@@ -27,6 +27,7 @@ _It has not been ascertained that the `.find()` method returns _all_ results. Cr
 | `missing-token` | 401        | The request did not send an `Authorization` header, but the endpoint is authenticated |
 | `wrong-token`   | 401        | The token sent has either expired or been tampered with      |
 | `permissions`   | 403        | The user does not have sufficient permissions to run the operation |
+| `validation`    | 400        | The input was malformed                                      |
 
 ## Accounts
 
@@ -320,40 +321,48 @@ Authenticated // Permissions: 2 for some features
 
 ## Challenges
 
-### `/v1/challenge/list/:category?`
+### `/v1/challenge/list`
 
-Show all available challenges  
+Show all available challenges, sorted by category  
 Authenticated
 
 #### Input
 
 ```
-GET /v1/challenge/list/CATEGORY_NAME (optional)
+No input required
 ```
 
 #### Output
 
-**Without `:category`**
 ```json
 {
 	"success": true,
-	"challenges": [
+	"data": [
 		{
-			"name": "CHALLENGE_NAME",
-			"category": "CHALLENGE_CATEGORY",
-			"points": "int",
-			"solved": "bool"
-		},
-		{
-			"name": "CHALLENGE_NAME",
-			"category": "CHALLENGE_CATEGORY",
-			"points": "int",
-			"solved": "bool"
+			"_id": "CATEGORY_NAME",
+			"challenges": [
+				{
+					"name": "CHALLENGE_NAME",
+					"points": "int",
+					"solved": "bool"
+				}
+			]
 		}
 	]
 }
 ```
-**With `:category`**
+
+### `/v1/challenge/list/:category`
+
+Show all available challenges in a category  
+Authenticated
+
+#### Input
+
+```
+GET /v1/challenge/list/CATEGORY_NAME
+```
+
 ```json
 {
 	"success": true,

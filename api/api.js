@@ -15,50 +15,52 @@ app.use(express.json());
 app.use(cors());
 
 function errors(err, res) {
-	switch (err.message) {
-		case 'Permissions':
-			res.status(403);
-			res.send({
-				success: false,
-				error: 'permissions'
-			});
-			return true;
-		case 'MissingToken':
+	if (err.message) {
+		switch (err.message) {
+			case 'Permissions':
+				res.status(403);
+				res.send({
+					success: false,
+					error: 'permissions'
+				});
+				return true;
+			case 'MissingToken':
+				res.status(401);
+				res.send({
+					success: false,
+					error: 'missing-token'
+				});
+				return true;
+			case 'NotFound':
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'not-found'
+				});
+				return true;
+			case 'WrongPassword':
+				res.status(401);
+				res.send({
+					success: false,
+					error: 'wrong-password'
+				});
+				return true;
+			case 'OutOfRange':
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'out-of-range'
+				});
+				return true;
+		}
+		if (err.message.includes('BadSignature')) {
 			res.status(401);
 			res.send({
 				success: false,
-				error: 'missing-token'
+				error: 'wrong-token'
 			});
 			return true;
-		case 'NotFound':
-			res.status(400);
-			res.send({
-				success: false,
-				error: 'not-found'
-			});
-			return true;
-		case 'WrongPassword':
-			res.status(401);
-			res.send({
-				success: false,
-				error: 'wrong-password'
-			});
-			return true;
-		case 'OutOfRange':
-			res.status(400);
-			res.send({
-				success: false,
-				error: 'out-of-range'
-			});
-			return true;
-	}
-	if (err.message.includes('BadSignature')) {
-		res.status(401);
-		res.send({
-			success: false,
-			error: 'wrong-token'
-		});
-		return true;
+		}
 	}
 	if (err.name == 'MongoError') {
 		switch (err.code) {
@@ -104,7 +106,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.post('/v1/account/create', async (req, res) => {
 		try {
 			await collections.users.insertOne({
-				username: req.body.username,
+				username: req.body.username.toLowerCase(),
 				email: req.body.email,
 				password: await argon2.hash(req.body.password),
 				type: 0,
@@ -167,10 +169,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.post('/v1/account/login', async (req, res) => {
 		try {
 			const user = await collections.users.findOne({username: req.body.username.toLowerCase()}, {projection: {password: 1, type: 1, _id: 0}});
-			if (!user) {
-				res.clearCookie('session');
-				throw new Error('WrongUsername');
-			}
+			if (!user) throw new Error('WrongUsername');
 			else if (await argon2.verify(user.password, req.body.password)) {
 				permissions[req.body.username] = user.type;
 				res.send({
@@ -179,10 +178,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					token: signer.sign(req.body.username.toLowerCase())
 				});
 			}
-			else {
-				res.clearCookie('session');
-				throw new Error('WrongPassword');
-			}
+			else throw new Error('WrongPassword');
 		}
 		catch (err) {
 			switch (err.message) {
@@ -208,7 +204,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			let userToDelete = username;
 			if (req.body.username) {
-				if (req.session.type < 2) {
+				if (permissions[username].type < 2) {
 					res.status(403);
 					res.send({
 						success: false,
@@ -314,27 +310,53 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				{username: req.body.username.toLowerCase()},
 				{'$set': {type: parseInt(req.body.type)}}
 			)).matchedCount > 0) {
-				res.send({success: true});
 				permissions[req.body.username] = req.body.type;
+				res.send({success: true});
 			}
-			else throw 'NotFound';
+			else throw new Error('NotFound');
 		}
 		catch (err) {
 			errors(err, res);
 		}
 	});
 
-	// Note to self: there should be a better way of doing this
-	app.get('/v1/challenge/list/:category?', async (req, res) => {
+	app.get('/v1/challenge/list/', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			let challenges = req.params.category == undefined ?
-				await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1, _id: 0}}).toArray() :
-				await collections.challs.find({visibility: true, category: req.params.category}, {projection: {name: 1, points: 1, solves: 1, _id: 0}}).toArray();
+			let matchObj = {visibility: true};
+			if (req.params.category) matchObj.category = req.params.category;
+			let challenges = await collections.challs.aggregate([
+				{$match: matchObj},
+				{$group: {
+					_id: '$category',
+					challenges: {$push: {
+						name: '$name',
+						points: '$points',
+						solved: {$in: [username.toLowerCase(), '$solves']}
+					}}
+				}}
+			]).toArray();
+			if (challenges.length == 0) throw new Error('NotFound');
+			res.send({
+				success: true,
+				data: challenges
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	// Update to aggregator
+	app.get('/v1/challenge/list/:category', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			let challenges = await collections.challs.find({visibility: true, category: req.params.category}, {projection: {name: 1, points: 1, solves: 1, _id: 0}}).toArray();
 			if (challenges.length == 0) throw new Error('NotFound')
 			challenges.forEach(chall => {
 				chall.solved = chall.solves.includes(username);
+				chall.firstBlood = chall.solves[0];
 				delete chall.solves;
 			});
 			res.send({
