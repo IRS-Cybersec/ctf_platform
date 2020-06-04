@@ -23,7 +23,7 @@ class Login extends React.Component {
     }
 
     handleRegister = values => {
-        console.log('Received values of form: ', values);
+
         fetch("https://api.irscybersec.tk//v1/account/create", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
@@ -36,12 +36,12 @@ class Login extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!"})
+                message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!" })
             }
             else {
-                message.error({ content: "Oops. Unknown error"})
+                message.error({ content: "Oops. Unknown error" })
             }
-            
+
 
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
@@ -67,15 +67,15 @@ class Login extends React.Component {
             else {
 
                 if (data.error === "wrong-username") {
-                    message.error({ content: "Oops. Username does not exist"})
+                    message.error({ content: "Oops. Username does not exist" })
                 }
                 else if (data.error === "wrong-password") {
-                    message.error({ content: "Oops. Incorrect password"})
+                    message.error({ content: "Oops. Incorrect password" })
                 }
                 else {
-                    message.error({ content: "Oops. Unknown error"})
+                    message.error({ content: "Oops. Unknown error" })
                 }
-                
+
             }
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting to the server" });
@@ -118,7 +118,7 @@ class Login extends React.Component {
                                         name="username"
                                         rules={[{ required: true, message: 'Please enter your username.' }]}
                                     >
-                                        <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
+                                        <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
                                     </Form.Item>
                                     <Form.Item
                                         name="password"
@@ -128,6 +128,7 @@ class Login extends React.Component {
                                             prefix={<LockOutlined className="site-form-item-icon" />}
                                             type="password"
                                             placeholder="Password"
+                                            allowClear
                                         />
                                     </Form.Item>
                                     <Form.Item>
@@ -158,14 +159,18 @@ class Login extends React.Component {
                                         name="username"
                                         rules={[{ required: true, message: 'Please enter a username' }]}
                                     >
-                                        <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
+                                        <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
                                     </Form.Item>
 
                                     <Form.Item
                                         name="email"
-                                        rules={[{ required: true, message: 'Please enter an email' }]}
+                                        rules={[{ required: true, message: 'Please enter an email' },
+                                        {
+                                            type: 'email',
+                                            message: "Please enter a valid email",
+                                        }]}
                                     >
-                                        <Input prefix={<MailOutlined />} placeholder="Enter a new email" />
+                                        <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
                                     </Form.Item>
 
                                     <Form.Item
@@ -178,7 +183,7 @@ class Login extends React.Component {
                                         ]}
                                         hasFeedback
                                     >
-                                        <Input.Password placeholder="Enter a new password" />
+                                        <Input.Password allowClear placeholder="Enter a new password" />
                                     </Form.Item>
 
                                     <Form.Item
@@ -200,12 +205,12 @@ class Login extends React.Component {
                                             }),
                                         ]}
                                     >
-                                        <Input.Password placeholder="Confirm new password" />
+                                        <Input.Password allowClear placeholder="Confirm new password" />
                                     </Form.Item>
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
 
-                            <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login Here!</a></p>
+                                        <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login Here!</a></p>
                                     </Form.Item>
                                 </Form>
                             </div>

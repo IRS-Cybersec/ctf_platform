@@ -17,9 +17,27 @@
 .card-design {
     border-color: #1890ff !important;
     border-radius: 5px !important;
-    transition: 0.38s;
+    transition-duration: 0.38s !important;
 }
 
 .card-design:hover {
     opacity: 0.6;
+}
+
+::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
+	background-color: #1f1f1f;
+}
+
+::-webkit-scrollbar
+{
+	width: 10px;
+	background-color: #8c8c8c;
+}
+
+::-webkit-scrollbar-thumb
+{
+	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.3);
+	background-color: #8c8c8c;
 }

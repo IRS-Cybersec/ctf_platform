@@ -204,6 +204,7 @@ class App extends React.Component {
                 <Switch>
                     <Route exact path='/' component={home} />
                     <Route exact path='/Challenges' component={challenges} />
+                    <Route exact path='/Challenges/:category' component={challenges} />
                     <Route exact path='/Scoreboard' component={Scoreboard} />
                     <Route exact path='/Announcements' component={announcements} />
                     <Route path='/Profile' render={(props) => <Profile {...props} token={this.state.token} username={this.state.username} />} />
@@ -218,9 +219,6 @@ class App extends React.Component {
 
                 </Switch>
               </Content>
-
-
-              <Footer style={{ textAlign: 'center' }}>HCIRS Cybersec CTF Platform &copy; 2020</Footer>
             </Layout>
           </Layout>
         )}

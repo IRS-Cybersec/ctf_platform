@@ -1,17 +1,13 @@
 import React from 'react';
-import { Layout, Menu, Breadcrumb } from 'antd';
+import { Layout, Tabs } from 'antd';
 import {
-  FlagTwoTone,
-  HomeTwoTone,
-  FundTwoTone,
-  NotificationTwoTone,
-  SmileTwoTone,
+  UserOutlined
 } from '@ant-design/icons';
 import './App.css';
+import AdminUsers from "./adminUsers.js";
 import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
 
-const { Header, Content, Footer, Sider } = Layout;
-
+const { TabPane } = Tabs;
 
 class admin extends React.Component {
   constructor(props) {
@@ -25,7 +21,20 @@ class admin extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-          Admin Panel. TBC
+        <Tabs defaultActiveKey="home">
+          <TabPane
+            tab={<span>  Home </span> }
+            key="home"
+          >
+            Admin Panel. Still WIP
+    </TabPane>
+          <TabPane
+            tab={ <span><UserOutlined />Users </span>}
+            key="users"
+          >
+            <AdminUsers></AdminUsers>
+    </TabPane>
+        </Tabs>
       </Layout>
     );
   }

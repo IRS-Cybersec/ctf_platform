@@ -5,24 +5,15 @@ import {
 } from '@ant-design/icons';
 import './App.css';
 import { Link } from 'react-router-dom';
-import ChallengesCategory from "./challengesCategory.js";
 
 const { Meta } = Card;
 
-const categoryImages = [require("./assets/catPhoto1.jpg"), require("./assets/catPhoto2.jpg"), require("./assets/catPhoto3.jpg")]
-
-
-
-  var i = -1
-
-class challenges extends React.Component {
+class ChallengesCategory extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      categories: [],
-      challengeCategory: false,
-      currentCategory: ""
+      challenges: []
     };
   }
 
@@ -30,16 +21,10 @@ class challenges extends React.Component {
     const startup = async () => {
       await this.fetchCategories()
     }
-    startup()
-
-    const category = this.props.match.params.category;
-    if (typeof category !== "undefined") {
-      this.setState({challengeCategory: true, currentCategory: category})
-    }
   }
 
   fetchCategories() {
-    fetch("https://api.irscybersec.tk/v1/challenge/list_categories", {
+    fetch("https://api.irscybersec.tk/v1/challenge/list/" + this.props.category, {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
@@ -47,7 +32,7 @@ class challenges extends React.Component {
     }).then((data) => {
       console.log(data)
       if (data.success === true) {
-        this.setState({ categories: data.categories })
+        this.setState({ categories: data.challenges })
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -63,18 +48,6 @@ class challenges extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-        <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", marginBottom: "5vh" }}>
-          <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
-          <h1 style={{
-            color: "white",
-            position: "relative",
-            bottom: "60%",
-            fontSize: "3vw",
-            backgroundColor: "#164c7e",
-          }}> Challenges</h1>
-        </div>
-
-        {!this.state.challengeCategory && (
         <List
           grid={{ column: 4, gutter: 20 }}
           dataSource={this.state.categories}
@@ -86,15 +59,10 @@ class challenges extends React.Component {
             )
           }}
           renderItem={item => {
-            i += 1
-            if (i > 2) {
-              i = 0
-              
-            }
             return (
               <List.Item key={item}>
                 <Link to={"Challenges/" + item}>
-                  <div onClick={() => {this.setState({challengeCategory: true, currentCategory: item})}}>
+                  <div onClick={console.log("Card click")}>
                     <Card
                       hoverable
                       type="inner"
@@ -102,7 +70,7 @@ class challenges extends React.Component {
                       bodyStyle={{ backgroundColor: "#262626" }}
                       className="card-design"
                       style={{ overflow: "hidden" }}
-                      cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                      cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={""} />}
                     >
                       <Meta
                         title={
@@ -126,15 +94,10 @@ class challenges extends React.Component {
           }
           }
         />
-        )}
-
-        {this.state.challengeCategory && (
-          <ChallengesCategory category={this.state.currentCategory}></ChallengesCategory>
-        )}
       </Layout>
 
     );
   }
 }
 
-export default challenges;
+export default ChallengesCategory;
