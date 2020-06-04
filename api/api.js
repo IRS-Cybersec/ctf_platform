@@ -320,14 +320,39 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
-	// Note to self: there should be a better way of doing this
-	app.get('/v1/challenge/list/:category?', async (req, res) => {
+	app.get('/v1/challenge/list/', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			let challenges = req.params.category == undefined ?
-				await collections.challs.find({visibility: true}, {projection: {name: 1, category: 1, points: 1, solves: 1, _id: 0}}).toArray() :
-				await collections.challs.find({visibility: true, category: req.params.category}, {projection: {name: 1, points: 1, solves: 1, _id: 0}}).toArray();
+			let matchObj = {visibility: true};
+			if (req.params.category) matchObj.category = req.params.category;
+			let challenges = await collections.challs.aggregate([
+				{$match: matchObj},
+				{$group: {
+					_id: '$category',
+					challenges: {$push: {
+						name: '$name',
+						points: '$points',
+						solved: {$in: [username.toLowerCase(), '$solves']}
+					}}
+				}}
+			]).toArray();
+			if (challenges.length == 0) throw new Error('NotFound');
+			res.send({
+				success: true,
+				data: challenges
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	// Update to aggregator
+	app.get('/v1/challenge/list/:category', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			let challenges = await collections.challs.find({visibility: true, category: req.params.category}, {projection: {name: 1, points: 1, solves: 1, _id: 0}}).toArray();
 			if (challenges.length == 0) throw new Error('NotFound')
 			challenges.forEach(chall => {
 				chall.solved = chall.solves.includes(username);

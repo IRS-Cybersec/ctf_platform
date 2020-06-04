@@ -321,40 +321,48 @@ Authenticated // Permissions: 2 for some features
 
 ## Challenges
 
-### `/v1/challenge/list/:category?`
+### `/v1/challenge/list`
 
-Show all available challenges  
+Show all available challenges, sorted by category  
 Authenticated
 
 #### Input
 
 ```
-GET /v1/challenge/list/CATEGORY_NAME (optional)
+No input required
 ```
 
 #### Output
 
-**Without `:category`**
 ```json
 {
 	"success": true,
-	"challenges": [
+	"data": [
 		{
-			"name": "CHALLENGE_NAME",
-			"category": "CHALLENGE_CATEGORY",
-			"points": "int",
-			"solved": "bool"
-		},
-		{
-			"name": "CHALLENGE_NAME",
-			"category": "CHALLENGE_CATEGORY",
-			"points": "int",
-			"solved": "bool"
+			"_id": "CATEGORY_NAME",
+			"challenges": [
+				{
+					"name": "CHALLENGE_NAME",
+					"points": "int",
+					"solved": "bool"
+				}
+			]
 		}
 	]
 }
 ```
-**With `:category`**
+
+### `/v1/challenge/list/:category`
+
+Show all available challenges in a category  
+Authenticated
+
+#### Input
+
+```
+GET /v1/challenge/list/CATEGORY_NAME
+```
+
 ```json
 {
 	"success": true,
