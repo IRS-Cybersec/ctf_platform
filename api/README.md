@@ -27,6 +27,7 @@ _It has not been ascertained that the `.find()` method returns _all_ results. Cr
 | `missing-token` | 401        | The request did not send an `Authorization` header, but the endpoint is authenticated |
 | `wrong-token`   | 401        | The token sent has either expired or been tampered with      |
 | `permissions`   | 403        | The user does not have sufficient permissions to run the operation |
+| `validation`    | 400        | The input was malformed                                      |
 
 ## Accounts
 
