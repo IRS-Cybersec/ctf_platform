@@ -352,7 +352,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			signer.unsign(req.headers.authorization);
 			res.send({
 				success: true,
-				challenges: await collections.challs.distinct('category', {visibility: true})
+				categories: await collections.challs.distinct('category', {visibility: true})
 			});
 		}
 		catch (err) {
