@@ -1,7 +1,8 @@
 import React from 'react';
-import { Layout, Card, List, Progress, message } from 'antd';
+import { Layout, Card, List, Progress, message, Button } from 'antd';
 import {
   LoadingOutlined,
+  LeftCircleTwoTone
 } from '@ant-design/icons';
 import './App.css';
 import { Link } from 'react-router-dom';
@@ -13,7 +14,7 @@ const categoryImages = [require("./assets/catPhoto1.jpg"), require("./assets/cat
 
 
 
-  var i = -1
+var i = -1
 
 class challenges extends React.Component {
   constructor(props) {
@@ -34,7 +35,7 @@ class challenges extends React.Component {
 
     const category = this.props.match.params.category;
     if (typeof category !== "undefined") {
-      this.setState({challengeCategory: true, currentCategory: category})
+      this.setState({ challengeCategory: true, currentCategory: decodeURIComponent(category) })
     }
   }
 
@@ -63,69 +64,96 @@ class challenges extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-        <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", marginBottom: "5vh" }}>
+        <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", marginBottom: "5vh", lineHeight: "1.1" }}>
           <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
-          <h1 style={{
-            color: "white",
-            position: "relative",
-            bottom: "60%",
-            fontSize: "3vw",
-            backgroundColor: "#164c7e",
-          }}> Challenges</h1>
+
+          {!this.state.currentCategory && (
+            <h1 style={{
+              color: "white",
+              position: "relative",
+              bottom: "60%",
+              fontSize: "250%",
+              letterSpacing: ".3rem",
+              backgroundColor: "#164c7e",
+              paddingTop: "10px",
+              paddingBottom: "10px",
+              fontWeight: 300
+            }}> CHALLENGES
+            </h1>
+          )}
+
+          {this.state.currentCategory && (
+            <h1 style={{
+              color: "white",
+              position: "relative",
+              bottom: "70%",
+              fontSize: "140%",
+              letterSpacing: ".3rem",
+              backgroundColor: "#164c7e",
+              paddingTop: "10px",
+              fontWeight: 300
+            }}> CHALLENGES <p style={{ fontSize: "210%", letterSpacing: "normal", paddingBottom: "10px", fontWeight: 400 }}>{this.state.currentCategory}</p></h1>
+            
+          )}
+          {this.state.currentCategory && (
+            <Button type="primary" style={{ display: "block", position: "relative", bottom: "75%", left: "1%" }} icon={<LeftCircleTwoTone twoToneColor="#d89614" />} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: "" }) }} size="large">Back</Button>
+          )}
         </div>
 
+
+
         {!this.state.challengeCategory && (
-        <List
-          grid={{ column: 4, gutter: 20 }}
-          dataSource={this.state.categories}
-          locale={{
-            emptyText: (
-              <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
-                <LoadingOutlined />
-              </div>
-            )
-          }}
-          renderItem={item => {
-            i += 1
-            if (i > 2) {
-              i = 0
-              
-            }
-            return (
-              <List.Item key={item}>
-                <Link to={"Challenges/" + item}>
-                  <div onClick={() => {this.setState({challengeCategory: true, currentCategory: item})}}>
-                    <Card
-                      hoverable
-                      type="inner"
-                      bordered={true}
-                      bodyStyle={{ backgroundColor: "#262626" }}
-                      className="card-design"
-                      style={{ overflow: "hidden" }}
-                      cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
-                    >
-                      <Meta
-                        title={
-                          <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                            <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item}</h1>
-                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-                              <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>20/25</h2>
-                              <Progress type="circle" percent={75} width="3.2vw" strokeColor={{
-                                '0%': '#177ddc',
-                                '100%': '#49aa19',
-                              }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
+          <List
+            grid={{ column: 4, gutter: 20 }}
+            dataSource={this.state.categories}
+            locale={{
+              emptyText: (
+                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                  <LoadingOutlined style={{color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1}}/>
+                </div>
+              )
+            }}
+            renderItem={item => {
+              i += 1
+              if (i > 2) {
+                i = 0
+
+              }
+              return (
+                <List.Item key={item}>
+                  <Link to={"Challenges/" + item}>
+                    <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item }) }}>
+                      <Card
+                        hoverable
+                        type="inner"
+                        bordered={true}
+                        bodyStyle={{ backgroundColor: "#262626" }}
+                        className="card-design"
+                        style={{ overflow: "hidden" }}
+                        cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                      >
+                        <Meta
+                          title={
+                            <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
+                              <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item}</h1>
+                              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
+                                <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>20/25</h2>
+                                <Progress type="circle" percent={75} width="3.2vw" strokeColor={{
+                                  '0%': '#177ddc',
+                                  '100%': '#49aa19',
+                                }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
+                              </div>
                             </div>
-                          </div>
-                        }
-                      />
-                    </Card> {/*Pass entire datasource as prop*/}
-                  </div>
-                </Link>
-              </ List.Item>
-            )
-          }
-          }
-        />
+                          }
+                        />
+                      </Card> {/*Pass entire datasource as prop*/}
+                    </div>
+                  </Link>
+                </ List.Item>
+              )
+            }
+            }
+          />
         )}
 
         {this.state.challengeCategory && (

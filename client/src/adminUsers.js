@@ -58,7 +58,6 @@ class AdminUsers extends React.Component {
     }
 
     changePermissions = () => {
-        console.log("test")
         this.setState({ modalLoading: true })
         fetch("https://api.irscybersec.tk/v1/account/permissions", {
             method: 'post',
