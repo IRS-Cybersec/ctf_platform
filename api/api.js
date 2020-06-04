@@ -100,7 +100,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		permissions[username] = type;
 		return type;
 	}
-	
+
 	app.post('/v1/account/create', async (req, res) => {
 		try {
 			await collections.users.insertOne({
@@ -113,7 +113,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({success: true});
 		}
 		catch (err) {
-			if (err instanceof MongoError) {
+			if (err.name == 'MongoError') {
 				switch (err.code) {
 					case 11000:
 						switch (Object.keys(err.keyPattern)[0]) {
@@ -146,7 +146,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({username: req.body.username}) > 0 ? true : false
+				taken: await collections.users.count({username: req.body.username.toLowerCase()}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -157,7 +157,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({email: req.body.email}) > 0 ? true : false
+				taken: await collections.users.count({email: req.body.email.toLowerCase()}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -166,7 +166,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.post('/v1/account/login', async (req, res) => {
 		try {
-			const user = await collections.users.findOne({username: req.body.username}, {projection: {password: 1, type: 1, _id: 0}});
+			const user = await collections.users.findOne({username: req.body.username.toLowerCase()}, {projection: {password: 1, type: 1, _id: 0}});
 			if (!user) {
 				res.clearCookie('session');
 				throw new Error('WrongUsername');
@@ -176,7 +176,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				res.send({
 					success: true,
 					permissions: user.type,
-					token: signer.sign(req.body.username)
+					token: signer.sign(req.body.username.toLowerCase())
 				});
 			}
 			else {
@@ -218,7 +218,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				}
 				userToDelete = req.body.username;
 			}
-			if ((await collections.users.deleteOne({username: userToDelete})).deletedCount == 0) {
+			if ((await collections.users.deleteOne({username: userToDelete.toLowerCase()})).deletedCount == 0) {
 				res.status(400);
 				res.send({
 					success: false,
@@ -311,7 +311,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			if (req.body.type < 0 || req.body.type > 2) throw new Error('OutOfRange');
 			if ((await collections.users.updateOne(
-				{username: req.body.username},
+				{username: req.body.username.toLowerCase()},
 				{'$set': {type: parseInt(req.body.type)}}
 			)).matchedCount > 0) {
 				res.send({success: true});
@@ -340,6 +340,19 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				challenges: challenges
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/challenge/list_categories', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			signer.unsign(req.headers.authorization);
+			res.send({
+				success: true,
+				challenges: await collections.challs.distinct('category', {visibility: true})
 			});
 		}
 		catch (err) {

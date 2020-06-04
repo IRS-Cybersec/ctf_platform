@@ -10,7 +10,7 @@ app.use(cors({
 	origin: 'http://localhost'
 }));
 ```
-All authenticated endpoints require an `Authentication` header with the token retrieved from the login endpoint.
+All authenticated endpoints require an `Authorization` header with the token retrieved from the login endpoint.
 
 _It has not been ascertained that the `.find()` method returns _all_ results. Create a GitHub issue if the responses seem to be limited to the first 20._
 
