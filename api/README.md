@@ -10,7 +10,7 @@ app.use(cors({
 	origin: 'http://localhost'
 }));
 ```
-All authenticated endpoints require an `Authentication` header with the token retrieved from the login endpoint.
+All authenticated endpoints require an `Authorization` header with the token retrieved from the login endpoint.
 
 _It has not been ascertained that the `.find()` method returns _all_ results. Create a GitHub issue if the responses seem to be limited to the first 20._
 
@@ -149,6 +149,7 @@ Login endpoint
 ```
 
 #### Remarks
+* Do not process the `token`. Store it directly as its format may change without notice.
 
 #### Errors
 
@@ -319,7 +320,7 @@ Authenticated // Permissions: 2 for some features
 
 ## Challenges
 
-### `/v1/challenge/list/:category`
+### `/v1/challenge/list/:category?`
 
 Show all available challenges  
 Authenticated
@@ -375,6 +376,38 @@ GET /v1/challenge/list/CATEGORY_NAME (optional)
 | Error       | Definition                                                    |
 | ----------- | ------------------------------------------------------------- |
 | `not-found` | No challenges were found (matching the criteria if specified) |
+
+### `/v1/challenge/list_categories`
+
+Show all available challenges  
+Authenticated
+
+#### Input
+
+```
+No input required
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"categories": [
+		"NEW_CATEGORIES",
+		"hackTM 2020"
+	]
+}
+
+#### Remarks
+
+* Only shows challenges with `visibility: true`
+
+#### Errors
+
+```
+No special errors
+```
 
 ### `/v1/challenge/list_all`
 
