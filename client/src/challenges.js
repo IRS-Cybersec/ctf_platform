@@ -63,7 +63,7 @@ class challenges extends React.Component {
   render() {
     return (
 
-      <Layout style={{ height: "100%", width: "100%" }}>
+      <Layout style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "hidden" }}>
         <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", marginBottom: "5vh", lineHeight: "1.1" }}>
           <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
 
@@ -108,7 +108,7 @@ class challenges extends React.Component {
             dataSource={this.state.categories}
             locale={{
               emptyText: (
-                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                   <LoadingOutlined style={{color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1}}/>
                 </div>
               )

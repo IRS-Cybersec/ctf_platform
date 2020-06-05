@@ -18,12 +18,13 @@ class Login extends React.Component {
             failedLogin: false,
             errorFetch: false,
             login: true,
-            register: false
+            register: false,
+            loading: false,
         };
     }
 
     handleRegister = values => {
-
+        this.setState({loading: true})
         fetch("https://api.irscybersec.tk//v1/account/create", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
@@ -37,6 +38,7 @@ class Login extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!" })
+                this.setState({loading: false})
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -49,7 +51,7 @@ class Login extends React.Component {
     }
 
     handleLogin = values => {
-        console.log('Received values of form: ', values);
+        this.setState({ loading: true})
         fetch("https://api.irscybersec.tk/v1/account/login", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
@@ -62,7 +64,12 @@ class Login extends React.Component {
         }).then((data) => {
             console.log(data)
             if (data.success === true) {
-                this.props.handleLogin(data.token, data.permissions, values.remember)
+                const login = async () => {
+                    await this.props.handleLogin(data.token, data.permissions, values.remember)
+                    this.setState({loading: false})
+                }
+
+                login()
             }
             else {
 
@@ -140,8 +147,8 @@ class Login extends React.Component {
                                     </Form.Item>
 
                                     <Form.Item>
-                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "1vw" }}>Log in</Button>
-                                Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} >Register now!</a>
+                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "1vw" }} loading={this.state.loading}>Log in</Button>
+                                        Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} >Register now!</a>
                                     </Form.Item>
                                 </Form>
                             </div>
@@ -208,7 +215,7 @@ class Login extends React.Component {
                                         <Input.Password allowClear placeholder="Confirm new password" />
                                     </Form.Item>
                                     <Form.Item>
-                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
+                                        <Button loading={this.state.loading} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
 
                                         <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login Here!</a></p>
                                     </Form.Item>
