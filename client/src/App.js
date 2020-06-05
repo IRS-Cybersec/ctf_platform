@@ -91,15 +91,23 @@ class App extends React.Component {
   // Callback function for Login component to set token and perms
   handleLogin(receivedToken, permissions, remember) {
     const username = receivedToken.split(".")[0]
-    this.setState({ token: receivedToken, permissions: permissions, username: username })
 
-    if (remember === true) {
-      localStorage.setItem('IRSCTF-token', receivedToken)
+    const store = async () => {
+      if (remember === true) {
+        await localStorage.setItem('IRSCTF-token', receivedToken)
+        
+      }
+      else {
+        await sessionStorage.setItem("IRSCTF-token", receivedToken)
+      }
+
+      await this.setState({ token: receivedToken, permissions: permissions, username: username })
+      message.success({ content: "Logged In! Welcome " + username })
     }
-    else {
-      sessionStorage.setItem("IRSCTF-token", receivedToken);
-    }
-    message.success({ content: "Logged In! Welcome " + username })
+
+    store()
+    
+    
   }
 
   handleLogout() {
@@ -175,8 +183,8 @@ class App extends React.Component {
               </Menu>
             </Sider>
 
-            <Layout style={{ width: "100vw", height: "100vh" }}>
-              <Header className="site-layout-background" style={{ height: "9vh", position: "fixed", zIndex: 1, width: "85vw" }}>
+            <Layout style={{width: "100%", height: "100%", overflow: "hidden"}}>
+              <Header className="site-layout-background" style={{ height: "9vh"}}>
                 <Dropdown overlay={
                   <Menu>
                     <Menu.Item key="0">
@@ -200,7 +208,7 @@ class App extends React.Component {
               </Header>
 
 
-              <Content style={{ margin: '10vh 20px' }}>
+              <Content style={{ marginLeft: "10px", marginRight: "10px" }}>
                 <Switch>
                     <Route exact path='/' component={home} />
                     <Route exact path='/Challenges' component={challenges} />
