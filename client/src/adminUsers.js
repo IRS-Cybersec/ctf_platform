@@ -291,6 +291,15 @@ class AdminUsers extends React.Component {
                         )}
                     />
                 </Table>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
             </Layout>
         );
     }

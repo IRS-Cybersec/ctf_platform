@@ -21,7 +21,7 @@ class admin extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-        <Tabs defaultActiveKey="home">
+        <Tabs defaultActiveKey="home" style={{overflowY: "scroll", overflowX: "hidden"}}>
           <TabPane
             tab={<span>  Home </span> }
             key="home"
