@@ -471,7 +471,7 @@ Authenticated
 #### Input
 
 ```
-GET: /v1/account/score/CHALLENGE_NAME
+GET: /v1/account/show/CHALLENGE_NAME
 ```
 
 #### Output
@@ -545,6 +545,7 @@ GET: /v1/account/score/CHALLENGE_NAME/detailed
 			"USERNAME_OF_SOLVER"
 		],
 		"max_attempts": "int (0 means unlimited)",
+		"used_attempts": "int",
 		"tags": [
 			"CHALLENGE_TAG"
 		],
@@ -830,6 +831,33 @@ Authenticated // Permissions: 2
 	"visibility": "bool (optional)"
 }
 ```
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `notfound`    | The `CHALLENGE_NAME` specified was invalid                   |
+| `permissions` | The logged-in user does not have sufficient permissions to edit a challenge |
+
+### `/v1/challenge/edit`
+
+Edit a challenge  
+Authenticated // Permissions: 2
+
+#### Input
+```json
+{
+	"chall": "CHALLENGE_NAME"
+}
+```
+
 #### Output
 
 ```json
