@@ -41,3 +41,7 @@
 	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.3);
 	background-color: #8c8c8c;
 }
+
+.create_challenge_form h1 {
+    font-size: 120%;
+}

@@ -14,6 +14,78 @@ import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'rea
 const { Column } = Table;
 const { Option } = Select;
 
+
+const RegisterForm = (props) => {
+    const [form] = Form.useForm();
+    return (
+        <Form
+            form={form}
+            name="register_form"
+            className="register-form"
+            onFinish={ (values) => { props.createAccount(values); form.resetFields()} }
+        >
+            <Form.Item
+                name="username"
+                rules={[{ required: true, message: 'Please enter a username' }]}
+            >
+                <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
+            </Form.Item>
+
+            <Form.Item
+                name="email"
+                rules={[
+                    { required: true, message: 'Please enter an email' },
+                    {
+                        type: 'email',
+                        message: "Please enter a valid email",
+                    },]}
+            >
+                <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
+            </Form.Item>
+
+            <Form.Item
+                name="password"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please input your password!',
+                    },
+                ]}
+                hasFeedback
+            >
+                <Input.Password allowClear placeholder="Enter a new password" />
+            </Form.Item>
+
+            <Form.Item
+                name="confirm"
+                dependencies={['password']}
+                hasFeedback
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please confirm your password!',
+                    },
+                    ({ getFieldValue }) => ({
+                        validator(rule, value) {
+                            if (!value || getFieldValue('password') === value) {
+                                return Promise.resolve();
+                            }
+                            return Promise.reject('Oops, the 2 passwords do not match');
+                        },
+                    }),
+                ]}
+            >
+                <Input.Password allowClear placeholder="Confirm new password" />
+            </Form.Item>
+            <Form.Item>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { this.setState({ createUserModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Account</Button>
+            </Form.Item>
+        </Form>
+    );
+};
+
+
 class AdminUsers extends React.Component {
     constructor(props) {
         super(props);
@@ -29,8 +101,6 @@ class AdminUsers extends React.Component {
             username: "",
             modalLoading: false,
         }
-
-
     }
 
     componentDidMount() {
@@ -126,10 +196,17 @@ class AdminUsers extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
+            console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created user " + values.username + " successfully!" })
                 this.setState({ modalLoading: false, createUserModal: false })
                 this.fillTableData()
+            }
+            else if (data.error === "email-taken") {
+                message.warn({ content: "Oops. Email already taken" })
+            }
+            else if (data.error === "username-taken") {
+                message.warn({ content: "Oops. Username already taken" })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -141,6 +218,8 @@ class AdminUsers extends React.Component {
         })
 
     }
+
+
 
 
 
@@ -184,72 +263,10 @@ class AdminUsers extends React.Component {
                     confirmLoading={this.state.modalLoading}
                 >
 
-                    <Form
-                        name="register_form"
-                        className="register-form"
-                        onFinish={this.createAccount}
-                    >
-                        <Form.Item
-                            name="username"
-                            rules={[{ required: true, message: 'Please enter a username' }]}
-                        >
-                            <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="email"
-                            rules={[
-                                { required: true, message: 'Please enter an email' },
-                                {
-                                    type: 'email',
-                                    message: "Please enter a valid email",
-                                },]}
-                        >
-                            <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="password"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please input your password!',
-                                },
-                            ]}
-                            hasFeedback
-                        >
-                            <Input.Password allowClear placeholder="Enter a new password" />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="confirm"
-                            dependencies={['password']}
-                            hasFeedback
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please confirm your password!',
-                                },
-                                ({ getFieldValue }) => ({
-                                    validator(rule, value) {
-                                        if (!value || getFieldValue('password') === value) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject('Oops, the 2 passwords do not match');
-                                    },
-                                }),
-                            ]}
-                        >
-                            <Input.Password allowClear placeholder="Confirm new password" />
-                        </Form.Item>
-                        <Form.Item>
-                                <Button style={{ marginRight: "1.5vw" }} onClick={() => { this.setState({ createUserModal: false }) }}>Cancel</Button>
-                                <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Account</Button>
-                        </Form.Item>
-                    </Form>
+                    <RegisterForm createAccount={this.createAccount.bind(this)}></RegisterForm>
                 </Modal>
 
-                <Button type="primary" style={{ marginBottom: "2vh" }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
+                <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch"  }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
 
                 <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (
@@ -273,11 +290,6 @@ class AdminUsers extends React.Component {
                                             Change Permissions <ClusterOutlined />
                                         </span>
                                     </Menu.Item>
-                                    <Menu.Item>
-                                        <a target="_blank" rel="noopener noreferrer" href="http://www.taobao.com/">
-                                            2nd menu item
-                                      </a>
-                                    </Menu.Item>
                                     <Menu.Divider />
                                     <Menu.Item onClick={() => { this.setState({ username: record.username, deleteModal: true }) }}>
                                         <span style={{ color: "#d32029" }} >
@@ -291,15 +303,6 @@ class AdminUsers extends React.Component {
                         )}
                     />
                 </Table>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
-                <br></br>
             </Layout>
         );
     }

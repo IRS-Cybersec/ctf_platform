@@ -40,6 +40,12 @@ class Login extends React.Component {
                 message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!" })
                 this.setState({loading: false})
             }
+            else if (data.error === "email-taken") {
+                message.warn({ content: "Oops. Email already taken" })
+            }
+            else if (data.error === "username-taken") {
+                message.warn({ content: "Oops. Username already taken" })
+            }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
