@@ -8,11 +8,32 @@ import {
   SmileOutlined
 } from '@ant-design/icons';
 import './App.css';
-import { Link } from 'react-router-dom';
 
 const { Meta } = Card;
 const { TabPane } = Tabs;
 
+const SubmitFlagForm = (props) => {
+  const [form] = Form.useForm();
+
+  return (
+    <Form
+      form={form}
+      name="submit-flag"
+      className="submit-flag-form"
+      onFinish={(values) => { props.submitFlag(values); form.resetFields() }}
+      style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "2vh" }}
+    >
+      <Form.Item
+        name="flag"
+        rules={[{ required: true, message: 'Hint: Flags are not blank.' }]}>
+        <Input disabled={props.currentChallengeSolved} style={{ width: "45ch" }} placeholder={props.currentChallengeStatus} />
+      </Form.Item>
+      <Form.Item>
+        <Button disabled={props.currentChallengeSolved} type="primary" htmlType="submit" icon={<FlagOutlined />}>Submit</Button>
+      </Form.Item>
+    </Form>
+  );
+}
 
 
 class ChallengesCategory extends React.Component {
@@ -23,6 +44,7 @@ class ChallengesCategory extends React.Component {
       challenges: [],
       challengeModal: false,
       currentChallenge: "",
+      currentChallengeStatus: "",
       viewingChallengeDetails: {
         name: "",
         category: this.props.category,
@@ -37,7 +59,9 @@ class ChallengesCategory extends React.Component {
       },
       challengeTags: [],
       loadingChallenge: false,
-      currentChallengeSolved: false
+      currentChallengeSolved: false,
+      challengeHints: [],
+      attemptsLeft: ""
 
     };
   }
@@ -91,21 +115,41 @@ class ChallengesCategory extends React.Component {
 
       if (data.success === true) {
 
+        //Handle unlimited attempts
         if (data.chall.max_attempts === 0) {
           data.chall.max_attempts = "Unlimited"
+
         }
+        else {
+          data.chall.max_attempts = String(data.chall.max_attempts - data.chall.used_attempts) + "/" + String(data.chall.max_attempts)
+        }
+
+        //Render tags
         const tag = data.chall.tags
-        const renderTags = []
-  
+        var renderTags = []
+
         for (var x = 0; x < tag.length; x++) {
           renderTags.push(
-            <Tag color="#1765ad">
+            <Tag color="#1765ad" key={tag[x]}>
               {tag[x]}
             </Tag>
           )
         }
 
-        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, loadingChallenge: false })
+        //Handle hints
+        if (typeof data.chall.hints != "undefined") {
+          const hints = data.chall.hints
+          var renderHints = []
+
+          for (var x = 0; x < hints.length; x++) {
+            renderHints.push(
+              <Button type="primary" key={hints[x].cost} style={{ marginBottom: "1.5vh" }}>Hint {x + 1} - {hints[x].cost} Points</Button>
+            )
+          }
+        }
+
+
+        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, loadingChallenge: false, challengeHints: renderHints })
 
       }
       else {
@@ -146,7 +190,7 @@ class ChallengesCategory extends React.Component {
           notification["error"]({
             message: 'Oops. Incorrect Flag',
             description:
-              'It seems like you submitted an incorrect flag for \"' + this.state.currentChallenge + '\".',
+              'It seems like you submitted an incorrect flag (' + values.flag + ') for \"' + this.state.currentChallenge + '\".',
             duration: 0
           });
         }
@@ -154,7 +198,7 @@ class ChallengesCategory extends React.Component {
       else {
         if (data.error === "exceeded") {
           notification["error"]({
-            message: 'Oops. Exceeded Maximum Number of Attempts',
+            message: 'Oops. Attempts Exhausted',
             description:
               'It seems like you have execeeded the maximum number of attempts for \"' + this.state.currentChallenge + '\". Contact an admin if you need more tries',
             duration: 0
@@ -189,26 +233,22 @@ class ChallengesCategory extends React.Component {
               <div>
                 {this.state.challengeTags}
               </div>
-              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
+              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
               <p dangerouslySetInnerHTML={{ __html: this.state.viewingChallengeDetails.description }}></p>
-              <div style={{ display: "flex" }}>
-                <Form
-                  name="submit-flag"
-                  className="submit-flag-form"
-                  onFinish={this.submitFlag.bind(this)}
-                  style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "2vh" }}
-                >
-                  <Form.Item
-                    name="flag"
-                    rules={[{ required: true, message: 'Come on! Flags are definitely not blank.' }]}>
-                    <Input disabled={this.state.currentChallengeSolved} style={{ width: "45ch" }} defaultValue="" placeholder={this.state.currentChallengeStatus} />
-                  </Form.Item>
-                  <Form.Item>
-                    <Button disabled={this.state.currentChallengeSolved} type="primary" htmlType="submit" icon={<FlagOutlined />}>Submit</Button>
-                  </Form.Item>
-                </Form>
+
+
+              <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+                {this.state.challengeHints}
               </div>
-              <p style={{ textAlign: "end", color: "#d87a16", fontWeight: 500, marginTop: "-1vh" }}>Attempts Remaining: Number/{this.state.viewingChallengeDetails.max_attempts}</p>
+
+
+              <div style={{ display: "flex" }}>
+                <SubmitFlagForm submitFlag={this.submitFlag.bind(this)} currentChallengeStatus={this.state.currentChallengeStatus} currentChallengeSolved={this.state.currentChallengeSolved}></SubmitFlagForm>
+              </div>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "-1vh" }}>
+                <p>Challenge Author: <em>{this.state.viewingChallengeDetails.author}</em></p>
+                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.viewingChallengeDetails.max_attempts}</p>
+              </div>
             </TabPane>
             <TabPane
               tab={<span><UnlockOutlined /> Solves </span>}
@@ -274,7 +314,7 @@ class ChallengesCategory extends React.Component {
                     >
                       <Meta
                         title={
-                          <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%" }}>{item.name}</h1>
+                          <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%", textAlign: "center" }}>{item.name}</h1>
                         }
                         description={
                           <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center" }}>

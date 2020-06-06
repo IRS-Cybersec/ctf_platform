@@ -1,11 +1,12 @@
 import React from 'react';
 import { Layout, Tabs } from 'antd';
 import {
-  UserOutlined
+  UserOutlined,
+  AppstoreOutlined
 } from '@ant-design/icons';
 import './App.css';
 import AdminUsers from "./adminUsers.js";
-import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
+import AdminChallenges from "./adminChallenges.js";
 
 const { TabPane } = Tabs;
 
@@ -21,19 +22,25 @@ class admin extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-        <Tabs defaultActiveKey="home" style={{overflowY: "scroll", overflowX: "hidden"}}>
+        <Tabs defaultActiveKey="home" style={{ overflowY: "scroll", overflowX: "hidden" }}>
           <TabPane
-            tab={<span>  Home </span> }
+            tab={<span> Home </span>}
             key="home"
           >
             Admin Panel. Still WIP
-    </TabPane>
+          </TabPane>
           <TabPane
-            tab={ <span><UserOutlined />Users </span>}
+            tab={<span><UserOutlined />Users</span>}
             key="users"
           >
             <AdminUsers></AdminUsers>
-    </TabPane>
+          </TabPane>
+          <TabPane
+            tab={<span><AppstoreOutlined />Challenges</span>}
+            key="challenges"
+          >
+            <AdminChallenges></AdminChallenges>
+          </TabPane>
         </Tabs>
       </Layout>
     );
