@@ -347,7 +347,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
-	// Update to aggregator
+	// To be updated to use an aggregator
 	app.get('/v1/challenge/list/:category', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
@@ -399,7 +399,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			const chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {visibility: 0, flags: 0, _id: 0}});
+			let chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {visibility: 0, flags: 0, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -413,6 +413,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				else delete hint.hint;
 				delete hint.purchased;
 			});
+			if (chall.max_attempts != 0)
+				chall.used_attempts = await collections.transactions.countDocuments({
+					author: username,
+					challenge: req.params.chall,
+					type: 'submission'
+				}, {limit: chall.max_attempts});
 			res.send({
 				success: true,
 				chall: chall
@@ -692,6 +698,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				{category: req.body.category},
 				{'$set': updateObj}
 			)).matchedCount > 0) res.send({success: true});
+			else throw new Error('NotFound');
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/challenge/delete', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if ((await collections.challs.deleteOne(
+				{name: req.body.chall}
+			)).deletedCount > 0) res.send({success: true});
 			else throw new Error('NotFound');
 		}
 		catch (err) {
