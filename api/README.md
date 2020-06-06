@@ -407,6 +407,7 @@ No input required
 		"hackTM 2020"
 	]
 }
+```
 
 #### Remarks
 
@@ -416,8 +417,8 @@ No input required
 
 ```
 No special errors
-```
 
+```
 ### `/v1/challenge/list_all`
 
 Show all challenges  
