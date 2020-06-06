@@ -409,8 +409,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				return;
 			}
 			chall.hints.forEach(hint => {
-				if (hint.purchased.includes(username)) delete hint.cost;
-				else delete hint.hint;
+				if (hint.purchased.includes(username)) {
+					hint.bought = true;
+					delete hint.cost;
+				}
+				else {
+					hint.bought = true;
+					delete hint.hint;
+				}
 				delete hint.purchased;
 			});
 			if (chall.max_attempts != 0)
