@@ -409,8 +409,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				return;
 			}
 			chall.hints.forEach(hint => {
-				if (hint.purchased.includes(username)) delete hint.cost;
-				else delete hint.hint;
+				if (hint.purchased.includes(username)) {
+					hint.bought = true;
+					delete hint.cost;
+				}
+				else {
+					hint.bought = true;
+					delete hint.hint;
+				}
 				delete hint.purchased;
 			});
 			if (chall.max_attempts != 0)
@@ -459,26 +465,26 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (!hints) throw new Error('NotFound');
 			hints = hints.hints;
 			if (req.body.id > hints.length - 1) throw new Error('OutOfRange');
-			if (hints[req.body.id].purchased.includes(username)) throw new Error('Bought');
-
-			await collections.users.updateOne(
-				{username: username},
-				{'$inc': {score: -hints[req.body.id].cost}},
-			);
-			const updateRef = {};
-			updateRef[`hints.${req.body.id}.purchased`] = username;
-			await collections.challs.updateOne(
-				{name: req.body.chall},
-				{'$push': updateRef}
-			);
-			await collections.transactions.insertOne({
-				author: username,
-				challenge: req.body.chall,
-				type: 'hint',
-				timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
-				points: -hints[req.body.id].cost,
-				hint_id: parseInt(req.body.id)
-			});
+			if (!hints[req.body.id].purchased.includes(username)) {
+				await collections.users.updateOne(
+					{username: username},
+					{'$inc': {score: -hints[req.body.id].cost}},
+				);
+				const updateRef = {};
+				updateRef[`hints.${req.body.id}.purchased`] = username;
+				await collections.challs.updateOne(
+					{name: req.body.chall},
+					{'$push': updateRef}
+				);
+				await collections.transactions.insertOne({
+					author: username,
+					challenge: req.body.chall,
+					type: 'hint',
+					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					points: -hints[req.body.id].cost,
+					hint_id: parseInt(req.body.id)
+				});
+			}
 			res.send({
 				success: true,
 				hint: hints[req.body.id].hint
