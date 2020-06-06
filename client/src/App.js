@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Button, Avatar, Divider, message, Dropdown } from 'antd';
+import { Layout, Menu, Avatar, Divider, message, Dropdown } from 'antd';
 import {
   FlagTwoTone,
   HomeTwoTone,
@@ -10,7 +10,7 @@ import {
   CodeTwoTone
 } from '@ant-design/icons';
 import './App.css';
-import { NavLink, Switch, Route, withRouter, useHistory, useLocation, Redirect } from 'react-router-dom';
+import { NavLink, Switch, Route, withRouter, Redirect } from 'react-router-dom';
 import home from "./home.js";
 import challenges from "./challenges.js";
 import Profile from "./profile.js";

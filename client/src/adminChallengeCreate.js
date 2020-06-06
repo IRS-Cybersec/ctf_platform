@@ -19,15 +19,13 @@ const { TabPane } = Tabs;
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
 
-    form.setFieldsValue({
-        name: "",
-        category: "",
-        description: "",
-        points: 1,
-        max_attempts: 0,
-        flags: [""],
-        visibility: "false"
-    })
+    if (typeof form.getFieldValue("flags") === undefined) {
+        var currentValues = form.getFieldsValue()
+        currentValues.flags = [""]
+
+        form.setFieldsValue(currentValues)
+    }
+
     return (
         <Form
             form={form}
@@ -82,6 +80,7 @@ const CreateChallengeForm = (props) => {
                             type: 'integer',
                             message: "Please enter a valid integer between 1-100000",
                         },]}
+                        initialValue={1}
                     >
 
                         <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
@@ -95,6 +94,7 @@ const CreateChallengeForm = (props) => {
                             message: "Please enter a valid integer between 1-10000",
                         },]}
                         style={{ alignText: 'center' }}
+                        initialValue={0}
                     >
 
                         <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
@@ -253,6 +253,7 @@ const CreateChallengeForm = (props) => {
             <Form.Item
                 name="visibility"
                 rules={[{ required: true, message: 'Please set the challenge visibility' }]}
+                initialValue="false"
             >
                 <Select style={{ width: "10vw" }}>
                     <Option value="false">Hidden</Option>
@@ -264,7 +265,7 @@ const CreateChallengeForm = (props) => {
             <Form.Item>
                 <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
                     <div>
-                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()) }}>Preview</Button>
+                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue());  }}>Preview</Button>
                         <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
                     </div>
                     <div>

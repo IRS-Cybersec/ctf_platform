@@ -298,6 +298,18 @@ class AdminChallengeEdit extends React.Component {
                 tags: [],
                 hints: [],
             },
+            previewData: {
+                name: "",
+                category: this.props.category,
+                description: "",
+                points: 0,
+                author: "",
+                created: "",
+                solves: [],
+                max_attempts: 0,
+                tags: [],
+                hints: [],
+            },
             challengeTags: [],
             previewModal: false,
             oldChallengeName: ""
@@ -367,7 +379,7 @@ class AdminChallengeEdit extends React.Component {
 
         }
 
-        this.setState({ challengeData: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints })
+        this.setState({ previewData: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints })
     }
 
     editChallenge = (values) => {
@@ -434,12 +446,12 @@ class AdminChallengeEdit extends React.Component {
                             tab={<span><ProfileOutlined /> Challenge</span>}
                             key="challenge"
                         >
-                            <h1 style={{ fontSize: "150%" }}>{this.state.challengeData.name}</h1>
+                            <h1 style={{ fontSize: "150%" }}>{this.state.previewData.name}</h1>
                             <div>
                                 {this.state.challengeTags}
                             </div>
-                            <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.challengeData.points}</h2>
-                            <p dangerouslySetInnerHTML={{ __html: this.state.challengeData.description }}></p>
+                            <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.previewData.points}</h2>
+                            <p dangerouslySetInnerHTML={{ __html: this.state.previewData.description }}></p>
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}
@@ -451,7 +463,7 @@ class AdminChallengeEdit extends React.Component {
                             </div>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
                                 <p>Challenge Author: <em>You</em></p>
-                                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.challengeData.max_attempts}</p>
+                                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewData.max_attempts}</p>
                             </div>
                         </TabPane>
                     </Tabs>
