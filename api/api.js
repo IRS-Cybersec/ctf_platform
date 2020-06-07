@@ -408,17 +408,18 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				});
 				return;
 			}
-			chall.hints.forEach(hint => {
-				if (hint.purchased.includes(username)) {
-					hint.bought = true;
-					delete hint.cost;
-				}
-				else {
-					hint.bought = true;
-					delete hint.hint;
-				}
-				delete hint.purchased;
-			});
+			if (chall.hints)
+				chall.hints.forEach(hint => {
+					if (hint.purchased.includes(username)) {
+						hint.bought = true;
+						delete hint.cost;
+					}
+					else {
+						hint.bought = false;
+						delete hint.hint;
+					}
+					delete hint.purchased;
+				});
 			if (chall.max_attempts != 0)
 				chall.used_attempts = await collections.transactions.countDocuments({
 					author: username,
@@ -461,43 +462,44 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			let hints = (await collections.challs.findOne({visibility: true, name: req.body.chall}, {projection: {hints: 1, _id: 0}}));
+			let hints = (await collections.challs.findOne({
+				visibility: true,
+				name: req.body.chall
+			}, {
+			projection: {
+				hints: {$slice: [req.body.id, 1]},
+				_id: 1
+			}}));
 			if (!hints) throw new Error('NotFound');
-			hints = hints.hints;
-			if (req.body.id > hints.length - 1) throw new Error('OutOfRange');
-			if (!hints[req.body.id].purchased.includes(username)) {
-				await collections.users.updateOne(
-					{username: username},
-					{'$inc': {score: -hints[req.body.id].cost}},
-				);
-				const updateRef = {};
-				updateRef[`hints.${req.body.id}.purchased`] = username;
-				await collections.challs.updateOne(
-					{name: req.body.chall},
-					{'$push': updateRef}
-				);
+			if (!hints.hints[0]) throw new Error('OutOfRange');
+			if (!hints.hints[0].purchased.includes(username)) {
+				await collections.users.updateOne({
+					username: username
+				}, {
+					'$inc': {score: -hints.hints[0].cost}
+				});
+				await collections.challs.updateOne({
+					name: req.body.chall
+				}, {
+					'$push': {
+						[`hints.${req.body.id}.purchased`]: 1
+					}
+				});
 				await collections.transactions.insertOne({
 					author: username,
 					challenge: req.body.chall,
 					type: 'hint',
 					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
-					points: -hints[req.body.id].cost,
+					points: -hints.hints[0],
 					hint_id: parseInt(req.body.id)
 				});
 			}
 			res.send({
 				success: true,
-				hint: hints[req.body.id].hint
+				hint: hints.hints[0].hint
 			});
 		}
 		catch (err) {
-			if (err.message == 'Bought') {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'bought'
-				});
-			}
 			errors(err, res);
 		}
 	});
