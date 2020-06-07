@@ -223,8 +223,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				return;
 			}
 			await collections.challs.updateMany({}, {
-				'$pull': {
-					'solves': userToDelete,
+				$pull: {
+					solves: userToDelete
+				}
+			});
+			await collections.challs.updateMany({
+				hints: {$exists: true}
+			}, {
+				$pull: {
 					'hints.$[].purchased': userToDelete
 				}
 			});
