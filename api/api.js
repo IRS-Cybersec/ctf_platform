@@ -414,7 +414,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				});
 				return;
 			}
-			if (chall.hints)
+			if (typeof chall.hints != undefined)
 				chall.hints.forEach(hint => {
 					if (hint.purchased.includes(username)) {
 						hint.bought = true;
@@ -487,16 +487,24 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				await collections.challs.updateOne({
 					name: req.body.chall
 				}, {
-					'$push': {
-						[`hints.${req.body.id}.purchased`]: 1
+					$push: {
+						[`hints.${req.body.id}.purchased`]: username
 					}
+				});
+				console.log({
+					author: username,
+					challenge: req.body.chall,
+					type: 'hint',
+					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					points: -hints.hints[0],
+					hint_id: parseInt(req.body.id)
 				});
 				await collections.transactions.insertOne({
 					author: username,
 					challenge: req.body.chall,
 					type: 'hint',
 					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
-					points: -hints.hints[0],
+					points: -hints.hints[0].cost,
 					hint_id: parseInt(req.body.id)
 				});
 			}
