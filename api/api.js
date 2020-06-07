@@ -414,7 +414,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				});
 				return;
 			}
-			if (typeof chall.hints != undefined)
+			if (chall.hints != undefined)
 				chall.hints.forEach(hint => {
 					if (hint.purchased.includes(username)) {
 						hint.bought = true;
