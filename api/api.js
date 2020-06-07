@@ -79,7 +79,7 @@ function errors(err, res) {
 		success: false,
 		error: 'unknown'
 	});
-	console.log(err);
+	console.error(err);
 	return false;
 }
 console.info('Initialization complete');
@@ -490,14 +490,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					$push: {
 						[`hints.${req.body.id}.purchased`]: username
 					}
-				});
-				console.log({
-					author: username,
-					challenge: req.body.chall,
-					type: 'hint',
-					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
-					points: -hints.hints[0],
-					hint_id: parseInt(req.body.id)
 				});
 				await collections.transactions.insertOne({
 					author: username,
