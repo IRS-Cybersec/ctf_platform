@@ -10,6 +10,9 @@ import {
     LoadingOutlined
 } from '@ant-design/icons';
 import './App.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import JsxParser from 'react-jsx-parser'
 
 
 const { Option } = Select;
@@ -19,13 +22,17 @@ const { TabPane } = Tabs;
 
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
-    if (props.initialData.visibility === false) {
-        props.initialData.visibility = "false"
+
+    if (typeof form.getFieldValue("flags") === "undefined") {
+        if (props.initialData.visibility === false) {
+            props.initialData.visibility = "false"
+        }
+        else {
+            props.initialData.visibility = "true"
+        }
+        form.setFieldsValue(props.initialData)
     }
-    else {
-        props.initialData.visibility = "true"
-    }
-    form.setFieldsValue(props.initialData)
+
     return (
         <Form
             form={form}
@@ -345,6 +352,37 @@ class AdminChallengeEdit extends React.Component {
 
     previewChallenge = (values) => {
 
+        //Replace <code> with syntax highlighter
+        let description = values.description
+        let position = description.search("<code>")
+
+
+        if (position !== -1) {
+
+            let language = ""
+            let offset = 0
+            position += 6
+
+            while (true) {
+                let currentLetter = description.slice(position + offset, position + offset + 1)
+                if (currentLetter === "\n") {
+                    language = description.slice(position, position + offset)
+                    description = description.slice(0, position) + description.slice(position + offset)
+                    description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
+                    description = description.replace("</code>", "\`}</SyntaxHighlighter>")
+                    console.log(description)
+                    values.description = description
+                    break
+                }
+                else if (offset > 10) {
+                    break
+                }
+                offset += 1
+            }
+
+
+        }
+
         if (values.max_attempts === 0) {
             values.max_attempts = "Unlimited"
         }
@@ -451,7 +489,14 @@ class AdminChallengeEdit extends React.Component {
                                 {this.state.challengeTags}
                             </div>
                             <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.previewData.points}</h2>
-                            <p dangerouslySetInnerHTML={{ __html: this.state.previewData.description }}></p>
+                            <JsxParser
+                                bindings={{
+                                    atomDark: atomDark
+                                }}
+                                components={{ SyntaxHighlighter }}
+                                jsx={this.state.previewData.description}
+                            />
+
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}

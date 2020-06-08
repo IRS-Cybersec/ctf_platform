@@ -23,7 +23,7 @@ class challenges extends React.Component {
     this.state = {
       categories: [],
       challengeCategory: false,
-      currentCategory: ""
+      currentCategory: "",
     };
   }
 
@@ -39,16 +39,46 @@ class challenges extends React.Component {
     }
   }
 
+  parseCategories(data) {
+    for (let x = 0; x < data.data.length; x++) {
+      let currentCategory = data.data[x].challenges
+      let solvedStats = {
+        challenges: currentCategory.length,
+        solved: 0,
+        percentage: 0
+      }
+
+      for (let y = 0; y < currentCategory.length; y++) {
+        if (currentCategory[y].solved === true) {
+          solvedStats.solved += 1
+        }
+      }
+
+      solvedStats.percentage = Math.round((solvedStats.solved / solvedStats.challenges) * 100)
+      data.data[x].challenges = solvedStats
+    }
+
+    return data;
+  
+  }
+
   fetchCategories() {
-    fetch("https://api.irscybersec.tk/v1/challenge/list_categories", {
+    fetch("https://api.irscybersec.tk/v1/challenge/list", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       console.log(data)
+
       if (data.success === true) {
-        this.setState({ categories: data.categories })
+
+        const parseData = async () => {
+          const newData = await this.parseCategories(data) 
+          console.log(newData.data)
+          this.setState({ categories: newData.data })
+        }
+        parseData()
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -119,10 +149,11 @@ class challenges extends React.Component {
                 i = 0
 
               }
+
               return (
-                <List.Item key={item}>
-                  <Link to={"Challenges/" + item}>
-                    <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item }) }}>
+                <List.Item key={item._id}>
+                  <Link to={"Challenges/" + item._id}>
+                    <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item._id, currentSolvedStatus: item.challenges }) }}>
                       <Card
                         hoverable
                         type="inner"
@@ -135,10 +166,10 @@ class challenges extends React.Component {
                         <Meta
                           title={
                             <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                              <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item}</h1>
+                              <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
                               <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-                                <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>20/25</h2>
-                                <Progress type="circle" percent={75} width="3.2vw" strokeColor={{
+                                <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
+                                <Progress type="circle" percent={item.challenges.percentage} width="3.2vw" strokeColor={{
                                   '0%': '#177ddc',
                                   '100%': '#49aa19',
                                 }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
@@ -157,7 +188,7 @@ class challenges extends React.Component {
         )}
 
         {this.state.challengeCategory && (
-          <ChallengesCategory category={this.state.currentCategory}></ChallengesCategory>
+          <ChallengesCategory category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
         )}
       </Layout>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Modal} from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Modal } from 'antd';
 import {
     LoadingOutlined,
     ExclamationCircleTwoTone,
@@ -33,6 +33,27 @@ class AdminChallenges extends React.Component {
     componentDidMount() {
         this.fillTableData()
     }
+
+    /*getCategories() {
+        fetch("https://api.irscybersec.tk/v1/challenge/list_categories", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+
+            if (data.success === true) {
+                this.setState({ dataSource: data.challenges })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+    }*/
 
     fillTableData = () => {
         fetch("https://api.irscybersec.tk/v1/challenge/list_all", {
@@ -122,7 +143,24 @@ class AdminChallenges extends React.Component {
         return (
 
             <Layout style={{ height: "100%", width: "100%" }}>
-
+                {/*<Transfer
+                            dataSource={mockData}
+                            titles={['Source', 'Target']}
+                            targetKeys={targetKeys}
+                            selectedKeys={selectedKeys}
+                            onChange={this.handleChange}
+                            render={item => item.title}
+                            pagination
+                        />
+                        <Space style={{ marginTop: 16 }}>
+                            <Switch
+                                unCheckedChildren="disabled"
+                                checkedChildren="disabled"
+                                checked={disabled}
+                                onChange={this.handleDisable}
+                            />
+                        </Space>*/
+                }
                 <Modal
                     title={"Are you sure you want to delete \"" + this.state.challengeName + "\" ?"}
                     visible={this.state.deleteModal}
@@ -137,6 +175,8 @@ class AdminChallenges extends React.Component {
                     <div>
 
                         <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }) }}>Create New Challenge</Button>
+
+
 
                         <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
                             emptyText: (
@@ -155,7 +195,7 @@ class AdminChallenges extends React.Component {
                                 render={(text, record) => (
                                     <Dropdown trigger={['click']} overlay={
                                         <Menu>
-                                            <Menu.Item onClick={() => { this.setState({editChallenge: true, challengeName: record.name}) }}>
+                                            <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }) }}>
                                                 <span>
                                                     Edit Challenge <EditOutlined />
                                                 </span>
@@ -180,7 +220,7 @@ class AdminChallenges extends React.Component {
                     <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)}></AdminChallengeCreate>
                 )}
 
-                {this.state.editChallenge && !this.state.challengeCreate && ( 
+                {this.state.editChallenge && !this.state.challengeCreate && (
                     <AdminChallengeEdit challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
                 )}
 

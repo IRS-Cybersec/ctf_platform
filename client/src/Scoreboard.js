@@ -25,7 +25,7 @@ class Scoreboard extends React.Component {
     return (
 
       <Layout style={{ height: "100%", width: "100%" }}>
-          Scoreboard
+       
       </Layout>
     );
   }

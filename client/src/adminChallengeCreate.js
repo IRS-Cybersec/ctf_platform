@@ -9,6 +9,9 @@ import {
     FlagTwoTone
 } from '@ant-design/icons';
 import './App.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import JsxParser from 'react-jsx-parser'
 
 
 const { Option } = Select;
@@ -19,7 +22,7 @@ const { TabPane } = Tabs;
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
 
-    if (typeof form.getFieldValue("flags") === undefined) {
+    if (typeof form.getFieldValue("flags") === "undefined") {
         var currentValues = form.getFieldsValue()
         currentValues.flags = [""]
 
@@ -67,7 +70,7 @@ const CreateChallengeForm = (props) => {
                 rules={[{ required: true, message: 'Please enter a category' }]}
             >
 
-                <TextArea rows={5} allowClear placeholder="Enter a challenge description. HTML is supported" />
+                <TextArea rows={7} allowClear placeholder="Enter a challenge description. HTML is supported" />
             </Form.Item>
 
             <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly" }}>
@@ -265,7 +268,7 @@ const CreateChallengeForm = (props) => {
             <Form.Item>
                 <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
                     <div>
-                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue());  }}>Preview</Button>
+                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
                         <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
                     </div>
                     <div>
@@ -310,6 +313,37 @@ class AdminChallengeCreate extends React.Component {
         }
         else {
             values.max_attempts = String(values.max_attempts) + "/" + String(values.max_attempts)
+        }
+
+        //Replace <code> with syntax highlighter
+        let description = values.description
+        let position = description.search("<code>")
+
+
+        if (position !== -1) {
+
+            let language = ""
+            let offset = 0
+            position += 6
+
+            while (true) {
+                let currentLetter = description.slice(position + offset, position + offset + 1)
+                if (currentLetter === "\n") {
+                    language = description.slice(position, position + offset)
+                    description = description.slice(0, position) + description.slice(position + offset)
+                    description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
+                    description = description.replace("</code>", "\`}</SyntaxHighlighter>")
+                    console.log(description)
+                    values.description = description
+                    break
+                }
+                else if (offset > 10) {
+                    break
+                }
+                offset += 1
+            }
+
+
         }
 
         var renderTags = []
@@ -410,7 +444,13 @@ class AdminChallengeCreate extends React.Component {
                             </div>
                             <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
 
-                            <p dangerouslySetInnerHTML={{ __html: this.state.previewChallenge.description }}></p>
+                            <JsxParser
+                                bindings={{
+                                    atomDark: atomDark
+                                }}
+                                components={{ SyntaxHighlighter }}
+                                jsx={this.state.previewChallenge.description}
+                            />
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}

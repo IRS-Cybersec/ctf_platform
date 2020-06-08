@@ -158,6 +158,7 @@ class AdminUsers extends React.Component {
 
 
     deleteAccount = () => {
+        this.setState({modalLoading: true})
         fetch("https://api.irscybersec.tk/v1/account/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -170,6 +171,8 @@ class AdminUsers extends React.Component {
             console.log(data)
             if (data.success === true) {
                 message.success({ content: "User deleted successfully" })
+                this.setState({deleteModal: false, modalLoading: false})
+                this.fillTableData()
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -248,8 +251,8 @@ class AdminUsers extends React.Component {
                     title={"Are you sure you want to delete \"" + this.state.username + "\" ?"}
                     visible={this.state.deleteModal}
                     onOk={this.deleteAccount}
-                    onCancel={() => { this.setState({ deleteModal: false }) }}
                     confirmLoading={this.state.modalLoading}
+                    onCancel={() => { this.setState({ deleteModal: false }) }}
                 >
                     <h4>This action of mass destruction is irreveisble! <ExclamationCircleTwoTone twoToneColor="#d32029" /> </h4>
                 </Modal>

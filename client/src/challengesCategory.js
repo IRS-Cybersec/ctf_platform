@@ -8,6 +8,9 @@ import {
   SmileOutlined
 } from '@ant-design/icons';
 import './App.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import JsxParser from 'react-jsx-parser'
 
 const { Meta } = Card;
 const { TabPane } = Tabs;
@@ -61,7 +64,9 @@ class ChallengesCategory extends React.Component {
       loadingChallenge: false,
       currentChallengeSolved: false,
       challengeHints: [],
-      attemptsLeft: ""
+      attemptsLeft: "",
+      hintContent: "",
+      hintModal: false
 
     };
   }
@@ -82,7 +87,7 @@ class ChallengesCategory extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-
+      console.log(data)
       if (data.success === true) {
         this.setState({ challenges: data.challenges })
       }
@@ -93,6 +98,34 @@ class ChallengesCategory extends React.Component {
 
     }).catch((error) => {
       message.error({ content: "Oops. There was an issue connecting with the server" });
+    })
+  }
+
+  handleHint(id, chall, bought, solved) {
+    fetch("https://api.irscybersec.tk/v1/challenge/hint", {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      body: JSON.stringify({
+        "id": parseInt(id),
+        "chall": chall,
+      })
+    }).then((results) => {
+      return results.json(); //return data in JSON (since its JSON data)
+    }).then((data) => {
+      console.log(data)
+      if (data.success === true) {
+        if (bought === true) {
+          this.setState({ hintModal: true, hintContent: data.hint })
+        }
+        else {
+          message.success({ content: "Purchashed hint " + String(id) + " successfully!" })
+          this.setState({ hintModal: true, hintContent: data.hint })
+          this.loadChallengeDetails(chall, solved)
+        }
+
+      }
+    }).catch((error) => {
+      message.error({ content: "Oops. There was an issue connecting to the server" });
     })
   }
 
@@ -115,6 +148,36 @@ class ChallengesCategory extends React.Component {
 
       if (data.success === true) {
 
+        //Replace <code> with syntax highlighter
+        let description = data.chall.description
+        let position = description.search("<code>")
+
+        if (position !== -1) {
+          let language = ""
+          let offset = 0
+          position += 6
+
+          while (true) {
+            let currentLetter = description.slice(position + offset, position + offset + 1)
+            if (currentLetter === "\n") {
+              language = description.slice(position, position + offset)
+              description = description.slice(0, position) + description.slice(position + offset)
+              description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
+              description = description.replace("</code>", "\`}</SyntaxHighlighter>")
+              console.log(description)
+              data.chall.description = description
+              break
+            }
+            else if (offset > 10) {
+              break
+            }
+            offset += 1
+          }
+
+
+        }
+
+
         //Handle unlimited attempts
         if (data.chall.max_attempts === 0) {
           data.chall.max_attempts = "Unlimited"
@@ -125,26 +188,38 @@ class ChallengesCategory extends React.Component {
         }
 
         //Render tags
-        const tag = data.chall.tags
-        var renderTags = []
+        if (typeof data.chall.tags !== "undefined") {
+          const tag = data.chall.tags
+          var renderTags = []
 
-        for (var x = 0; x < tag.length; x++) {
-          renderTags.push(
-            <Tag color="#1765ad" key={tag[x]}>
-              {tag[x]}
-            </Tag>
-          )
+          for (let x = 0; x < tag.length; x++) {
+            renderTags.push(
+              <Tag color="#1765ad" key={tag[x]}>
+                {tag[x]}
+              </Tag>
+            )
+          }
         }
 
+
         //Handle hints
-        if (typeof data.chall.hints != "undefined") {
+        if (typeof data.chall.hints !== "undefined") {
           const hints = data.chall.hints
           var renderHints = []
 
-          for (var x = 0; x < hints.length; x++) {
-            renderHints.push(
-              <Button type="primary" key={hints[x].cost} style={{ marginBottom: "1.5vh" }}>Hint {x + 1} - {hints[x].cost} Points</Button>
-            )
+          for (let y = 0; y < hints.length; y++) {
+            if (hints[y].bought === false) {
+
+              renderHints.push(
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, false, solved) }}>Hint {y + 1} - {hints[y].cost} Points</Button>
+              )
+            }
+            else {
+              renderHints.push(
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, true, solved) }}>Hint {y + 1} - Purchased</Button>
+              )
+            }
+
           }
         }
 
@@ -185,6 +260,9 @@ class ChallengesCategory extends React.Component {
               'Congratulations for solving \"' + this.state.currentChallenge + '\".',
             duration: 0
           });
+          this.fetchCategories(this.props.category)
+          this.loadChallengeDetails(this.state.currentChallenge, true)
+          this.props.challengeFetchCategory()
         }
         else {
           notification["error"]({
@@ -218,6 +296,16 @@ class ChallengesCategory extends React.Component {
       <Layout style={{ height: "100%", width: "100%" }}>
 
         <Modal
+          title="Hint"
+          visible={this.state.hintModal}
+          onCancel={() => { this.setState({ hintModal: false }) }}
+          footer={null}
+        >
+          <p>{this.state.hintContent}</p>
+        </Modal>
+
+
+        <Modal
           title={null}
           visible={this.state.challengeModal}
           footer={null}
@@ -234,7 +322,13 @@ class ChallengesCategory extends React.Component {
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <p dangerouslySetInnerHTML={{ __html: this.state.viewingChallengeDetails.description }}></p>
+              <JsxParser
+                bindings={{
+                  atomDark: atomDark
+                }}
+                components={{ SyntaxHighlighter }}
+                jsx={this.state.viewingChallengeDetails.description}
+              />
 
 
               <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
@@ -343,13 +437,13 @@ class ChallengesCategory extends React.Component {
                       hoverable
                       type="inner"
                       bordered={true}
-                      bodyStyle={{ backgroundColor: "#306317" }}
+                      bodyStyle={{ backgroundColor: "#389e0d" }}
                       className="card-design"
-                      style={{ overflow: "hidden", opacity: 0.8 }}
+                      style={{ overflow: "hidden", opacity: 0.7 }}
                     >
                       <Meta
                         title={
-                          <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%" }}>{item.name}</h1>
+                          <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%", textAlign: "center" }}>{item.name}</h1>
                         }
                         description={
                           <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center" }}>

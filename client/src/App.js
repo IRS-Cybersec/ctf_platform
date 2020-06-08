@@ -125,7 +125,7 @@ class App extends React.Component {
           <Layout style={{ height: "100vh", width: "100vw" }}>
             <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse} style={{ width: "15vw" }}>
               <div style={{ height: "9vh", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                <img src="https://jloh02.github.io/images/CTF/cyberthon-2020/cyberthon.png" style={{ maxWidth: "13vw", maxHeight: "8vh", marginRight: "1vw" }}></img>
+                <img src={require("./assets/sieberrsec_ctf.png")} style={{ maxWidth: "13vw", maxHeight: "9vh", marginRight: "1vw" }}></img>
                 <Divider type="vertical" style={{ height: "6vh", zIndex: 2 }}></Divider>
               </div>
               <Menu
