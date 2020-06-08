@@ -720,17 +720,26 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if (!Array.isArray(req.body.category)) throw new Error('Validation');
 			let updateObj = {};
 			if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
 			if (req.body.new_name != undefined) updateObj.category = req.body.new_name;
-			if ((await collections.challs.updateMany(
-				{category: req.body.category},
-				{'$set': updateObj}
-			)).matchedCount > 0) res.send({success: true});
+			if ((await collections.challs.updateMany({
+				category: {
+					$in: req.body.category
+				}
+			}, {
+				$set: updateObj
+			})).matchedCount > 0) res.send({success: true});
 			else throw new Error('NotFound');
 		}
 		catch (err) {
-			errors(err, res);
+			if (err.message == 'Validation')
+				res.send({
+					success: false,
+					error: 'validation'
+				});
+			else errors(err, res);
 		}
 	});
 	app.post('/v1/challenge/delete', async (req, res) => {
