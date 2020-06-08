@@ -105,6 +105,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	app.post('/v1/account/create', async (req, res) => {
 		try {
+			if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
 			await collections.users.insertOne({
 				username: req.body.username.toLowerCase(),
 				email: req.body.email,
@@ -115,6 +116,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({success: true});
 		}
 		catch (err) {
+			if (err.message == 'BadEmail') {
+				res.send({
+					success: false,
+					error: 'email-formatting'
+				});
+				return;
+			}
 			if (err.name == 'MongoError') {
 				switch (err.code) {
 					case 11000:
@@ -148,7 +156,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({username: req.body.username.toLowerCase()}) > 0 ? true : false
+				taken: await collections.users.countDocuments({username: req.body.username.toLowerCase()}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -159,8 +167,55 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({email: req.body.email.toLowerCase()}) > 0 ? true : false
+				taken: await collections.users.countDocuments({email: req.body.email.toLowerCase()}) > 0 ? true : false
 			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/account/delete', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			let userToDelete = username;
+			if (req.body.username) {
+				if (permissions[username].type < 2) {
+					res.status(403);
+					res.send({
+						success: false,
+						error: 'permissions'
+					});
+					return;
+				}
+				userToDelete = req.body.username;
+			}
+			if ((await collections.users.deleteOne({username: userToDelete.toLowerCase()})).deletedCount == 0) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'not_found'
+				});
+				return;
+			}
+			await collections.challs.updateMany({}, {
+				$pull: {
+					solves: userToDelete
+				}
+			});
+			await collections.challs.updateMany({
+				hints: {
+					$exists: true
+				}
+			}, {
+				$pull: {
+					'hints.$[].purchased': userToDelete
+				}
+			});
+			await collections.challs.deleteMany({author: userToDelete});
+			await collections.transactions.deleteMany({author: userToDelete});
+			if (permissions.includes(username)) delete permissions[username];
+			res.send({success: true});
 		}
 		catch (err) {
 			errors(err, res);
@@ -195,51 +250,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					})
 					return true;
 			}
-			errors(err, res);
-		}
-	});
-	app.post('/v1/account/delete', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			let userToDelete = username;
-			if (req.body.username) {
-				if (permissions[username].type < 2) {
-					res.status(403);
-					res.send({
-						success: false,
-						error: 'permissions'
-					});
-					return;
-				}
-				userToDelete = req.body.username;
-			}
-			if ((await collections.users.deleteOne({username: userToDelete.toLowerCase()})).deletedCount == 0) {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'not_found'
-				});
-				return;
-			}
-			await collections.challs.updateMany({}, {
-				$pull: {
-					solves: userToDelete
-				}
-			});
-			await collections.challs.updateMany({
-				hints: {$exists: true}
-			}, {
-				$pull: {
-					'hints.$[].purchased': userToDelete
-				}
-			});
-			await collections.challs.deleteMany({author: userToDelete});
-			await collections.transactions.deleteMany({author: userToDelete});
-			if (permissions.includes(username)) delete permissions[username];
-			res.send({success: true});
-		}
-		catch (err) {
 			errors(err, res);
 		}
 	});
@@ -552,7 +562,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					);
 				}
 			}
-			// test
 			if (chall.max_attempts != 0) {
 				if (await collections.transactions.count({
 					author: username,

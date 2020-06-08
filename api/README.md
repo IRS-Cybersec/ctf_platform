@@ -59,10 +59,45 @@ Creates a new account
 
 #### Errors
 
-| Error            | Definition                               |
-| ---------------- | ---------------------------------------- |
-| `username-taken` | The username submitted is already in use |
-| `email-taken`    | The email submitted is already in use    |
+| Error              | Definition                               |
+| -----------------  | ---------------------------------------- |
+| `username-taken`   | The username submitted is already in use |
+| `email-taken`      | The email submitted is already in use    |
+| `email-formatting` | The email submitted was malformed        |
+
+### `/v1/account/delete`
+
+Deletes an account  
+Authenticated // Permissions: 2 for some features
+
+#### Input
+
+```json
+{
+	"username": "USERNAME OF USER TO BE DELETED (optional)"
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
+#### Remarks
+
+* If `username` is empty, the current user will be deleted
+* `username` can only be defined by a user with permissions level 2
+* This endpoint is very slow
+
+#### Errors
+
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `permissions` | The logged-in user does not have sufficient permissions to delete another user |
+| `not_found`   | The username supplied does not exist                         |
 
 ### `/v1/account/taken/username`
 
@@ -286,39 +321,6 @@ Authenticated // Permissions: 2
 | `permissions`  | The logged-in user does not have sufficient permissions to change another user's permission |
 | `out-of-range` | `type` is not between 0 to 2                                 |
 
-### `/v1/account/delete`
-
-Deletes an account  
-Authenticated // Permissions: 2 for some features
-
-#### Input
-
-```json
-{
-	"username": "USERNAME OF USER TO BE DELETED (optional)"
-}
-```
-
-#### Output
-
-```json
-{
-	"success": true
-}
-```
-
-#### Remarks
-
-* If `username` is empty, the current user will be deleted
-* `username` can only be defined by a user with permissions level 2
-* This endpoint is very slow
-
-#### Errors
-
-| Error         | Definition                                                   |
-| ------------- | ------------------------------------------------------------ |
-| `permissions` | The logged-in user does not have sufficient permissions to delete another user |
-
 ## Challenges
 
 ### `/v1/challenge/list`
@@ -344,7 +346,10 @@ No input required
 				{
 					"name": "CHALLENGE_NAME",
 					"points": "int",
-					"solved": "bool"
+					"solved": "bool",
+					"tags": [
+						"CHALLENGE_TAGS"
+					]
 				}
 			]
 		}
@@ -404,7 +409,7 @@ No input required
 	"success": true,
 	"categories": [
 		"NEW_CATEGORIES",
-		"hackTM 2020"
+		"OTHER_NEW_CATEGORIES"
 	]
 }
 ```
@@ -496,12 +501,13 @@ GET: /v1/account/show/CHALLENGE_NAME
 		],
 		"hints": [
 			{
+				"bought": true,
 				"hint": "HINT_CONTENTS" // hint 1
 			},
 			{
+				"bought": false,
 				"cost": "int" // hint 2
 			}
-			// etc
 		]
 	}
 }
@@ -511,7 +517,7 @@ GET: /v1/account/show/CHALLENGE_NAME
 
 * Only shows challenges with `visibility: true`
 * Missing information: number of attempts used up
-* Hints: if the hint has been bought, the object will print the hint directly. If not, the `cost` key will be an integer of the number of points needed
+* Hints: if the hint has been bought, the object will provide the hint directly. If not, the `cost` key will be an integer of the number of points needed
 
 #### Errors
 
@@ -605,13 +611,13 @@ Authenticated
 #### Remarks
 
 * The `id` field refers to the index of the hint (e.g. the **1**st hint would be ID = 0)
+* The server will return the hint if it has already been bought, but will not deduct any points
 
 #### Errors
 
 | Error          | Definition                                                   |
 | -------------- | ------------------------------------------------------------ |
 | `not-found`    | The `CHALLENGE_NAME` specified was invalid                   |
-| `bought`       | This hint has already been bought by the user and can be accessed through `/v1/challenge/show/:chall` |
 | `out-of-range` | The `id` field is too large or too small (minimum is 0)      |
 
 ### `/v1/challenge/submit`
@@ -639,7 +645,7 @@ Authenticated
 
 #### Remarks
 
-* The `id` field refers to the index of the hint (e.g. the **1**st hint would be ID = 0)
+* The `id` field refers to the index of the hint (e.g. the **1**st hint would be ID = 0 this isn't Lua)
 
 #### Errors
 
@@ -867,6 +873,28 @@ Authenticated // Permissions: 2
 }
 ```
 
+### `/v1/challenge/dekete`
+
+Delete a challenge  
+Authenticated // Permissions: 2
+
+**Does not delete cleanly**
+
+#### Input
+```json
+{
+	"chall": "CHALLENGE_NAME"
+}
+```
+
+#### Output
+
+```json
+{
+	"success": true
+}
+```
+
 #### Errors
 
 | Error         | Definition                                                   |
@@ -894,12 +922,12 @@ No input required
 	"success": true,
 	"scores": [
 		{
-			"author": "USERNAME_OF_AFFECTED_USER",
+			"author": "USERNAME_OF_USER",
 			"timestamp": "TIMESTAMP",
 			"points": "int (positive or negative)"
 		},
 		{
-			"author": "USERNAME_OF_AFFECTED_USER",
+			"author": "USERNAME_OF_USER",
 			"timestamp": "TIMESTAMP",
 			"points": "int (positive or negative)"
 		}
@@ -913,9 +941,42 @@ No input required
 * This endpoint is probably very slow (needs to look through every document)
 * `points` is non-zero
 
-### `/v1/scoreboard/:username`
+### `/v1/scoreboard`
 
-**HAS NOT BEEN IMPLEMENTED AND IS SUBJECT TO CHANGE**
+Get all user scores  
+Authenticated
+
+#### Input
+
+```
+No input required
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"scores": [
+		{
+			"username": "USERNAME_OF_USER",
+			"points": "int (positive or negative)"
+		},
+		{
+			"author": "USERNAME_OF_USER",
+			"points": "int (positive or negative)"
+		}
+	]
+}
+```
+
+#### Remarks
+
+* The events are **not sorted by user** and this must be done on the client side
+* This endpoint is probably very slow (needs to look through every document)
+* `points` is non-zero
+
+### `/v1/scoreboard/:username`
 
 Returns the score history of a requested user  
 Authenticated
@@ -954,7 +1015,7 @@ GET: /v1/scoreboard/USERNAME_OF_USER_TO_CHECK
 No special errors
 ```
 
-### `submissions`
+### `/v1/submissions`
 
 Returns all recorded submissions  
 Authenticated // Permissions: 2
@@ -990,3 +1051,6 @@ No input required
 | Error         | Definition                                                   |
 | ------------- | ------------------------------------------------------------ |
 | `permissions` | The logged-in user does not have sufficient permissions to view submissions |
+
+#### Remarks
+* The submission ID is kinda useless
