@@ -405,7 +405,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.get('/v1/challenge/list_all_categories', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			signer.unsign(req.headers.authorization);
+			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
