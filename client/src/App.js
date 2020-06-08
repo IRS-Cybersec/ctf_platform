@@ -200,7 +200,7 @@ class App extends React.Component {
                   </Menu>}
                   trigger={['click']}>
                   <div className="buttonHover"
-                    style={{ display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", height: "9vh", float: "right", paddingLeft: "1vw", paddingRight: "1vw", backgroundColor: "#1765ad", borderRadius: "5px", cursor: "pointer" }}>
+                    style={{ display: "flex", justifyContent: "row", alignContent: "center", alignItems: "center", height: "9vh", float: "right", paddingLeft: "1vw", paddingRight: "1vw", backgroundColor: "#1765ad", cursor: "pointer" }}>
                     <h3 style={{ marginRight: "1vw" }}>{this.state.username}</h3>
                     <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
                   </div>
