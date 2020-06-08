@@ -339,7 +339,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					challenges: {$push: {
 						name: '$name',
 						points: '$points',
-						solved: {$in: [username.toLowerCase(), '$solves']}
+						solved: {$in: [username.toLowerCase(), '$solves']},
+						tags: '$tags'
 					}}
 				}}
 			]).toArray();
@@ -395,6 +396,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				challenges: (await collections.challs.find({}, {projection: {name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0}}).toArray())
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/challenge/list_all_categories', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			res.send({
+				success: true,
+				categories: await collections.challs.distinct('category')
 			});
 		}
 		catch (err) {
