@@ -637,7 +637,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.body.hints) {
 				doc.hints = req.body.hints;
 				doc.hints.forEach(hint => {
-					if (!hint.cost) throw new Error('MissingHintCost');
+					if (hint.cost == undefined) throw new Error('MissingHintCost');
 					hint.cost = parseInt(hint.cost);
 					hint.purchased = [];
 				});
@@ -799,6 +799,19 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				scores: await collections.transactions.find({points: {'$ne': 0}, author: req.params.username}, {projection: {points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0}}).toArray()
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/scores/:username', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			res.send({
+				success: true,
+				score: (await collections.users.find({username: username}, {projection: {score: 1, _id: 0}}).toArray())[0].score
 			});
 		}
 		catch (err) {

@@ -941,7 +941,7 @@ No input required
 * This endpoint is probably very slow (needs to look through every document)
 * `points` is non-zero
 
-### `/v1/scoreboard`
+### `/v1/scores`
 
 Get all user scores  
 Authenticated
@@ -960,21 +960,15 @@ No input required
 	"scores": [
 		{
 			"username": "USERNAME_OF_USER",
-			"points": "int (positive or negative)"
+			"points": "int"
 		},
 		{
 			"author": "USERNAME_OF_USER",
-			"points": "int (positive or negative)"
+			"points": "int"
 		}
 	]
 }
 ```
-
-#### Remarks
-
-* The events are **not sorted by user** and this must be done on the client side
-* This endpoint is probably very slow (needs to look through every document)
-* `points` is non-zero
 
 ### `/v1/scoreboard/:username`
 
@@ -1008,6 +1002,36 @@ GET: /v1/scoreboard/USERNAME_OF_USER_TO_CHECK
 	]
 }
 ```
+
+#### Errors
+
+```
+No special errors
+```
+
+### `/v1/scores/:username`
+
+Get all user scores  
+Authenticated
+
+#### Input
+
+```
+GET: /v1/scoreboard/USERNAME_OF_USER_TO_CHECK
+```
+
+#### Output
+
+```json
+{
+	"success": true,
+	"scores": 200
+}
+```
+
+#### Remarks
+
+* The `not-found` error **has not** been implemented yet.
 
 #### Errors
 
