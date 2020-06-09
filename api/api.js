@@ -545,7 +545,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				await collections.transactions.insertOne({
 					author: username,
 					challenge: req.body.chall,
-					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					timestamp: new Date(),
 					type: blocked ? 'blocked_submission' : 'submission',
 					points: correct ? chall.points : 0,
 					correct: correct,
@@ -628,7 +628,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				flags: req.body.flags,
 
 				author: username,
-				created: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+				created: new Date(),
 				solves: [],
 				max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
 				visibility: req.body.visibility ? true : false
