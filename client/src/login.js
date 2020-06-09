@@ -24,7 +24,7 @@ class Login extends React.Component {
     }
 
     handleRegister = values => {
-        this.setState({loading: true})
+        this.setState({ loading: true })
         fetch("https://api.irscybersec.tk//v1/account/create", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
@@ -36,9 +36,10 @@ class Login extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
+            console.log(data)
             if (data.success === true) {
                 message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!" })
-                this.setState({loading: false})
+
             }
             else if (data.error === "email-taken") {
                 message.warn({ content: "Oops. Email already taken" })
@@ -46,18 +47,24 @@ class Login extends React.Component {
             else if (data.error === "username-taken") {
                 message.warn({ content: "Oops. Username already taken" })
             }
+            else if (data.error === "email-formatting") {
+                message.error({ content: "Oops, registration is not enabled for any email domains outside HCI"})
+            }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
 
+            this.setState({ loading: false })
+
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
     }
 
     handleLogin = values => {
-        this.setState({ loading: true})
+        this.setState({ loading: true })
         fetch("https://api.irscybersec.tk/v1/account/login", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
@@ -69,27 +76,28 @@ class Login extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             console.log(data)
-            if (data.success === true) {
-                const login = async () => {
+
+            const login = async () => {
+                if (data.success === true) {
                     await this.props.handleLogin(data.token, data.permissions, values.remember)
-                    this.setState({loading: false})
-                }
-
-                login()
-            }
-            else {
-
-                if (data.error === "wrong-username") {
-                    message.error({ content: "Oops. Username does not exist" })
-                }
-                else if (data.error === "wrong-password") {
-                    message.error({ content: "Oops. Incorrect password" })
                 }
                 else {
-                    message.error({ content: "Oops. Unknown error" })
-                }
 
+                    if (data.error === "wrong-username") {
+                        message.error({ content: "Oops. Username does not exist" })
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Oops. Incorrect password" })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error" })
+                    }
+
+                }
+                this.setState({ loading: false })
             }
+            login()
+
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting to the server" });
         })
@@ -111,12 +119,15 @@ class Login extends React.Component {
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}> IRS Cybersec CTF Platform</span>
                         </div>
                         <div style={{ color: "white", fontSize: "1.5vw" }}>
-                            <p style={{ textShadow: '1px 1px 1px 1px #000000' }}>Reconstructing the wheel from scratch. Because why not?™</p>
+                            <p style={{ textShadow: '1px 1px 1px 1px #000000' }}>The Wheel. Reinvented.™</p>
                         </div>
                     </div>
 
 
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", boxShadow: "-5px 0px 20px black" }}>
+                        <div style={{ padding: "15px", marginBottom: "5vh" }}>
+                            <img src={require("./sieberrsec_ctf.svg")} style={{ width: "100%" }}></img>
+                        </div>
                         {this.state.login && (
                             <div>
                                 <h1 style={{ color: "white", fontSize: "2vw" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>

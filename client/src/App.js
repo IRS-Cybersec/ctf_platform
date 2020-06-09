@@ -7,7 +7,8 @@ import {
   NotificationTwoTone,
   UserOutlined,
   LogoutOutlined,
-  CodeTwoTone
+  CodeTwoTone,
+  PlusSquareTwoTone
 } from '@ant-design/icons';
 import './App.css';
 import { NavLink, Switch, Route, withRouter, Redirect } from 'react-router-dom';
@@ -19,6 +20,7 @@ import announcements from "./announcements.js";
 import Login from "./login.js";
 import admin from "./admin.js";
 import Oops from "./oops.js";
+import UserChallengeCreate from "./userChallengeCreate.js";
 
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -47,7 +49,7 @@ class App extends React.Component {
   }
 
 
-  componentWillMount() {
+  componentDidMount() {
     // Handle any page changes via manual typing/direct access
     const page = this.props.location.pathname.slice(1);
 
@@ -61,29 +63,29 @@ class App extends React.Component {
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
 
-      
+
       if (token !== null) {
 
-          // Get permissions from server
-          fetch("https://api.irscybersec.tk/v1/account/type", {
-            method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-          }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-          }).then((data) => {
-            if (data.success === true) {
-              const username = token.split(".")[0]
-              this.setState({ permissions: data.type, token: token, username: username})
-              message.success({content: "Session restored. Welcome back " + username})
-            }
-            else { 
-              //Might be a fake token since server does not have it, exit
-              this.setState({ token: false })
-              message.error({content: "Oops. Failed to restore session, please login again"})
-            }
-          }).catch((error) => {
-            message.error({ content: "Oops. There was an issue connecting to the server" });
-          })
+        // Get permissions from server
+        fetch("https://api.irscybersec.tk/v1/account/type", {
+          method: 'get',
+          headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+          return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+          if (data.success === true) {
+            const username = token.split(".")[0]
+            this.setState({ permissions: data.type, token: token, username: username })
+            message.success({ content: "Session restored. Welcome back " + username })
+          }
+          else {
+            //Might be a fake token since server does not have it, exit
+            this.setState({ token: false })
+            message.error({ content: "Oops. Failed to restore session, please login again" })
+          }
+        }).catch((error) => {
+          message.error({ content: "Oops. There was an issue connecting to the server" });
+        })
       }
     }
   }
@@ -95,7 +97,7 @@ class App extends React.Component {
     const store = async () => {
       if (remember === true) {
         await localStorage.setItem('IRSCTF-token', receivedToken)
-        
+
       }
       else {
         await sessionStorage.setItem("IRSCTF-token", receivedToken)
@@ -106,8 +108,8 @@ class App extends React.Component {
     }
 
     store()
-    
-    
+
+
   }
 
   handleLogout() {
@@ -125,8 +127,7 @@ class App extends React.Component {
           <Layout style={{ height: "100vh", width: "100vw" }}>
             <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse} style={{ width: "15vw" }}>
               <div style={{ height: "9vh", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                <img src={require("./assets/sieberrsec_ctf.png")} style={{ maxWidth: "13vw", maxHeight: "9vh", marginRight: "1vw" }}></img>
-                <Divider type="vertical" style={{ height: "6vh", zIndex: 2 }}></Divider>
+                <img src={require("./sieberrsec_ctf.svg")} style={{ maxWidth: "110%", maxHeight: "200%", marginRight: "1vw" }}></img>
               </div>
               <Menu
                 selectedKeys={[this.state.current]}
@@ -140,41 +141,50 @@ class App extends React.Component {
         defaultOpenKeys - default opened sub menus
         inline - Sidebar Menu
         */}
-                <Menu.Item key="Home" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center", marginTop: 0 }}>
+                <Menu.Item key="Home" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center", marginTop: 0 }}>
                   <NavLink to="/">
-                    <HomeTwoTone style={{ fontSize: "1.4vw" }} />
+                    <HomeTwoTone style={{ fontSize: "110%" }} />
                     <span>Home</span>
                   </NavLink>
                 </Menu.Item>
 
-                <Menu.Item key="Challenges" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center" }}>
+                <Menu.Item key="Challenges" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center" }}>
                   <NavLink to="/Challenges">
-                    <FlagTwoTone style={{ fontSize: "1.4vw" }} />
+                    <FlagTwoTone style={{ fontSize: "110%" }} />
                     <span>Challenges</span>
                   </NavLink>
                 </Menu.Item>
 
-                <Menu.Item key="Scoreboard" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center" }}>
+                <Menu.Item key="Scoreboard" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center" }}>
                   <NavLink to="/Scoreboard">
-                    <FundTwoTone style={{ fontSize: "1.4vw" }} />
+                    <FundTwoTone style={{ fontSize: "110%" }} />
                     <span>Scoreboard</span>
                   </NavLink>
                 </Menu.Item>
 
-                <Menu.Item key="Announcements" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center" }}>
+                <Menu.Item key="Announcements" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center" }}>
                   <NavLink to="/Announcements">
-                    <NotificationTwoTone style={{ fontSize: "1.4vw" }} />
+                    <NotificationTwoTone style={{ fontSize: "110%" }} />
                     <span>Announcements</span>
                   </NavLink>
                 </Menu.Item>
 
                 <Menu.Divider />
 
+                {this.state.permissions === 1 && (
+                  <Menu.Item key="CreateChallenge" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center", color: "#d32029" }}>
+                    <NavLink to="/CreateChallenge">
+                      <PlusSquareTwoTone style={{ fontSize: "110%" }} twoToneColor="#d89614" />
+                      <span>Create Challenge</span>
+                    </NavLink>
+                  </Menu.Item>
+                )}
+
                 {this.state.permissions === 2 && (
 
-                  <Menu.Item key="Admin" style={{ fontSize: "1.2vw", height: "8vh", display: "flex", alignItems: "center", color: "#d32029" }}>
+                  <Menu.Item key="Admin" style={{ fontSize: "115%", height: "8vh", display: "flex", alignItems: "center", color: "#d32029" }}>
                     <NavLink to="/Admin">
-                      <CodeTwoTone style={{ fontSize: "1.4vw" }} twoToneColor="#d32029" />
+                    <CodeTwoTone style={{ fontSize: "110%" }} twoToneColor="#d32029" />
                       <span>Admin Panel</span>
                     </NavLink>
                   </Menu.Item>
@@ -183,8 +193,8 @@ class App extends React.Component {
               </Menu>
             </Sider>
 
-            <Layout style={{width: "100%", height: "100%", overflow: "hidden"}}>
-              <Header className="site-layout-background" style={{ height: "9vh"}}>
+            <Layout style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+              <Header className="site-layout-background" style={{ height: "9vh" }}>
                 <Dropdown overlay={
                   <Menu>
                     <Menu.Item key="0">
@@ -208,19 +218,26 @@ class App extends React.Component {
               </Header>
 
 
-              <Content style={{ marginLeft: "10px", marginRight: "10px" }}>
+              <Content style={{ marginLeft: "10px" }}>
                 <Switch>
-                    <Route exact path='/' component={home} />
-                    <Route exact path='/Challenges' component={challenges} />
-                    <Route exact path='/Challenges/:category' component={challenges} />
-                    <Route exact path='/Scoreboard' component={Scoreboard} />
-                    <Route exact path='/Announcements' component={announcements} />
-                    <Route path='/Profile' render={(props) => <Profile {...props} token={this.state.token} username={this.state.username} />} />
-                    <Route path='/Oops' component={Oops} />
+                  <Route exact path='/' component={home} />
+                  <Route exact path='/Challenges' component={challenges} />
+                  <Route exact path='/Challenges/:category' component={challenges} />
+                  <Route exact path='/Scoreboard' component={Scoreboard} />
+                  <Route exact path='/Announcements' component={announcements} />
 
-                    {this.state.permissions === 2 ? (
-                      <Route path='/Admin' component={admin} />
-                    ) : (
+                  <Route path='/Profile' render={(props) => <Profile {...props} token={this.state.token} username={this.state.username} />} />
+                  <Route path='/Oops' component={Oops} />
+
+                  {this.state.permissions >= 1 ? (
+                    <Route exact path='/CreateChallenge' component={UserChallengeCreate} />
+                  ) : (
+                      <Redirect to="/Oops" />
+                    )}
+
+                  {this.state.permissions === 2 ? (
+                    <Route path='/Admin' component={admin} />
+                  ) : (
                       <Redirect to="/Oops" />
                     )}
 

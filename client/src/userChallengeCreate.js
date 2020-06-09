@@ -282,7 +282,7 @@ const CreateChallengeForm = (props) => {
 };
 
 
-class AdminChallengeCreate extends React.Component {
+class UserChallengeCreate extends React.Component {
     constructor(props) {
         super(props);
 
@@ -377,7 +377,6 @@ class AdminChallengeCreate extends React.Component {
     }
 
     createChallenge = (values) => {
-        console.log(values)
         this.setState({ loading: true })
         if (values.visibility === "false") {
             values.visibility = false
@@ -405,12 +404,11 @@ class AdminChallengeCreate extends React.Component {
             console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created challenge " + values.name + " successfully!" })
-                this.props.handleCreateBack()
+                this.setState({ loading: false })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            this.setState({ loading: false })
 
 
         }).catch((error) => {
@@ -426,7 +424,7 @@ class AdminChallengeCreate extends React.Component {
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%", margin: "10px" }}>
+            <Layout style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "hidden", padding: "10px" }}>
                 <Modal
                     title={null}
                     visible={this.state.previewModal}
@@ -470,14 +468,14 @@ class AdminChallengeCreate extends React.Component {
 
                 </Modal>
                 <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
-                    <Button type="primary" onClick={this.props.handleBack} icon={<LeftOutlined />} style={{ maxWidth: "20ch", marginBottom: "3vh", marginRight: "2vw" }}>Back</Button>
                     <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
                 </div>
                 <CreateChallengeForm createChallenge={this.createChallenge} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
             </Layout>
+
         );
     }
 }
 
-export default AdminChallengeCreate;
+export default UserChallengeCreate;

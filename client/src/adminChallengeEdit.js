@@ -67,13 +67,13 @@ const CreateChallengeForm = (props) => {
                 <Input allowClear placeholder="Enter a challenge description" />
             </Form.Item>
 
-            <h1>Challenge Description:</h1>
+            <h1>Challenge Description (JSX Supported):</h1>
             <Form.Item
                 name="description"
                 rules={[{ required: true, message: 'Please enter a category' }]}
             >
 
-                <TextArea rows={5} allowClear placeholder="Enter a challenge description. HTML is supported" />
+                <TextArea rows={5} allowClear placeholder="Enter a challenge description. JSX is very similiar to HTML, only difference being that there MUST be closing tags for everything." />
             </Form.Item>
 
             <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly" }}>
@@ -97,7 +97,7 @@ const CreateChallengeForm = (props) => {
                         name="max_attempts"
                         rules={[{ required: true, message: 'Please enter the maximum number of attempts' }, {
                             type: 'integer',
-                            message: "Please enter a valid integer between 1-10000",
+                            message: "Please enter a valid integer between 0-10000",
                         },]}
                         style={{ alignText: 'center' }}
                         initialValue={0}
@@ -224,10 +224,10 @@ const CreateChallengeForm = (props) => {
                                         fieldKey={[field.fieldKey, "cost"]}
                                         rules={[{ required: true, message: 'Missing cost for hint' }, {
                                             type: 'integer',
-                                            message: "Please enter a valid integer between 1-10000",
+                                            message: "Please enter a valid integer between 0-10000",
                                         },]}
                                     >
-                                        <InputNumber min={1} max={10000} style={{ width: "40ch" }} placeholder="Cost"></InputNumber>
+                                        <InputNumber min={0} max={10000} style={{ width: "40ch" }} placeholder="Cost"></InputNumber>
                                     </Form.Item>
 
                                     <MinusCircleOutlined
@@ -338,11 +338,13 @@ class AdminChallengeEdit extends React.Component {
         }).then((data) => {
             console.log(data)
             if (data.success === true) {
-                this.setState({ loading: false, challengeData: data.chall })
+                this.setState({ challengeData: data.chall })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
+
+            this.setState({loading: false})
 
 
         }).catch((error) => {

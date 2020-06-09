@@ -24,8 +24,12 @@ class home extends React.Component {
   render() {
     return (
 
-      <Layout style={{ height: "100%", width: "100%" }}>
-          Home
+      <Layout style={{ height: "100%", width: "100%", textAlign: "center" }}>
+          <h2>Welcome to the IRS Cybersec CTF Platform!</h2>
+          <h3>This platform is in really early alpha. Do report any bugs you find :D!</h3>
+          <p>
+            Version 0.12 (10/6/2020)
+          </p>
       </Layout>
     );
   }

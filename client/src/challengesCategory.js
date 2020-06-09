@@ -209,14 +209,16 @@ class ChallengesCategory extends React.Component {
 
           for (let y = 0; y < hints.length; y++) {
             if (hints[y].bought === false) {
-
+              if (hints[y].cost === 0) {
+                hints[y].cost = "Free"
+              }
               renderHints.push(
                 <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, false, solved) }}>Hint {y + 1} - {hints[y].cost} Points</Button>
               )
             }
             else {
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, true, solved) }}>Hint {y + 1} - Purchased</Button>
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(y, name, true, solved) }}>Hint {y + 1} - Purchased</Button>
               )
             }
 

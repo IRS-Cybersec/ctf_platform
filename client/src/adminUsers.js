@@ -274,7 +274,7 @@ class AdminUsers extends React.Component {
                 <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (
                         <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
-                            <LoadingOutlined />
+                            <LoadingOutlined style={{color: "#177ddc"}}/>
                         </div>
                     )
                 }}>
