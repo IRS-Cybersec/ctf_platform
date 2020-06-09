@@ -1017,7 +1017,7 @@ Authenticated
 #### Input
 
 ```
-GET: /v1/scoreboard/USERNAME_OF_USER_TO_CHECK
+GET: /v1/scores/USERNAME_OF_USER_TO_CHECK
 ```
 
 #### Output

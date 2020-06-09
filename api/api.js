@@ -520,7 +520,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					author: username,
 					challenge: req.body.chall,
 					type: 'hint',
-					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					timestamp: new Date(),
 					points: -hints.hints[0].cost,
 					hint_id: parseInt(req.body.id)
 				});
@@ -772,7 +772,15 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			signer.unsign(req.headers.authorization);
 			res.send({
 				success: true,
-				scores: await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray()
+				users: await collections.transactions.aggregate([
+					{$group: {
+						_id: '$author',
+						changes: {$push: {
+							points: '$points',
+							timestamp: '$timestamp'
+						}}
+					}}
+				]).toArray()
 			});
 		}
 		catch (err) {
