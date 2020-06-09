@@ -63,7 +63,7 @@
       max_attempts: {
         bsonType: 'int'
       },
-      visbility: {
+      visibility: {
         bsonType: 'bool'
       },
       flags: {
@@ -76,10 +76,12 @@
       },
       files: {
         bsonType: 'array',
-        minItems: 1,
-        uniqueItems: true,
         items: {
-          bsonType: 'string'
+          bsonType: 'object',
+          required: [
+            'url',
+            'name'
+          ]
         }
       },
       solves: {
@@ -94,7 +96,7 @@
         bsonType: 'string'
       },
       created: {
-        bsonType: 'timestamp'
+        bsonType: 'date'
       }
     }
   }

@@ -105,6 +105,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	app.post('/v1/account/create', async (req, res) => {
 		try {
+			if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
 			await collections.users.insertOne({
 				username: req.body.username.toLowerCase(),
 				email: req.body.email,
@@ -115,6 +116,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({success: true});
 		}
 		catch (err) {
+			if (err.message == 'BadEmail') {
+				res.send({
+					success: false,
+					error: 'email-formatting'
+				});
+				return;
+			}
 			if (err.name == 'MongoError') {
 				switch (err.code) {
 					case 11000:
@@ -148,7 +156,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({username: req.body.username.toLowerCase()}) > 0 ? true : false
+				taken: await collections.users.countDocuments({username: req.body.username.toLowerCase()}) > 0 ? true : false
 			});
 		}
 		catch (err) {
@@ -159,8 +167,55 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			res.send({
 				success: true,
-				taken: await collections.users.count({email: req.body.email.toLowerCase()}) > 0 ? true : false
+				taken: await collections.users.countDocuments({email: req.body.email.toLowerCase()}) > 0 ? true : false
 			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/account/delete', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			let userToDelete = username;
+			if (req.body.username) {
+				if (permissions[username].type < 2) {
+					res.status(403);
+					res.send({
+						success: false,
+						error: 'permissions'
+					});
+					return;
+				}
+				userToDelete = req.body.username;
+			}
+			if ((await collections.users.deleteOne({username: userToDelete.toLowerCase()})).deletedCount == 0) {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'not_found'
+				});
+				return;
+			}
+			await collections.challs.updateMany({}, {
+				$pull: {
+					solves: userToDelete
+				}
+			});
+			await collections.challs.updateMany({
+				hints: {
+					$exists: true
+				}
+			}, {
+				$pull: {
+					'hints.$[].purchased': userToDelete
+				}
+			});
+			await collections.challs.deleteMany({author: userToDelete});
+			await collections.transactions.deleteMany({author: userToDelete});
+			if (permissions.includes(username)) delete permissions[username];
+			res.send({success: true});
 		}
 		catch (err) {
 			errors(err, res);
@@ -195,51 +250,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					})
 					return true;
 			}
-			errors(err, res);
-		}
-	});
-	app.post('/v1/account/delete', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			let userToDelete = username;
-			if (req.body.username) {
-				if (permissions[username].type < 2) {
-					res.status(403);
-					res.send({
-						success: false,
-						error: 'permissions'
-					});
-					return;
-				}
-				userToDelete = req.body.username;
-			}
-			if ((await collections.users.deleteOne({username: userToDelete.toLowerCase()})).deletedCount == 0) {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'not_found'
-				});
-				return;
-			}
-			await collections.challs.updateMany({}, {
-				$pull: {
-					solves: userToDelete
-				}
-			});
-			await collections.challs.updateMany({
-				hints: {$exists: true}
-			}, {
-				$pull: {
-					'hints.$[].purchased': userToDelete
-				}
-			});
-			await collections.challs.deleteMany({author: userToDelete});
-			await collections.transactions.deleteMany({author: userToDelete});
-			if (permissions.includes(username)) delete permissions[username];
-			res.send({success: true});
-		}
-		catch (err) {
 			errors(err, res);
 		}
 	});
@@ -339,7 +349,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					challenges: {$push: {
 						name: '$name',
 						points: '$points',
-						solved: {$in: [username.toLowerCase(), '$solves']}
+						solved: {$in: [username.toLowerCase(), '$solves']},
+						tags: '$tags'
 					}}
 				}}
 			]).toArray();
@@ -395,6 +406,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				challenges: (await collections.challs.find({}, {projection: {name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0}}).toArray())
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/challenge/list_all_categories', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			res.send({
+				success: true,
+				categories: await collections.challs.distinct('category')
 			});
 		}
 		catch (err) {
@@ -495,7 +520,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					author: username,
 					challenge: req.body.chall,
 					type: 'hint',
-					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					timestamp: new Date(),
 					points: -hints.hints[0].cost,
 					hint_id: parseInt(req.body.id)
 				});
@@ -520,7 +545,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				await collections.transactions.insertOne({
 					author: username,
 					challenge: req.body.chall,
-					timestamp: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+					timestamp: new Date(),
 					type: blocked ? 'blocked_submission' : 'submission',
 					points: correct ? chall.points : 0,
 					correct: correct,
@@ -537,7 +562,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					);
 				}
 			}
-			// test
 			if (chall.max_attempts != 0) {
 				if (await collections.transactions.count({
 					author: username,
@@ -604,7 +628,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				flags: req.body.flags,
 
 				author: username,
-				created: new MongoDB.Timestamp(0, Math.floor(new Date().getTime() / 1000)),
+				created: new Date(),
 				solves: [],
 				max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
 				visibility: req.body.visibility ? true : false
@@ -613,7 +637,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.body.hints) {
 				doc.hints = req.body.hints;
 				doc.hints.forEach(hint => {
-					if (!hint.cost) throw new Error('MissingHintCost');
+					if (hint.cost == undefined) throw new Error('MissingHintCost');
 					hint.cost = parseInt(hint.cost);
 					hint.purchased = [];
 				});
@@ -705,17 +729,26 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if (!Array.isArray(req.body.category)) throw new Error('Validation');
 			let updateObj = {};
 			if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
 			if (req.body.new_name != undefined) updateObj.category = req.body.new_name;
-			if ((await collections.challs.updateMany(
-				{category: req.body.category},
-				{'$set': updateObj}
-			)).matchedCount > 0) res.send({success: true});
+			if ((await collections.challs.updateMany({
+				category: {
+					$in: req.body.category
+				}
+			}, {
+				$set: updateObj
+			})).matchedCount > 0) res.send({success: true});
 			else throw new Error('NotFound');
 		}
 		catch (err) {
-			errors(err, res);
+			if (err.message == 'Validation')
+				res.send({
+					success: false,
+					error: 'validation'
+				});
+			else errors(err, res);
 		}
 	});
 	app.post('/v1/challenge/delete', async (req, res) => {
@@ -739,7 +772,28 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			signer.unsign(req.headers.authorization);
 			res.send({
 				success: true,
-				scores: await collections.transactions.find({points: {'$ne': 0}}, {projection: {author: 1, points: 1, timestamp: 1, _id: 0}}).toArray()
+				users: await collections.transactions.aggregate([
+					{$group: {
+						_id: '$author',
+						changes: {$push: {
+							points: '$points',
+							timestamp: '$timestamp'
+						}}
+					}}
+				]).toArray()
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/scores', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			signer.unsign(req.headers.authorization);
+			res.send({
+				success: true,
+				scores: await collections.users.find({}, {projection: {username: 1, score: 1, _id: 0}}).toArray()
 			});
 		}
 		catch (err) {
@@ -753,6 +807,19 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				scores: await collections.transactions.find({points: {'$ne': 0}, author: req.params.username}, {projection: {points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0}}).toArray()
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/scores/:username', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			res.send({
+				success: true,
+				score: (await collections.users.find({username: username}, {projection: {score: 1, _id: 0}}).toArray())[0].score
 			});
 		}
 		catch (err) {
