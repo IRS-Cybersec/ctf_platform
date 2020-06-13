@@ -1,5 +1,6 @@
 const argon2 = require('argon2');
 const express = require('express');
+const mongoSanitize = require('express-mongo-sanitize');
 const RD = require('reallydangerous');
 const cors = require('cors');
 const MongoDB = require('mongodb');
@@ -8,6 +9,7 @@ let permissions = [];
 const signer = new RD.Signer('supermassivepowerfulsecretuwu', 'supermassivepowerfulsaltuwu');
 const app = express();
 app.use(express.json());
+app.use(mongoSanitize());
 // app.use(cors({
 // 	credentials: true,
 // 	origin: 'http://localhost'
@@ -714,6 +716,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			let updateObj = {};
 			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility'];
 			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
+			if (updateObj.hints) {
+				updateObj.hints.forEach(hint => {
+					if (hint.cost == undefined) throw new Error('MissingHintCost');
+					hint.cost = parseInt(hint.cost);
+					hint.purchased = hint.purchased != undefined ? hint.purchased : [];
+				});
+			}
 			if ((await collections.challs.updateOne(
 				{name: req.body.chall},
 				{'$set': updateObj}
@@ -721,6 +730,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			else throw new Error('NotFound');
 		}
 		catch (err) {
+			if (err.message == 'MissingHintCost') {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'validation'
+				});
+			}
 			errors(err, res);
 		}
 	});

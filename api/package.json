@@ -21,6 +21,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.3",
+    "express-mongo-sanitize": "^2.0.0",
     "mongodb": "^3.5.8",
     "reallydangerous": "^2.1.0"
   }
