@@ -4,7 +4,7 @@ import {
   LoadingOutlined
 } from '@ant-design/icons';
 import './App.css';
-import { orderBy } from "lodash";
+import { orderBy, clone, times } from "lodash";
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label } from "recharts";
 
 const { Column } = Table;
@@ -16,7 +16,7 @@ class Scoreboard extends React.Component {
 
     this.state = {
       scores: [],
-      graphData: [],
+      graphData: [{ "": 0 }],
       top10: [""] * 10,
       loadingGraph: false
     };
@@ -27,7 +27,7 @@ class Scoreboard extends React.Component {
   }
 
   getFinalScores() {
-    this.setState({loadingGraph: true})
+    this.setState({ loadingGraph: true })
     fetch("https://api.irscybersec.tk/v1/scores", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -38,10 +38,10 @@ class Scoreboard extends React.Component {
       let top10names = []
       let top10scores = {}
 
+
       if (data.success === true) {
         let scoreArray = orderBy(data.scores, ["score"], ["desc"])
         for (let i = 0; i < scoreArray.length; i++) {
-          scoreArray[i].position = String(i + 1) + "."
 
           if (i < 10) {
             top10[scoreArray[i].username] = ""
@@ -50,9 +50,13 @@ class Scoreboard extends React.Component {
           }
 
         }
-        console.log(scoreArray)
-        this.setState({ scores: scoreArray, top10: top10names })
-        this.plotGraph(top10, top10scores)
+
+        const waitalittle = async () => {
+          await this.setState({ top10: top10names })
+          this.plotGraph(top10, top10scores, scoreArray)
+        }
+        waitalittle()
+
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -64,17 +68,17 @@ class Scoreboard extends React.Component {
     })
   }
 
-  plotGraph(top10, top10scores) {
-    console.log(top10)
+  plotGraph(top10, top10scores, scoreArray) {
     fetch("https://api.irscybersec.tk/v1/scoreboard", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
       let formattedData = []
       let finalPoint = {}
+
+      let timestamp = {}
 
       if (data.success === true) {
         finalPoint = top10scores
@@ -94,16 +98,50 @@ class Scoreboard extends React.Component {
               currentPoint["name"] = data.users[i]._id
               currentPoint["points"] = pointsSoFar
               currentPoint["Time"] = scores[x].timestamp
-              formattedData.push(currentPoint)
+              formattedData.push(Object.assign({}, currentPoint))
             }
 
+          } 
+          
+          //Process timestamps
+          let scores2 = data.users[i].changes
+
+
+          for (let x = 0; x < scores2.length; x++) {
+            if (data.users[i]._id in timestamp) {
+
+              let d1 = new Date(timestamp[data.users[i]._id]) 
+              let d2 = new Date(scores2[x].timestamp)
+              if (d1 < d2) {
+                timestamp[data.users[i]._id] = scores2[x].timestamp
+              }
+            }
+            else {
+              timestamp[data.users[i]._id] = scores2[x].timestamp
+            }
           }
+
+
+        }
+        //console.log(timestamp)
+        // More processing & sort by timestamp
+        for (let x = 0; x < scoreArray.length; x++) {
+          if (scoreArray[x].username in timestamp) {
+            scoreArray[x].timestamp = timestamp[scoreArray[x].username]
+          }
+          else {
+            scoreArray[x].timestamp = "0"
+          }
+        }
+        scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
+        console.log(scoreArray);
+        for (let x = 0; x < scoreArray.length; x++) {
+            scoreArray[x].position =  String(x+1) + "."
         }
 
 
         formattedData = orderBy(formattedData, ["Time"], ["asc"])
-        console.log(formattedData)
-
+        //console.log(formattedData)
         let pointDict = {}
         let finalData = []
 
@@ -118,9 +156,10 @@ class Scoreboard extends React.Component {
         }
 
         finalData.push(finalPoint)
-        console.log(finalData)
+        //console.log(finalData)
+        //Temp fix for table data to use timestamp
 
-        this.setState({ graphData: finalData, loadingGraph: false })
+        this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray })
 
       }
       else {
@@ -136,7 +175,7 @@ class Scoreboard extends React.Component {
   render() {
     return (
 
-      <Layout style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "auto" }}>
+      <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "auto" }}>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
 
           <AreaChart width={1000} height={350} data={this.state.graphData}

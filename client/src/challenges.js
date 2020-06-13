@@ -116,7 +116,7 @@ class challenges extends React.Component {
   render() {
     return (
 
-      <Layout style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "hidden", paddingRight: "10px" }}>
+      <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "hidden", paddingRight: "10px" }}>
         <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh" }}>
           <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
 
@@ -166,6 +166,7 @@ class challenges extends React.Component {
           <List
             grid={{ column: 4, gutter: 20 }}
             dataSource={this.state.categories}
+            className="pageTransition"
             locale={{
               emptyText: (
                 <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>

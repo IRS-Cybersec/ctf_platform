@@ -14,32 +14,48 @@
     animation-fill-mode: forwards;
 }
 
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-20%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.pageTransition {
+    animation-duration: 0.35s;
+    animation-timing-function: ease-out;
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-name: slideInFromLeft;
+}
+
 .card-design {
     border-color: #1890ff !important;
     border-radius: 5px !important;
-    transition-duration: 0.38s !important;
+    transition: 0.35s !important;
 }
 
 .card-design:hover {
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
-::-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
-	background-color: #1f1f1f;
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    background-color: #1f1f1f;
 }
 
-::-webkit-scrollbar
-{
-	width: 10px;
-	background-color: #8c8c8c;
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: #8c8c8c;
 }
 
-::-webkit-scrollbar-thumb
-{
-	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.3);
-	background-color: #8c8c8c;
+::-webkit-scrollbar-thumb {
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, .3);
+    background-color: #8c8c8c;
 }
 
 .create_challenge_form h1 {

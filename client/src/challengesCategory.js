@@ -212,8 +212,11 @@ class ChallengesCategory extends React.Component {
               if (hints[y].cost === 0) {
                 hints[y].cost = "Free"
               }
+              else {
+                hints[y].cost = String(hints[y].cost) + " Points"
+              }
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, false, solved) }}>Hint {y + 1} - {hints[y].cost} Points</Button>
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, false, solved) }}>Hint {y + 1} - {hints[y].cost}</Button>
               )
             }
             else {
@@ -295,7 +298,7 @@ class ChallengesCategory extends React.Component {
 
   render() {
     return (
-      <Layout style={{ height: "100%", width: "100%" }}>
+      <Layout className="pageTransition" style={{ height: "100%", width: "100%" }}>
 
         <Modal
           title="Hint"
@@ -347,7 +350,7 @@ class ChallengesCategory extends React.Component {
               </div>
             </TabPane>
             <TabPane
-              tab={<span><UnlockOutlined /> Solves </span>}
+              tab={<span><UnlockOutlined /> Solves ({this.state.viewingChallengeDetails.solves.length}) </span>}
               key="solves"
             >
               <List
