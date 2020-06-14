@@ -9,7 +9,6 @@ import {
     MailOutlined
 } from '@ant-design/icons';
 import './App.css';
-import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
 
 const { Column } = Table;
 const { Option } = Select;
@@ -168,7 +167,7 @@ class AdminUsers extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 message.success({ content: "User deleted successfully" })
                 this.setState({deleteModal: false, modalLoading: false})
@@ -199,7 +198,7 @@ class AdminUsers extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created user " + values.username + " successfully!" })
                 this.setState({ modalLoading: false, createUserModal: false })
@@ -217,6 +216,7 @@ class AdminUsers extends React.Component {
 
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
 
@@ -271,7 +271,7 @@ class AdminUsers extends React.Component {
 
                 <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch"  }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
 
-                <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
+                <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (
                         <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
                             <LoadingOutlined style={{color: "#177ddc"}}/>

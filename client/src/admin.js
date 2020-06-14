@@ -24,7 +24,7 @@ class admin extends React.Component {
     return (
 
       <Layout className="pageTransition" style={{ height: "100%", width: "100%" }}>
-        <Tabs defaultActiveKey="home" style={{ overflowY: "scroll", overflowX: "hidden" }}>
+        <Tabs defaultActiveKey="home" style={{ overflowY: "auto", overflowX: "auto" }}>
           <TabPane
             tab={<span> Home </span>}
             key="home"

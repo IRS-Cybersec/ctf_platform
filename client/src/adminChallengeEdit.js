@@ -43,8 +43,48 @@ const CreateChallengeForm = (props) => {
                     message.warn("Please enter at least 1 flag")
                 }
                 else {
-                    props.editChallenge(values)
-                    form.resetFields()
+                    if (values.visibility === "false") {
+                        values.visibility = false
+                    }
+                    else {
+                        values.visibility = true
+                    }
+                    props.setState({ editLoading: true })
+                    fetch("https://api.irscybersec.tk/v1/challenge/edit", {
+                        method: 'post',
+                        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                        body: JSON.stringify({
+                            "chall": props.initialData.name,
+                            "name": values.name,
+                            "category": values.category,
+                            "description": values.description,
+                            "points": values.points,
+                            "flags": values.flags,
+                            "tags": values.tags,
+                            "hints": values.hints,
+                            "max_attempts": values.max_attempts,
+                            "visibility": values.visibility
+                        })
+                    }).then((results) => {
+                        return results.json(); //return data in JSON (since its JSON data)
+                    }).then((data) => {
+                        //console.log(data)
+                        if (data.success === true) {
+                            message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
+                            props.setState({ editLoading: false })
+                            props.handleEditChallBack()
+                            form.resetFields()
+                        }
+                        else {
+                            message.error({ content: "Oops. Unknown error" })
+                        }
+
+
+                    }).catch((error) => {
+                        console.log(error)
+                        message.error({ content: "Oops. There was an issue connecting with the server" });
+                    })
+                    
                 }
 
             }}
@@ -336,7 +376,7 @@ class AdminChallengeEdit extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 this.setState({ challengeData: data.chall })
             }
@@ -344,7 +384,7 @@ class AdminChallengeEdit extends React.Component {
                 message.error({ content: "Oops. Unknown error" })
             }
 
-            this.setState({loading: false})
+            this.setState({ loading: false })
 
 
         }).catch((error) => {
@@ -370,9 +410,8 @@ class AdminChallengeEdit extends React.Component {
                 if (currentLetter === "\n") {
                     language = description.slice(position, position + offset)
                     description = description.slice(0, position) + description.slice(position + offset)
-                    description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
-                    description = description.replace("</code>", "\`}</SyntaxHighlighter>")
-                    console.log(description)
+                    description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{'")
+                    description = description.replace("</code>", "'}</SyntaxHighlighter>")
                     values.description = description
                     break
                 }
@@ -396,7 +435,7 @@ class AdminChallengeEdit extends React.Component {
         if (typeof values.tags !== "undefined") {
             const tag = values.tags
 
-            for (var x = 0; x < tag.length; x++) {
+            for (let x = 0; x < tag.length; x++) {
                 renderTags.push(
                     <Tag color="#1765ad">
                         {tag[x]}
@@ -411,7 +450,7 @@ class AdminChallengeEdit extends React.Component {
             const hints = values.hints
             var renderHints = []
 
-            for (var x = 0; x < hints.length; x++) {
+            for (let x = 0; x < hints.length; x++) {
                 renderHints.push(
                     <Button type="primary" key={hints[x].cost} style={{ marginBottom: "1.5vh" }}>Hint {x + 1} - {hints[x].cost} Points</Button>
                 )
@@ -421,55 +460,7 @@ class AdminChallengeEdit extends React.Component {
 
         this.setState({ previewData: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints })
     }
-
-    editChallenge = (values) => {
-        if (values.visibility === "false") {
-            values.visibility = false
-        }
-        else {
-            values.visibility = true
-        }
-        this.setState({ editLoading: true })
-        fetch("https://api.irscybersec.tk/v1/challenge/edit", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-            body: JSON.stringify({
-                "chall": this.state.oldChallengeName,
-                "name": values.name,
-                "category": values.category,
-                "description": values.description,
-                "points": values.points,
-                "flags": values.flags,
-                "tags": values.tags,
-                "hints": values.hints,
-                "max_attempts": values.max_attempts,
-                "visibility": values.visibility
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            console.log(data)
-            if (data.success === true) {
-                message.success({ content: "Edited challenge " + this.state.oldChallengeName + " successfully!" })
-                this.setState({ editLoading: false })
-                this.props.handleEditChallBack()
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-
-
-        }).catch((error) => {
-            console.log(error)
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-        })
-
-    }
-
-
-
-
-
+    
     render() {
         return (
 
@@ -509,7 +500,7 @@ class AdminChallengeEdit extends React.Component {
                                 <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
                             </div>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
-                                <p>Challenge Author: <em>You</em></p>
+                                <p>Challenge Author: {this.state.challengeData.author}</p>
                                 <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewData.max_attempts}</p>
                             </div>
                         </TabPane>
@@ -523,7 +514,7 @@ class AdminChallengeEdit extends React.Component {
 
                 </div>
                 {!this.state.loading && (
-                    <CreateChallengeForm editLoading={this.state.editLoading} editChallenge={this.editChallenge.bind(this)} previewChallenge={this.previewChallenge.bind(this)} initialData={this.state.challengeData}></CreateChallengeForm>
+                    <CreateChallengeForm editLoading={this.state.editLoading} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} initialData={this.state.challengeData} handleEditChallBack={this.props.handleEditChallBack}></CreateChallengeForm>
                 )}
 
                 {this.state.loading && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Avatar, Divider, message, Dropdown } from 'antd';
+import { Layout, Menu, Avatar, message, Dropdown } from 'antd';
 import {
   FlagTwoTone,
   HomeTwoTone,
@@ -23,7 +23,7 @@ import Oops from "./oops.js";
 import UserChallengeCreate from "./userChallengeCreate.js";
 
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 var previousLocation = ""
 
@@ -62,10 +62,10 @@ class App extends React.Component {
     // Handles "remember me" logins
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
-
+      const key = "login"
 
       if (token !== null) {
-
+        message.loading({content: "Attempting to restore session...", key})
         // Get permissions from server
         fetch("https://api.irscybersec.tk/v1/account/type", {
           method: 'get',
@@ -76,7 +76,7 @@ class App extends React.Component {
           if (data.success === true) {
             const username = token.split(".")[0]
             this.setState({ permissions: data.type, token: token, username: username })
-            message.success({ content: "Session restored. Welcome back " + username })
+            message.success({ content: "Session restored. Welcome back " + username, key, duration: 2.5 })
           }
           else {
             //Might be a fake token since server does not have it, exit
@@ -127,7 +127,7 @@ class App extends React.Component {
           <Layout style={{ height: "100vh", width: "100vw" }}>
             <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse} style={{ width: "15vw" }}>
               <div style={{ height: "9vh", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                <img src={require("./sieberrsec_ctf.svg")} style={{ maxWidth: "110%", maxHeight: "200%", marginRight: "1vw" }}></img>
+                <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg")} style={{ maxWidth: "110%", maxHeight: "200%", marginRight: "1vw" }}></img>
               </div>
               <Menu
                 selectedKeys={[this.state.current]}

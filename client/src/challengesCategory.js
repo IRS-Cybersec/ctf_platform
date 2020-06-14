@@ -10,7 +10,8 @@ import {
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser'
+import JsxParser from 'react-jsx-parser';
+import { orderBy } from 'lodash';
 
 const { Meta } = Card;
 const { TabPane } = Tabs;
@@ -66,7 +67,8 @@ class ChallengesCategory extends React.Component {
       challengeHints: [],
       attemptsLeft: "",
       hintContent: "",
-      hintModal: false
+      hintModal: false,
+      currentSorting: "points"
 
     };
   }
@@ -87,8 +89,9 @@ class ChallengesCategory extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
       if (data.success === true) {
+        data.challenges = orderBy(data.challenges, ["points"], ["asc"])
         this.setState({ challenges: data.challenges })
       }
       else {
@@ -97,6 +100,7 @@ class ChallengesCategory extends React.Component {
 
 
     }).catch((error) => {
+      console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
   }
@@ -112,7 +116,7 @@ class ChallengesCategory extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
       if (data.success === true) {
         if (bought === true) {
           this.setState({ hintModal: true, hintContent: data.hint })
@@ -125,6 +129,7 @@ class ChallengesCategory extends React.Component {
 
       }
     }).catch((error) => {
+      console.log(error)
       message.error({ content: "Oops. There was an issue connecting to the server" });
     })
   }
@@ -144,7 +149,7 @@ class ChallengesCategory extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
 
       if (data.success === true) {
 
@@ -162,9 +167,8 @@ class ChallengesCategory extends React.Component {
             if (currentLetter === "\n") {
               language = description.slice(position, position + offset)
               description = description.slice(0, position) + description.slice(position + offset)
-              description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
-              description = description.replace("</code>", "\`}</SyntaxHighlighter>")
-              console.log(description)
+              description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
+              description = description.replace("</code>", "`}</SyntaxHighlighter>")
               data.chall.description = description
               break
             }
@@ -256,24 +260,25 @@ class ChallengesCategory extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
       if (data.success === true) {
         if (data.data === "correct") {
           notification["success"]({
             message: 'Challenge Solved! Congratulations!',
             description:
-              'Congratulations for solving \"' + this.state.currentChallenge + '\".',
+              'Congratulations for solving "' + this.state.currentChallenge + '".',
             duration: 0
           });
           this.fetchCategories(this.props.category)
-          this.loadChallengeDetails(this.state.currentChallenge, true)
           this.props.challengeFetchCategory()
+          this.setState({ challengeModal: false })
+
         }
         else {
           notification["error"]({
             message: 'Oops. Incorrect Flag',
             description:
-              'It seems like you submitted an incorrect flag (' + values.flag + ') for \"' + this.state.currentChallenge + '\".',
+              'It seems like you submitted an incorrect flag (' + values.flag + ') for "' + this.state.currentChallenge + '".',
             duration: 0
           });
         }
@@ -283,7 +288,7 @@ class ChallengesCategory extends React.Component {
           notification["error"]({
             message: 'Oops. Attempts Exhausted',
             description:
-              'It seems like you have execeeded the maximum number of attempts for \"' + this.state.currentChallenge + '\". Contact an admin if you need more tries',
+              'It seems like you have execeeded the maximum number of attempts for "' + this.state.currentChallenge + '". Contact an admin if you need more tries',
             duration: 0
           });
         }
@@ -292,8 +297,25 @@ class ChallengesCategory extends React.Component {
         }
       }
     }).catch((error) => {
+      console.log(error)
       message.error({ content: "Oops. There was an issue connecting to the server" });
     })
+  }
+
+  sortCats(value) {
+    if (value !== this.state.currentSorting) {
+      let challenges = this.state.challenges
+      if (value === "points") {
+        challenges = orderBy(challenges, ["points"], ["asc"])
+      }
+      else if (value === "abc") {
+        challenges = orderBy(challenges, ["name"], ["asc"])
+      }
+      else if (value === "abcrev") {
+        challenges = orderBy(challenges, ["name"], ["desc"])
+      }
+      this.setState({challenges: challenges, currentSorting: value})
+    }
   }
 
   render() {

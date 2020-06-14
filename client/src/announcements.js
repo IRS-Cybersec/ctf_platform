@@ -1,11 +1,9 @@
 import React from 'react';
 import { Layout } from 'antd';
 import {
-  FlagTwoTone,
+  NotificationTwoTone,
 } from '@ant-design/icons';
 import './App.css';
-
-const { Header, Content, Footer, Sider } = Layout;
 
 
 class announcements extends React.Component {
@@ -20,7 +18,7 @@ class announcements extends React.Component {
     return (
 
       <Layout className="pageTransition" style={{ height: "100%", width: "100%"  }}>
-          Announcements
+          <p>Announcements <NotificationTwoTone /> </p>
       </Layout>
     );
   }

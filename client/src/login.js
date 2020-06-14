@@ -36,7 +36,7 @@ class Login extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 message.success({ content: "Woohoo! Successfully registered, you can now login via the login screen!" })
 
@@ -75,7 +75,7 @@ class Login extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
 
             const login = async () => {
                 if (data.success === true) {
@@ -99,13 +99,9 @@ class Login extends React.Component {
             login()
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting to the server" });
         })
-    }
-
-
-    onFinish = values => {
-        console.log('Received values of form: ', values);
     }
 
     render() {

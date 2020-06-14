@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Card, List, Progress, message, Button, Radio } from 'antd';
+import { Layout, Card, List, Progress, message, Button, Radio, Select } from 'antd';
 import {
   LoadingOutlined,
   LeftCircleTwoTone,
@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import ChallengesCategory from "./challengesCategory.js";
 
 const { Meta } = Card;
+const { Option } = Select;
 
 const categoryImages = [require("./assets/catPhoto1.jpg"), require("./assets/catPhoto2.jpg"), require("./assets/catPhoto3.jpg")]
 
@@ -21,6 +22,7 @@ var i = -1
 class challenges extends React.Component {
   constructor(props) {
     super(props);
+    this.child = React.createRef();
 
     this.state = {
       categories: [],
@@ -47,7 +49,7 @@ class challenges extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
 
       if (data.success === true) {
         this.setState({ userScore: data.score })
@@ -58,6 +60,7 @@ class challenges extends React.Component {
 
 
     }).catch((error) => {
+      console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
   }
@@ -92,13 +95,13 @@ class challenges extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
 
       if (data.success === true) {
 
         const parseData = async () => {
           const newData = await this.parseCategories(data)
-          console.log(newData.data)
+          //console.log(newData.data)
           this.setState({ categories: newData.data })
         }
         parseData()
@@ -109,14 +112,19 @@ class challenges extends React.Component {
 
 
     }).catch((error) => {
+      console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
+  }
+
+  sortCats(value) {
+    this.child.current.sortCats(value)
   }
 
   render() {
     return (
 
-      <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "scroll", overflowX: "hidden", paddingRight: "10px" }}>
+      <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "auto", overflowX: "hidden", paddingRight: "10px" }}>
         <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh" }}>
           <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
 
@@ -153,14 +161,24 @@ class challenges extends React.Component {
           )}
 
         </div>
-        <div style={{display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh"}}>
-        <h1 style={{ fontSize: "120%", padding: "5px", borderRadius: "5px", borderStyle: "solid", borderWidth: "1px" , borderColor: "#177ddc", color: "#d89614", backgroundColor: "#1f1f1f", fontWeight: 600 }}>Current Score: <u>{this.state.userScore}</u></h1>
-          <Radio.Group defaultValue="Category" buttonStyle="solid" size="large">
-            <Radio.Button value="Category">Category <AppstoreOutlined /> </Radio.Button>
-            <Radio.Button value="Type">Type <GroupOutlined /> </Radio.Button>
-          </Radio.Group>
+        <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh" }}>
+          <h1 style={{ fontSize: "120%", padding: "5px", borderRadius: "5px", borderStyle: "solid", borderWidth: "1px", borderColor: "#177ddc", color: "#d89614", backgroundColor: "#1f1f1f", fontWeight: 600 }}>Current Score: <u>{this.state.userScore}</u></h1>
+          <div>
+            {this.state.currentCategory && (
+              <Select defaultValue="points" style={{ marginRight: "1.5vw", width: "10vw" }} onChange={this.sortCats.bind(this)}>
+                <Option value="points">Sort by Points</Option>
+                <Option value="abc">Sort A→Z</Option>
+                <Option value="abcrev">Sort Z→A</Option>
+              </Select>
+            )}
+            <Radio.Group defaultValue="Category" buttonStyle="solid" size="large">
+              <Radio.Button value="Category">Category <AppstoreOutlined /> </Radio.Button>
+              <Radio.Button value="Type">Type <GroupOutlined /> </Radio.Button>
+            </Radio.Group>
+
+          </div>
         </div>
-        
+
 
         {!this.state.challengeCategory && (
           <List
@@ -219,7 +237,7 @@ class challenges extends React.Component {
         )}
 
         {this.state.challengeCategory && (
-          <ChallengesCategory category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
+          <ChallengesCategory ref={this.child} category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
         )}
       </Layout>
 

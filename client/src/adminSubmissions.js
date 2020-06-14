@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Table, message, Select } from 'antd';
+import { Layout, Table, message } from 'antd';
 import {
     LoadingOutlined,
 } from '@ant-design/icons';
@@ -66,7 +66,7 @@ class AdminSubmissions extends React.Component {
 
             <Layout style={{ height: "100%", width: "100%" }}>
 
-                <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
+                <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (
                         <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
                             <LoadingOutlined style={{color: "#177ddc"}}/>

@@ -35,13 +35,53 @@ const CreateChallengeForm = (props) => {
             name="create_challenge_form"
             className="create_challenge_form"
             onFinish={(values) => {
-                console.log(values)
+                //console.log(values)
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
                 }
                 else {
-                    props.createChallenge(values)
-                    form.resetFields()
+                    //console.log(values)
+                    props.setState({loading: true})
+                    if (values.visibility === "false") {
+                        values.visibility = false
+                    }
+                    else {
+                        values.visibility = true
+                    }
+                    fetch("https://api.irscybersec.tk/v1/challenge/new", {
+                        method: 'post',
+                        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                        body: JSON.stringify({
+                            "name": values.name,
+                            "category": values.category,
+                            "description": values.description,
+                            "points": values.points,
+                            "flags": values.flags,
+                            "tags": values.tags,
+                            "hints": values.hints,
+                            "max_attempts": values.max_attempts,
+                            "visibility": values.visibility
+                        })
+                    }).then((results) => {
+                        return results.json(); //return data in JSON (since its JSON data)
+                    }).then((data) => {
+                        //console.log(data)
+                        if (data.success === true) {
+                            message.success({ content: "Created challenge " + values.name + " successfully!" })
+                            form.resetFields()
+                            props.handleCreateBack()
+                        }
+                        else {
+                            message.error({ content: "Oops. Unknown error, please contact an admin." })
+                        }
+                        props.setState({ loading: false })
+
+
+                    }).catch((error) => {
+                        console.log(error)
+                        message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
+                    })
+                    
                 }
 
             }}
@@ -331,9 +371,8 @@ class AdminChallengeCreate extends React.Component {
                 if (currentLetter === "\n") {
                     language = description.slice(position, position + offset)
                     description = description.slice(0, position) + description.slice(position + offset)
-                    description = description.replace("<code>", "<SyntaxHighlighter language=\'" + language + "\' style={atomDark}>{\`")
-                    description = description.replace("</code>", "\`}</SyntaxHighlighter>")
-                    console.log(description)
+                    description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
+                    description = description.replace("</code>", "`}</SyntaxHighlighter>")
                     values.description = description
                     break
                 }
@@ -350,7 +389,7 @@ class AdminChallengeCreate extends React.Component {
         if (typeof values.tags !== "undefined") {
             const tag = values.tags
 
-            for (var x = 0; x < tag.length; x++) {
+            for (let x = 0; x < tag.length; x++) {
                 renderTags.push(
                     <Tag color="#1765ad">
                         {tag[x]}
@@ -365,7 +404,7 @@ class AdminChallengeCreate extends React.Component {
             const hints = values.hints
             var renderHints = []
 
-            for (var x = 0; x < hints.length; x++) {
+            for (let x = 0; x < hints.length; x++) {
                 renderHints.push(
                     <Button type="primary" key={hints[x].cost} style={{ marginBottom: "1.5vh" }}>Hint {x + 1} - {hints[x].cost} Points</Button>
                 )
@@ -375,53 +414,6 @@ class AdminChallengeCreate extends React.Component {
 
         this.setState({ previewChallenge: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints })
     }
-
-    createChallenge = (values) => {
-        console.log(values)
-        this.setState({ loading: true })
-        if (values.visibility === "false") {
-            values.visibility = false
-        }
-        else {
-            values.visibility = true
-        }
-        fetch("https://api.irscybersec.tk/v1/challenge/new", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-            body: JSON.stringify({
-                "name": values.name,
-                "category": values.category,
-                "description": values.description,
-                "points": values.points,
-                "flags": values.flags,
-                "tags": values.tags,
-                "hints": values.hints,
-                "max_attempts": values.max_attempts,
-                "visibility": values.visibility
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            console.log(data)
-            if (data.success === true) {
-                message.success({ content: "Created challenge " + values.name + " successfully!" })
-                this.props.handleCreateBack()
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-            this.setState({ loading: false })
-
-
-        }).catch((error) => {
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-        })
-
-    }
-
-
-
-
 
     render() {
         return (
@@ -474,7 +466,7 @@ class AdminChallengeCreate extends React.Component {
                     <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
                 </div>
-                <CreateChallengeForm createChallenge={this.createChallenge} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
+                <CreateChallengeForm handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
             </Layout>
         );
     }

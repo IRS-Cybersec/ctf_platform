@@ -2,10 +2,8 @@ import React from 'react';
 import { Layout, message, Typography, Empty, Divider, Avatar } from 'antd';
 import {PieChart, Pie, Cell} from 'recharts';
 import './App.css';
-import { NavLink, Switch, Route, withRouter, useHistory, useLocation } from 'react-router-dom';
 
 
-const { Header, Content, Footer, Sider } = Layout;
 const { Title, Paragraph, Text } = Typography;
 class Profile extends React.Component {
     

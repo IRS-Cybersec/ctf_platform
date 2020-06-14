@@ -6,7 +6,6 @@ import {
     DeleteOutlined,
     FlagOutlined,
     EditOutlined,
-    ContainerOutlined
 } from '@ant-design/icons';
 import './App.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
@@ -65,6 +64,7 @@ class AdminChallenges extends React.Component {
 
 
             }).catch((error) => {
+                console.log(error)
                 message.error({ content: "Oops. There was an issue connecting with the server" });
             })
 
@@ -84,6 +84,7 @@ class AdminChallenges extends React.Component {
 
 
             }).catch((error) => {
+                console.log(error)
                 message.error({ content: "Oops. There was an issue connecting with the server" });
             })
 
@@ -93,9 +94,9 @@ class AdminChallenges extends React.Component {
         (async () => {
             await getInfo()
             let invisible = difference(allCat, visibleCat)
-            console.log(invisible)
+            /*console.log(invisible)
             console.log(allCat)
-            console.log(visibleCat)
+            console.log(visibleCat)*/
 
             for (let i = 0; i < allCat.length; i++) {
                 allCat[i] = { "key": allCat[i] }
@@ -131,7 +132,7 @@ class AdminChallenges extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 message.success("The visibility of (" + categories.join(", ") + ") categories has been updated")
             }
@@ -142,6 +143,7 @@ class AdminChallenges extends React.Component {
 
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
     }
@@ -188,7 +190,7 @@ class AdminChallenges extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 message.success({ content: "Deleted challenge " + this.state.challengeName + " successfully" })
                 this.fillTableData()
@@ -233,7 +235,7 @@ class AdminChallenges extends React.Component {
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%" }}>
+            <Layout style={{ height: "100%", width: "100%"}}>
                 <Modal
                     title={"Are you sure you want to delete \"" + this.state.challengeName + "\" ?"}
                     visible={this.state.deleteModal}
@@ -251,7 +253,7 @@ class AdminChallenges extends React.Component {
 
 
 
-                        <Table style={{ overflow: "scroll" }} dataSource={this.state.dataSource} locale={{
+                        <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                             emptyText: (
                                 <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
                                     <LoadingOutlined style={{ color: "#177ddc" }} />
