@@ -363,7 +363,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			]).toArray();
 			res.send({
 				success: true,
-				data: challenges
+				challenges: challenges
 			});
 		}
 		catch (err) {
@@ -432,7 +432,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (challenges.length == 0) throw new Error('NotFound')
 			res.send({
 				success: true,
-				data: challenges
+				challenges: challenges
 			});
 		}
 		catch (err) {
