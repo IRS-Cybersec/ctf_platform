@@ -1,11 +1,12 @@
 import React from 'react';
 import { Layout, message, Table } from 'antd';
 import {
-  LoadingOutlined
+  FileUnknownTwoTone
 } from '@ant-design/icons';
 import './App.css';
 import { orderBy } from "lodash";
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
+import { Ellipsis } from 'react-spinners-css';
 
 const { Column } = Table;
 
@@ -253,14 +254,15 @@ class Scoreboard extends React.Component {
           </ResponsiveContainer>
           {this.state.loadingGraph && (
             <div className="demo-loading-container">
-              <LoadingOutlined style={{ color: "#177ddc", fontSize: "3vw" }} />
+              <Ellipsis size={40} color="#177ddc" />
             </div>
           )}
         </div>
         <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 30 }} locale={{
           emptyText: (
-            <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
-              <LoadingOutlined style={{ color: "#177ddc" }} />
+
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Ellipsis size={100} color="#177ddc" />
             </div>
           )
         }}>

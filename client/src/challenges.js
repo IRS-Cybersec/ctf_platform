@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layout, Card, List, Progress, message, Button, Radio, Select } from 'antd';
 import {
-  LoadingOutlined,
+  FileUnknownTwoTone,
   LeftCircleTwoTone,
   AppstoreOutlined,
   GroupOutlined
@@ -9,6 +9,8 @@ import {
 import './App.css';
 import { Link } from 'react-router-dom';
 import ChallengesCategory from "./challengesCategory.js";
+import ChallengesTagSort from "./challengesTagSort.js";
+import { Ellipsis } from 'react-spinners-css';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -28,11 +30,15 @@ class challenges extends React.Component {
       categories: [],
       challengeCategory: false,
       currentCategory: "",
-      userScore: 0
+      userScore: 0,
+      originalData: [],
+      sortByTags: false,
+      loadingChall: false
     };
   }
 
   componentDidMount() {
+    this.setState({ loadingChall: true })
     this.fetchCategories()
     this.obtainScore()
 
@@ -100,9 +106,11 @@ class challenges extends React.Component {
       if (data.success === true) {
 
         const parseData = async () => {
+          let originalData = JSON.parse(JSON.stringify(data.data))
           const newData = await this.parseCategories(data)
           //console.log(newData.data)
-          this.setState({ categories: newData.data })
+          this.setState({ categories: newData.data, originalData: originalData, loadingChall: false })
+          console.log(originalData)
         }
         parseData()
       }
@@ -119,6 +127,15 @@ class challenges extends React.Component {
 
   sortCats(value) {
     this.child.current.sortCats(value)
+  }
+
+  sortDifferent(value) {
+    if (value.target.value === "Type" && !this.state.sortByTags) {
+      this.setState({ sortByTags: true, challengeCategory: false, currentCategory: "" })
+    }
+    else if (this.state.sortByTags && value.target.value === "Category") {
+      this.setState({ sortByTags: false, challengeCategory: false })
+    }
   }
 
   render() {
@@ -171,7 +188,7 @@ class challenges extends React.Component {
                 <Option value="abcrev">Sort Z→A</Option>
               </Select>
             )}
-            <Radio.Group defaultValue="Category" buttonStyle="solid" size="large">
+            <Radio.Group defaultValue="Category" buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)}>
               <Radio.Button value="Category">Category <AppstoreOutlined /> </Radio.Button>
               <Radio.Button value="Type">Type <GroupOutlined /> </Radio.Button>
             </Radio.Group>
@@ -179,66 +196,81 @@ class challenges extends React.Component {
           </div>
         </div>
 
-
-        {!this.state.challengeCategory && (
-          <List
-            grid={{ column: 4, gutter: 20 }}
-            dataSource={this.state.categories}
-            className="pageTransition"
-            locale={{
-              emptyText: (
-                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                  <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
-                </div>
-              )
-            }}
-            renderItem={item => {
-              i += 1
-              if (i > 2) {
-                i = 0
-
-              }
-
-              return (
-                <List.Item key={item._id}>
-                  <Link to={"Challenges/" + item._id}>
-                    <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item._id, currentSolvedStatus: item.challenges }) }}>
-                      <Card
-                        hoverable
-                        type="inner"
-                        bordered={true}
-                        bodyStyle={{ backgroundColor: "#262626" }}
-                        className="card-design"
-                        style={{ overflow: "hidden" }}
-                        cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
-                      >
-                        <Meta
-                          title={
-                            <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                              <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
-                              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-                                <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
-                                <Progress type="circle" percent={item.challenges.percentage} width="3.2vw" strokeColor={{
-                                  '0%': '#177ddc',
-                                  '100%': '#49aa19',
-                                }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
-                              </div>
-                            </div>
-                          }
-                        />
-                      </Card> {/*Pass entire datasource as prop*/}
+        {!this.state.loadingChall && (
+          <div>
+            {!this.state.challengeCategory && !this.state.sortByTags && (
+              <List
+                grid={{ column: 4, gutter: 20 }}
+                dataSource={this.state.categories}
+                className="pageTransition"
+                locale={{
+                  emptyText: (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                      <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                      <h1 style={{fontSize: "200%"}}>Oops, no challenges have been created.</h1>
                     </div>
-                  </Link>
-                </ List.Item>
-              )
-            }
-            }
-          />
+                  )
+                }}
+                renderItem={item => {
+                  i += 1
+                  if (i > 2) {
+                    i = 0
+
+                  }
+
+                  return (
+                    <List.Item key={item._id}>
+                      <Link to={"/Challenges/" + item._id}>
+                        <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item._id, currentSolvedStatus: item.challenges }) }}>
+                          <Card
+                            hoverable
+                            type="inner"
+                            bordered={true}
+                            bodyStyle={{ backgroundColor: "#262626" }}
+                            className="card-design"
+                            style={{ overflow: "hidden" }}
+                            cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                          >
+                            <Meta
+                              title={
+                                <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
+                                  <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
+                                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
+                                    <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
+                                    <Progress type="circle" percent={item.challenges.percentage} width="3.2vw" strokeColor={{
+                                      '0%': '#177ddc',
+                                      '100%': '#49aa19',
+                                    }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
+                                  </div>
+                                </div>
+                              }
+                            />
+                          </Card> {/*Pass entire datasource as prop*/}
+                        </div>
+                      </Link>
+                    </ List.Item>
+                  )
+                }
+                }
+              />
+            )}
+
+            {this.state.challengeCategory && (
+              <ChallengesCategory ref={this.child} category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
+            )}
+
+            {this.state.sortByTags && (
+              <ChallengesTagSort originalData={this.state.originalData}></ChallengesTagSort>
+            )}
+          </div>
         )}
 
-        {this.state.challengeCategory && (
-          <ChallengesCategory ref={this.child} category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
+        {this.state.loadingChall && (
+          <div style={{display: "flex", width: "100%", justifyContent: "center"}}>
+            <Ellipsis color="#177ddc" size={110}></Ellipsis>
+          </div>
         )}
+
       </Layout>
 
     );

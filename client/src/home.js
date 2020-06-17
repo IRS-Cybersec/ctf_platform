@@ -32,7 +32,7 @@ class home extends React.Component {
         <p>
           - Do not attack the server infrastructrure in anyway, if you found an exploit, please report it immediately. <br />
           - Do not corrupt any challenges if you found a way to do so (that's just mean!)<br />
-          - No sharing of flags/solutions until the CTF ends. Try to not spoil this experience for anyone :D<br />
+          - No sharing of flags/solutions in chats. Try to not spoil this experience for anyone :D (Feel free to ask for help though)<br />
           - If you need further clarification for any challenges, please contact the challenge author (whose name can be found in the challenge description)<br />
           - Have fun, enjoy yourselves and we hope you learnt something :)!<br />
           ~ <i>Sincerely, Sieberrsec 18/19 &amp; 19/20 &amp; 20/21</i>
@@ -41,6 +41,12 @@ class home extends React.Component {
 
         <div style={{ textAlign: "start" }}>
           <h3>Changelog:</h3>
+          <p><u>Version 0.13.5 (15/6/2020)</u></p>
+          <ul>
+            <li>Improved loading screens</li>
+            <li>Fixed ghost hints</li>
+            <li>Sorting by Tags (There is a bug where the loading challenge indicator will not show :/)</li>
+          </ul>
           <p><u>Version 0.13.0 (15/6/2020)</u></p>
           <ul>
             <li>Made mobile view slightly better</li>

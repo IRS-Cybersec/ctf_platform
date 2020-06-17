@@ -100,6 +100,7 @@ class Profile extends React.Component {
         this.updateWindowDimensions();
     }
 
+
     render() {
         console.log(this.state);
         //Empty page. No user found
