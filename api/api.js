@@ -977,6 +977,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
+
+	app.get('/v1/about', async (req, res) => {
+		res.send({
+			success: true,
+			version: 'dev'
+		});
+	});
 app.listen(20001, () => console.info('Web server started'));
 }).catch(err => {
 	errors(err, res);
