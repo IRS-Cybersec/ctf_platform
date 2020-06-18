@@ -22,7 +22,8 @@
         'enum': [
           'submission',
           'hint',
-          'blocked_submission'
+          'blocked_submission',
+          'challenge_update',
         ]
       },
       points: {

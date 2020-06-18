@@ -4,6 +4,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const RD = require('reallydangerous');
 const cors = require('cors');
 const MongoDB = require('mongodb');
+const e = require('express');
 
 let permissions = [];
 const signer = new RD.Signer('supermassivepowerfulsecretuwu', 'supermassivepowerfulsaltuwu');
@@ -564,7 +565,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				await collections.users.updateOne({
 					username: username
 				}, {
-					'$inc': {score: -hints.hints[0].cost}
+					$inc: {score: -hints.hints[0].cost}
 				});
 				await collections.challs.updateOne({
 					name: req.body.chall
@@ -777,6 +778,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+
 			let updateObj = {};
 			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility'];
 			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
@@ -836,10 +838,34 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			if ((await collections.challs.deleteOne(
-				{name: req.body.chall}
-			)).deletedCount > 0) res.send({success: true});
-			else throw new Error('NotFound');
+			const delReq = await collections.challs.findOneAndDelete({
+				name: req.body.chall
+			}, {
+				solves: 1,
+				points: 1,
+				hints: 1,
+				_id: 0
+			});
+			console.log(delReq);
+			if (!delReq.ok) throw new Error('Unknown');
+			if (delReq.value === null) throw new Error('NotFound');
+			const timestamp = new Date();
+			await collections.transactions.deleteMany({challenge: req.body.chall});
+			await collections.users.updateMany({
+				username: {$in: delReq.value.solves}
+			}, {
+				$inc: {score: -delReq.value.points}
+			});
+			for (hint of delReq.value.hints) {
+				await collections.users.updateMany({
+					username: {$in: hint.purchased}
+				}, {
+					$inc: {score: hint.cost}
+				});
+			}
+			res.send({
+				success: true
+			});
 		}
 		catch (err) {
 			errors(err, res);
