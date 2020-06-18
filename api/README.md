@@ -1079,4 +1079,39 @@ No input required
 | `permissions` | The logged-in user does not have sufficient permissions to view submissions |
 
 #### Remarks
-* The submission ID is kinda useless
+* ~~The submission ID is kinda useless~~ The submission ID is used to delete submissions
+
+### /v1/submissions/new
+
+Authenticated // Permissions: 2
+
+#### Input
+```json
+{
+	"username": "USER_TO_CREDIT",
+	"chall": "CHALL_NAME",
+	"points": int,
+	"flag": "(optional) FLAG_TO_BE_RECORDED",
+	"force": (optional) bool
+}
+```
+
+#### Output
+```json
+{
+	"success": true,
+	"data": "STRING"
+}
+```
+Data can be any of the following:
+* `recorded`: the submission was recorde
+* `previous-higher`: the previous score was higher, hence the score was not updated
+
+#### Errors
+| Error         | Definition                                                   |
+| ------------- | ------------------------------------------------------------ |
+| `permissions` | The logged-in user does not have sufficient permissions to create submissions |
+
+#### Remarks
+* When `force` is `true`, the API will ignore that the previous submissions had higher scores and will update the score anyways
+* This endpoint will be used for datascience challenges

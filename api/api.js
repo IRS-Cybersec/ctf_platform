@@ -349,22 +349,22 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			let challenges = await collections.challs.aggregate([
-				{$match: {visibility: true}},
-				{$group: {
-					_id: '$category',
-					challenges: {$push: {
-						name: '$name',
-						points: '$points',
-						solved: {$in: [username.toLowerCase(), '$solves']},
-						firstBlood: {$arrayElemAt: ['$solves', 0]},
-						tags: '$tags'
-					}}
-				}}
-			]).toArray();
 			res.send({
 				success: true,
-				challenges: challenges
+				challenges: await collections.challs.aggregate([{
+					$match: {visibility: true}
+				}, {
+					$group: {
+						_id: '$category',
+						challenges: {$push: {
+							name: '$name',
+							points: '$points',
+							solved: {$in: [username.toLowerCase(), '$solves']},
+							firstBlood: {$arrayElemAt: ['$solves', 0]},
+							tags: '$tags'
+						}}
+					}
+				}]).toArray()
 			});
 		}
 		catch (err) {
@@ -373,54 +373,15 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.get('/v1/challenge/list/:category', async (req, res) => {
 		try {
-			// if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			// const username = signer.unsign(req.headers.authorization);
-			// if (await checkPermissions(username) === false) throw new Error('BadToken');
-			// let challenges = await collections.challs.find({
-			// 	visibility: true,
-			// 	category: req.params.category
-			// }, {projection: {
-			// 	name: 1,
-			// 	points: 1,
-			// 	// solved: {$in: [username.toLowerCase(), '$solves']},
-			// 	// firstBlood: {},
-			// 	tags: 1,
-			// 	_id: 0
-			// }}).toArray();
-			// let challenges = await collections.challs.aggregate([
-			// 	{$match: {
-			// 		visibility: true,
-			// 		category: req.params.category
-			// 	}},
-			// 	{$group: {
-			// 		_id: '$category',
-			// 		challenges: {$push: {
-			// 			name: '$name',
-			// 			points: '$points',
-			// 			solved: {$in: [username.toLowerCase(), '$solves']},
-			// 			firstBlood: '$solves.0',
-			// 			tags: '$tags'
-			// 		}}
-			// 	}}
-			// ]).toArray();
-			// if (challenges.length == 0) throw new Error('NotFound')
-			// // challenges.forEach(chall => {
-			// // 	chall.solved = chall.solves.includes(username);
-			// // 	chall.firstBlood = chall.solves[0];
-			// // 	delete chall.solves;
-			// // });
-			// res.send({
-			// 	success: true,
-			// 	data: challenges
-			// });
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			let challenges = await collections.challs.aggregate([
-				{$match: {
+			const challenges = await collections.challs.aggregate([{
+				$match: {
 					visibility: true,
 					category: req.params.category
-				}}, {
+				}
+			}, {
 				$project: {
 					_id: 0,
 					name: '$name',
@@ -428,8 +389,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					solved: {$in: [username.toLowerCase(), '$solves']},
 					firstBlood: {$arrayElemAt: ['$solves', 0]},
 					tags: '$tags'
-				}}
-			]).toArray();
+				}
+			}]).toArray();
 			if (challenges.length == 0) throw new Error('NotFound')
 			res.send({
 				success: true,
@@ -611,15 +572,17 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					submission: req.body.flag
 				});
 				if (correct && !blocked) {
-					await collections.users.updateOne(
-						{username: username.toLowerCase()},
-						{'$inc': {score: chall.points}},
-					);
-					await collections.challs.updateOne(
-							{name: req.body.chall},
-							{'$push': {solves: username.toLowerCase()}}
-						);
-					}
+					await collections.users.updateOne({
+						username: username.toLowerCase()
+					}, {
+						$inc: {score: chall.points}
+					});
+					await collections.challs.updateOne({
+						name: req.body.chall
+					}, {
+						$push: {solves: username.toLowerCase()}
+					});
+				}
 			}
 			if (chall.max_attempts != 0) {
 				if (await collections.transactions.countDocuments({
@@ -879,15 +842,15 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 			res.send({
 				success: true,
-				users: await collections.transactions.aggregate([
-					{$group: {
+				users: await collections.transactions.aggregate([{
+					$group: {
 						_id: '$author',
 						changes: {$push: {
 							points: '$points',
 							timestamp: '$timestamp'
 						}}
-					}}
-				]).toArray()
+					}
+				}]).toArray()
 			});
 		}
 		catch (err) {
@@ -944,6 +907,70 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				submissions: await collections.transactions.find({'$or': [{type: 'submission'}, {type: 'blocked_submission'}]}).toArray()
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/submissions/new', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if (await collections.users.countDocuments({username: req.body.username.toLowerCase()}) == 0) throw new Error('UserNotFound');
+			const chall = await collections.challs.findOneAndUpdate({
+				name: req.body.chall
+			}, {
+				$addToSet: {
+					solves: req.body.username.toLowerCase()
+				}
+			}, {
+				projection: {
+					points: 1,
+					_id: 0
+				}
+			});
+			console.log(chall);
+			if (!chall.ok) throw new Error('Unknown');
+			if (chall.value === null) throw new Error('NotFound');
+			const lastScore = await collections.transactions.aggregate([{
+				$match: {
+					author: req.body.username.toLowerCase(),
+					challenge: req.body.chall
+				}
+			}, {
+				$group: {
+					_id: '$challenge',
+					points: {
+						$sum: '$points'
+					}
+				}
+			}]).toArray();
+			if (lastScore[0].points > req.body.points && !req.body.force) {
+				res.send({
+					success: true,
+					data: 'previous-higher'
+				});
+				return;
+			}
+			await collections.transactions.insertOne({
+				author: req.body.username.toLowerCase(),
+				challenge: req.body.chall,
+				timestamp: new Date(),
+				type: 'submission',
+				points: req.body.points - lastScore[0].points,
+				submission: req.body.flag != null ? req.body.flag : 'No flag provided',
+				manual: username
+			});
+			await collections.users.updateOne({
+				username: req.body.username.toLowerCase()
+			}, {
+				$inc: {score: req.body.points - lastScore[0].points}
+			});
+			res.send({
+				success: true,
+				data: 'recorded'
 			});
 		}
 		catch (err) {
