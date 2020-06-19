@@ -4,7 +4,6 @@ const mongoSanitize = require('express-mongo-sanitize');
 const RD = require('reallydangerous');
 const cors = require('cors');
 const MongoDB = require('mongodb');
-const e = require('express');
 
 let permissions = [];
 const signer = new RD.Signer('supermassivepowerfulsecretuwu', 'supermassivepowerfulsaltuwu');
