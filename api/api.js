@@ -808,7 +808,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				hints: 1,
 				_id: 0
 			});
-			console.log(delReq);
 			if (!delReq.ok) throw new Error('Unknown');
 			if (delReq.value === null) throw new Error('NotFound');
 			const timestamp = new Date();
@@ -930,7 +929,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					_id: 0
 				}
 			});
-			console.log(chall);
 			if (!chall.ok) throw new Error('Unknown');
 			if (chall.value === null) throw new Error('NotFound');
 			const lastScore = await collections.transactions.aggregate([{
@@ -970,6 +968,29 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			res.send({
 				success: true,
 				data: 'recorded'
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.get('/v1/submissions/delete', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			const delReq = await collections.transactions.findOneAndDelete({
+				_id: MongoDB.ObjectID(req.body.submissionID)
+			}, {
+				solves: 1,
+				points: 1,
+				hints: 1,
+				_id: 0
+			});
+			if (!delReq.ok) throw new Error('Unknown');
+			if (delReq.value === null) throw new Error('NotFound');
+			res.send({
+				success: true,
 			});
 		}
 		catch (err) {
