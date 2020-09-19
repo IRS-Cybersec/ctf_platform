@@ -13,6 +13,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import JsxParser from 'react-jsx-parser';
 import { Ellipsis } from 'react-spinners-css';
+import { orderBy } from 'lodash';
 
 
 const { Meta } = Card;
@@ -87,24 +88,24 @@ class ChallengesTagSort extends React.Component {
 
   sortByTags() {
 
-    let originalData = this.props.originalData
+    let originalData = this.props.tagData
     let tag = {}
-    //console.log(originalData)
+    console.log(originalData)
     this.setState({ loadingTag: true })
 
 
-    for (let i = 0; i < originalData.length; i++) {
-      let currentCat = originalData[i].challenges
+    for (const [key, value] of Object.entries(originalData)) {
+      let currentCat = originalData[key]
       for (let x = 0; x < currentCat.length; x++) {
 
         if ("tags" in currentCat[x]) {
 
-          if (currentCat[x].tags[0] in tag) {
-            tag[currentCat[x].tags[0]].push(currentCat[x])
+          if (currentCat[x].tags[0].toLowerCase() in tag) {
+            tag[currentCat[x].tags[0].toLowerCase()].push(currentCat[x])
           }
           else {
-            tag[currentCat[x].tags[0]] = []
-            tag[currentCat[x].tags[0]].push(currentCat[x])
+            tag[currentCat[x].tags[0].toLowerCase()] = []
+            tag[currentCat[x].tags[0].toLowerCase()].push(currentCat[x])
           }
 
         }
@@ -112,6 +113,11 @@ class ChallengesTagSort extends React.Component {
 
       }
     }
+
+      //currentCat = currentCat.orderBy([""])
+      
+
+    console.log(tag)
 
     let tagLists = []
 
@@ -213,6 +219,7 @@ class ChallengesTagSort extends React.Component {
         </div>
       )
     }
+    console.log(tagLists)
     this.setState({ tagLists: tagLists, loadingTag: false })
 
   }

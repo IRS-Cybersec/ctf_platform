@@ -7,6 +7,7 @@ import './App.css';
 import { orderBy } from "lodash";
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis } from 'react-spinners-css';
+import { animated } from 'react-spring/renderprops'
 
 const { Column } = Table;
 
@@ -177,100 +178,102 @@ class Scoreboard extends React.Component {
   render() {
     return (
 
-      <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "auto", overflowX: "auto" }}>
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+      <animated.div style={{ ...this.props.transition, position: "fixed", height: "100%", overflowX: "auto", width: "100%"}}>
+        <Layout style={{width: "100%", paddingRight: "10px"}}>
+          <div style={{ display: "flex", flexDirection: "row"}}>
 
-          <ResponsiveContainer width="95%" height={350}>
-            <AreaChart width={1000} height={350} data={this.state.graphData}
-              margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
+            <ResponsiveContainer width="80%" height={350}>
+              <AreaChart height={350} data={this.state.graphData}
+                margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
 
-              <defs>
-                <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#791a1f" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c4a15" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f8cf8d" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color3" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c5914" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f8df8b" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color4" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#536d13" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#e4f88b" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color5" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#306317" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#b2e58b" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color6" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#146262" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#84e2d8" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color7" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#164c7e" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#8dcff8" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color8" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#203175" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#a8c1f8" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color9" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3e2069" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#cda8f0" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="color10" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#75204f" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f8a8cc" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="Time">
-                <Label offset={-5} position="insideBottom" style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                  Time
+                <defs>
+                  <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#791a1f" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7c4a15" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f8cf8d" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7c5914" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f8df8b" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#536d13" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#e4f88b" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color5" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#306317" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#b2e58b" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color6" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#146262" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#84e2d8" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color7" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#164c7e" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8dcff8" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color8" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#203175" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#a8c1f8" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color9" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3e2069" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#cda8f0" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="color10" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#75204f" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f8a8cc" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="Time">
+                  <Label offset={-5} position="insideBottom" style={{ fill: 'rgba(207, 207, 207, 1)' }}>
+                    Time
                                 </Label>
-              </XAxis>
-              <YAxis >
-                <Label offset={-10} position='insideLeft' style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                  Score
+                </XAxis>
+                <YAxis >
+                  <Label offset={-10} position='insideLeft' style={{ fill: 'rgba(207, 207, 207, 1)' }}>
+                    Score
                                 </Label>
-              </YAxis>
-              <CartesianGrid strokeDasharray="3 3" />
+                </YAxis>
+                <CartesianGrid strokeDasharray="3 3" />
 
-              <Tooltip labelStyle={{ backgroundColor: "#1c2b3e" }} contentStyle={{ backgroundColor: "#1c2b3e" }} wrapperStyle={{ backgroundColor: "#1c2b3e" }} />
-              <Area type="monotone" dataKey={this.state.top10[0]} stroke="#d32029" fillOpacity={1} fill="url(#color1)" />
-              <Area type="monotone" dataKey={this.state.top10[1]} stroke="#d87a16" fillOpacity={1} fill="url(#color2)" />
-              <Area type="monotone" dataKey={this.state.top10[2]} stroke="#d89614" fillOpacity={1} fill="url(#color3)" />
-              <Area type="monotone" dataKey={this.state.top10[3]} stroke="#8bbb11" fillOpacity={1} fill="url(#color4)" />
-              <Area type="monotone" dataKey={this.state.top10[4]} stroke="#49aa19" fillOpacity={1} fill="url(#color5)" />
-              <Area type="monotone" dataKey={this.state.top10[5]} stroke="#13a8a8" fillOpacity={1} fill="url(#color6)" />
-              <Area type="monotone" dataKey={this.state.top10[6]} stroke="#177ddc" fillOpacity={1} fill="url(#color7)" />
-              <Area type="monotone" dataKey={this.state.top10[7]} stroke="#2b4acb" fillOpacity={1} fill="url(#color8)" />
-              <Area type="monotone" dataKey={this.state.top10[8]} stroke="#642ab5" fillOpacity={1} fill="url(#color9)" />
-              <Area type="monotone" dataKey={this.state.top10[9]} stroke="#cb2b83" fillOpacity={1} fill="url(#color10)" />
-              <Area type="monotone" dataKey="Hi" stroke="#8884d8" fillOpacity={1} fill="url(#colorPv)" />
-            </AreaChart>
-          </ResponsiveContainer>
-          {this.state.loadingGraph && (
-            <div className="demo-loading-container">
-              <Ellipsis size={40} color="#177ddc" />
-            </div>
-          )}
-        </div>
-        <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 30 }} locale={{
-          emptyText: (
+                <Tooltip labelStyle={{ backgroundColor: "#1c2b3e" }} contentStyle={{ backgroundColor: "#1c2b3e" }} wrapperStyle={{ backgroundColor: "#1c2b3e" }} />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[0]} stroke="#d32029" fillOpacity={1} fill="url(#color1)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[1]} stroke="#d87a16" fillOpacity={1} fill="url(#color2)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[2]} stroke="#d89614" fillOpacity={1} fill="url(#color3)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[3]} stroke="#8bbb11" fillOpacity={1} fill="url(#color4)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[4]} stroke="#49aa19" fillOpacity={1} fill="url(#color5)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[5]} stroke="#13a8a8" fillOpacity={1} fill="url(#color6)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[6]} stroke="#177ddc" fillOpacity={1} fill="url(#color7)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[7]} stroke="#2b4acb" fillOpacity={1} fill="url(#color8)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[8]} stroke="#642ab5" fillOpacity={1} fill="url(#color9)" />
+                <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[9]} stroke="#cb2b83" fillOpacity={1} fill="url(#color10)" />
+                <Area isAnimationActive={false} type="monotone" dataKey="Hi" stroke="#8884d8" fillOpacity={1} fill="url(#colorPv)" />
+              </AreaChart>
+            </ResponsiveContainer>
+            {this.state.loadingGraph && (
+              <div className="demo-loading-container">
+                <Ellipsis size={40} color="#177ddc" />
+              </div>
+            )}
+          </div>
+          <Table style={{ marginTop: "2vh"}} dataSource={this.state.scores} pagination={{ pageSize: 30 }} locale={{
+            emptyText: (
 
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Ellipsis size={100} color="#177ddc" />
-            </div>
-          )
-        }}>
-          <Column title="Position" dataIndex="position" key="position" />
-          <Column title="Username" dataIndex="username" key="username" />
-          <Column title="Score" dataIndex="score" key="score" />
-        </Table>
-      </Layout>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Ellipsis size={100} color="#177ddc" />
+              </div>
+            )
+          }}>
+            <Column title="Position" dataIndex="position" key="position" />
+            <Column title="Username" dataIndex="username" key="username" />
+            <Column title="Score" dataIndex="score" key="score" />
+          </Table>
+        </Layout>
+      </animated.div>
     );
   }
 }

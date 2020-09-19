@@ -33,6 +33,25 @@
     animation-name: slideInFromLeft;
 }
 
+@keyframes slideInFromTop {
+    0% {
+        transform: translateY(50%);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.pageSwitch {
+    animation-duration: 0.38s;
+    animation-timing-function: ease-out;
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-name: slideInFromTop;
+}
+
 .card-design {
     border-color: #1890ff !important;
     border-radius: 5px !important;
@@ -60,4 +79,12 @@
 
 .create_challenge_form h1 {
     font-size: 120%;
+}
+
+.loadingStyle {
+    display: "flex" !important;
+    width: "100%" !important;
+    justify-content: "center";
+    justify-items: "center";
+    position: absolute;
 }

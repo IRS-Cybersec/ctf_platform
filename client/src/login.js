@@ -59,7 +59,8 @@ class Login extends React.Component {
 
         }).catch((error) => {
             console.log(error)
-            message.error({ content: "Oops. There was an issue connecting with the server" });
+            message.error({ content: "Oops. There was an issue connecting to the server" });
+            this.setState({ loading: false })
         })
     }
 
@@ -100,7 +101,8 @@ class Login extends React.Component {
 
         }).catch((error) => {
             console.log(error)
-            message.error({ content: "Oops. There was an issue connecting to the server" });
+            message.error({ content: "Oops. There was an issue connecting to the server" })
+            this.setState({ loading: false })
         })
     }
 

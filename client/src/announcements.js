@@ -4,9 +4,10 @@ import {
   NotificationTwoTone,
 } from '@ant-design/icons';
 import './App.css';
+import { animated } from 'react-spring/renderprops';
 
 
-class announcements extends React.Component {
+class Announcements extends React.Component {
   constructor(props) {
     super(props);
 
@@ -16,12 +17,13 @@ class announcements extends React.Component {
 
   render() {
     return (
-
-      <Layout className="pageTransition" style={{ height: "100%", width: "100%"  }}>
+      <animated.div style={{ ...this.props.transition, position: "absolute" }}>
+        <Layout className="pageSwitch" style={{ height: "100%", width: "100%" }}>
           <p>Announcements <NotificationTwoTone /> </p>
-      </Layout>
+        </Layout>
+      </animated.div>
     );
   }
 }
 
-export default announcements;
+export default Announcements;

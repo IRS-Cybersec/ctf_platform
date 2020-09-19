@@ -85,27 +85,10 @@ class ChallengesCategory extends React.Component {
   }
 
   fetchCategories() {
-    this.setState({ loadingCat: true })
-    fetch("https://api.irscybersec.tk/v1/challenge/list/" + encodeURIComponent(this.props.category), {
-      method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-    }).then((results) => {
-      return results.json(); //return data in JSON (since its JSON data)
-    }).then((data) => {
-      console.log(data)
-      if (data.success === true) {
-        data.challenges = orderBy(data.challenges, ["points"], ["asc"])
-        this.setState({ challenges: data.challenges, loadingCat: false })
-      }
-      else {
-        message.error({ content: "Oops. Unknown error" })
-      }
-
-
-    }).catch((error) => {
-      console.log(error)
-      message.error({ content: "Oops. There was an issue connecting with the server" });
-    })
+    //console.log(this.props.currentCategoryChallenges)
+    let challenges = this.props.currentCategoryChallenges
+    challenges = orderBy(challenges, ["points"], ["asc"])
+        this.setState({ challenges: challenges, loadingCat: false })
   }
 
   handleHint(id, chall, bought) {
