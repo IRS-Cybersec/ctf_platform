@@ -85,14 +85,13 @@ class ChallengesCategory extends React.Component {
   }
 
   fetchCategories() {
-    //console.log(this.props.currentCategoryChallenges)
     let challenges = this.props.currentCategoryChallenges
     challenges = orderBy(challenges, ["points"], ["asc"])
-        this.setState({ challenges: challenges, loadingCat: false })
+    this.setState({ challenges: challenges, loadingCat: false })
   }
 
   handleHint(id, chall, bought) {
-    fetch("https://api.irscybersec.tk/v1/challenge/hint", {
+    fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
       body: JSON.stringify({
@@ -132,7 +131,7 @@ class ChallengesCategory extends React.Component {
       this.setState({ currentChallengeStatus: "Enter the flag (case-sensitive)" })
     }
     document.getElementById(name).style.pointerEvents = "none"
-    fetch("https://api.irscybersec.tk/v1/challenge/show/" + encodeURIComponent(name), {
+    fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
@@ -239,7 +238,7 @@ class ChallengesCategory extends React.Component {
 
   submitFlag(values) {
 
-    fetch("https://api.irscybersec.tk/v1/challenge/submit", {
+    fetch(window.ipAddress + "/v1/challenge/submit", {
       method: 'post',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
       body: JSON.stringify({
@@ -258,16 +257,19 @@ class ChallengesCategory extends React.Component {
               'Congratulations for solving "' + this.state.currentChallenge + '".',
             duration: 0
           });
-          this.fetchCategories(this.props.category)
-          this.props.challengeFetchCategory()
-          this.setState({ challengeModal: false })
+          const refresh = async () => {
+            await this.props.handleRefresh(false)
+            await this.fetchCategories()
+            await this.setState({ challengeModal: false })
+          }
+          refresh()
 
         }
         else {
           notification["error"]({
             message: 'Oops. Incorrect Flag',
             description:
-              'It seems like you submitted an incorrect flag (' + values.flag + ') for "' + this.state.currentChallenge + '".',
+              'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.currentChallenge + '".',
             duration: 0
           });
         }
@@ -309,7 +311,7 @@ class ChallengesCategory extends React.Component {
 
   render() {
     return (
-      <Layout className="pageTransition" style={{ height: "100%", width: "100%" }}>
+      <Layout className="pageTransition" style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
         <Modal
           title="Hint"
@@ -378,6 +380,7 @@ class ChallengesCategory extends React.Component {
                   )
                 }}
                 renderItem={item => {
+
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
@@ -386,8 +389,7 @@ class ChallengesCategory extends React.Component {
                       />
                     </List.Item>
                   )
-                }
-                } />
+                }} />
             </TabPane>
           </Tabs>
 
@@ -396,7 +398,14 @@ class ChallengesCategory extends React.Component {
 
         {!this.state.loadingCat && (
           <List
-            grid={{ column: 4, gutter: 20 }}
+            grid={{
+              xs: 1,
+              sm: 2,
+              md: 3,
+              lg: 4,
+              xl: 4,
+              xxl: 5,
+              gutter: 20 }}
             dataSource={this.state.challenges}
             locale={{
               emptyText: (
@@ -412,7 +421,7 @@ class ChallengesCategory extends React.Component {
               }
 
 
-              if (item.solved === false) {
+              if (!item.solved) {
                 return (
                   <List.Item key={item.name}>
                     <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved) }}>
@@ -425,11 +434,9 @@ class ChallengesCategory extends React.Component {
                         style={{ overflow: "hidden" }}
                       >
                         <Meta
-                          title={
-                            <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%", textAlign: "center" }}>{item.name}</h1>
-                          }
                           description={
-                            <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center" }}>
+                            <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
+                              <h1 style={{ textOverflow: "ellipsis", width: "25ch", fontSize: "3ch",overflow: "hidden", whiteSpace: "nowrap"}}>{item.name}</h1>
                               <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
                               <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
@@ -455,16 +462,14 @@ class ChallengesCategory extends React.Component {
                         hoverable
                         type="inner"
                         bordered={true}
-                        bodyStyle={{ backgroundColor: "#389e0d" }}
+                        bodyStyle={{ backgroundColor: "#3c8618" }}
                         className="card-design"
-                        style={{ overflow: "hidden", opacity: 0.7 }}
+                        style={{ overflow: "hidden" }}
                       >
                         <Meta
-                          title={
-                            <h1 style={{ overflow: "hidden", maxWidth: "30ch", textOverflow: "ellipsis", fontSize: "85%", textAlign: "center" }}>{item.name}</h1>
-                          }
                           description={
-                            <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center" }}>
+                            <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
+                              <h1 style={{ textOverflow: "ellipsis", width: "25ch", fontSize: "3ch",overflow: "hidden", whiteSpace: "nowrap"}}>{item.name}</h1>
                               <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
                               <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (

@@ -50,7 +50,7 @@ const CreateChallengeForm = (props) => {
                         values.visibility = true
                     }
                     props.setState({ editLoading: true })
-                    fetch("https://api.irscybersec.tk/v1/challenge/edit", {
+                    fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -370,7 +370,7 @@ class AdminChallengeEdit extends React.Component {
 
     getChallengeDetails = (name) => {
         this.setState({ loading: true })
-        fetch("https://api.irscybersec.tk/v1/challenge/show/" + name + "/detailed", {
+        fetch(window.ipAddress + "/v1/challenge/show/" + name + "/detailed", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -464,7 +464,7 @@ class AdminChallengeEdit extends React.Component {
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%", margin: "10px" }}>
+            <Layout style={{ height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
                 <Modal
                     title={null}
                     visible={this.state.previewModal}

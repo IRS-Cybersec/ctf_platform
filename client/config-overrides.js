@@ -1,6 +1,6 @@
 const { override, addLessLoader, fixBabelImports } = require('customize-cra');
 const { getThemeVariables } = require('antd/dist/theme');
-const TerserPlugin = require('terser-webpack-plugin');
+//const TerserPlugin = require('terser-webpack-plugin');
 
 const Terser = config => {
 	config.plugins.push(new TerserPlugin({
@@ -29,5 +29,5 @@ module.exports = override(
 		}),
 	}
   }),
-  Terser
+  //Terser
 );

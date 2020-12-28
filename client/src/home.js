@@ -11,6 +11,8 @@ import './App.css';
 import { animated } from 'react-spring/renderprops'
 
 
+
+
 class Home extends React.Component {
   constructor(props) {
     super(props);
@@ -23,8 +25,8 @@ class Home extends React.Component {
   render() {
     return (
 
-      <animated.div style={{...this.props.transition, position: "fixed" }}>
-        <Layout>
+      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <h2>Welcome to the IRS Cybersec CTF Platform!</h2>
           <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
           <br />

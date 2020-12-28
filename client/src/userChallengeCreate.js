@@ -10,7 +10,8 @@ import {
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser'
+import JsxParser from 'react-jsx-parser';
+import { animated } from 'react-spring/renderprops';
 
 
 const { Option } = Select;
@@ -46,7 +47,7 @@ const CreateChallengeForm = (props) => {
                     else {
                         values.visibility = true
                     }
-                    fetch("https://api.irscybersec.tk/v1/challenge/new", {
+                    fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -77,7 +78,7 @@ const CreateChallengeForm = (props) => {
                     }).catch((error) => {
                         message.error({ content: "Oops. There was an issue connecting with the server" });
                     })
-                    
+
                 }
 
             }}
@@ -304,8 +305,8 @@ const CreateChallengeForm = (props) => {
             <Form.Item>
                 <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
                     <div>
-                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
-                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
+                        <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
+                        <Button loading={props.loadingStatus} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
                     </div>
                     <div>
                         <Button style={{ marginRight: "2vw" }} type="primary" danger onClick={() => { form.resetFields() }}>Clear</Button>
@@ -413,56 +414,59 @@ class UserChallengeCreate extends React.Component {
 
     render() {
         return (
-
-            <Layout className="pageTransition" style={{ height: "100%", width: "100%", overflowY: "auto", overflowX: "hidden", padding: "10px" }}>
-                <Modal
-                    title={null}
-                    visible={this.state.previewModal}
-                    footer={null}
-                    bodyStyle={{ textAlign: "center" }}
-                    onCancel={() => { this.setState({ previewModal: false }) }}
-                >
-                    <Tabs defaultActiveKey="challenge">
-                        <TabPane
-                            tab={<span><ProfileOutlined /> Challenge</span>}
-                            key="challenge"
+            <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+                <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+                    <div style={{padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px"}}>
+                        <Modal
+                            title={null}
+                            visible={this.state.previewModal}
+                            footer={null}
+                            bodyStyle={{ textAlign: "center" }}
+                            onCancel={() => { this.setState({ previewModal: false }) }}
                         >
-                            <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
-                            <div>
-                                {this.state.challengeTags}
-                            </div>
-                            <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
+                            <Tabs defaultActiveKey="challenge">
+                                <TabPane
+                                    tab={<span><ProfileOutlined /> Challenge</span>}
+                                    key="challenge"
+                                >
+                                    <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
+                                    <div>
+                                        {this.state.challengeTags}
+                                    </div>
+                                    <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
 
-                            <JsxParser
-                                bindings={{
-                                    atomDark: atomDark
-                                }}
-                                components={{ SyntaxHighlighter }}
-                                jsx={this.state.previewChallenge.description}
-                            />
+                                    <JsxParser
+                                        bindings={{
+                                            atomDark: atomDark
+                                        }}
+                                        components={{ SyntaxHighlighter }}
+                                        jsx={this.state.previewChallenge.description}
+                                    />
 
-                            <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
-                                {this.state.challengeHints}
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "center" }}>
-                                <Input style={{ width: "45ch" }} defaultValue="" placeholder={"Enter a flag"} />
-                                <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
-                                <p>Challenge Author: <em>You</em></p>
-                                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewChallenge.max_attempts}</p>
-                            </div>
-                        </TabPane>
-                    </Tabs>
+                                    <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+                                        {this.state.challengeHints}
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "center" }}>
+                                        <Input style={{ width: "45ch" }} defaultValue="" placeholder={"Enter a flag"} />
+                                        <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
+                                        <p>Challenge Author: <em>You</em></p>
+                                        <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewChallenge.max_attempts}</p>
+                                    </div>
+                                </TabPane>
+                            </Tabs>
 
 
-                </Modal>
-                <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
-                    <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
+                        </Modal>
+                        <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
+                            <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
-                </div>
-                <CreateChallengeForm setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
-            </Layout>
+                        </div>
+                        <CreateChallengeForm setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
+                    </div>
+                </Layout>
+            </animated.div>
 
         );
     }

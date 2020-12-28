@@ -48,7 +48,7 @@ const CreateChallengeForm = (props) => {
                     else {
                         values.visibility = true
                     }
-                    fetch("https://api.irscybersec.tk/v1/challenge/new", {
+                    fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -308,8 +308,8 @@ const CreateChallengeForm = (props) => {
             <Form.Item>
                 <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
                     <div>
-                        <Button loading={props.loadingStatus} style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
-                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
+                        <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
+                        <Button loading={props.loadingStatus} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
                     </div>
                     <div>
                         <Button style={{ marginRight: "2vw" }} type="primary" danger onClick={() => { form.resetFields() }}>Clear</Button>
@@ -418,7 +418,7 @@ class AdminChallengeCreate extends React.Component {
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%", margin: "10px" }}>
+            <Layout style={{ height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px"  }}>
                 <Modal
                     title={null}
                     visible={this.state.previewModal}

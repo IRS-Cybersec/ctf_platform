@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Card, List, Progress, message, Button, Radio, Select } from 'antd';
 import {
   FileUnknownTwoTone,
-  LeftCircleTwoTone,
+  LeftCircleOutlined,
   AppstoreOutlined,
   GroupOutlined
 } from '@ant-design/icons';
@@ -16,7 +16,7 @@ import { Transition, animated } from 'react-spring/renderprops';
 const { Meta } = Card;
 const { Option } = Select;
 
-const categoryImages = [require("./assets/catPhoto1.jpg"), require("./assets/catPhoto2.jpg"), require("./assets/catPhoto3.jpg")]
+const categoryImages = [require("./assets/catPhoto1.jpg").default, require("./assets/catPhoto2.jpg").default, require("./assets/catPhoto3.jpg").default]
 
 
 
@@ -30,8 +30,7 @@ class Challenges extends React.Component {
     this.state = {
       categories: [],
       challengeCategory: false,
-      currentCategory: "",
-      userScore: 0,
+      currentCategory: false,
       originalData: [],
       tagData: [],
       sortByTags: false,
@@ -45,30 +44,6 @@ class Challenges extends React.Component {
     this.setState({ loadingChall: true })
 
     this.fetchCategories()
-    this.obtainScore()
-  }
-
-  obtainScore() {
-    fetch("https://api.irscybersec.tk/v1/scores/" + localStorage.getItem("IRSCTF-token").split(".")[0], {
-      method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-    }).then((results) => {
-      return results.json(); //return data in JSON (since its JSON data)
-    }).then((data) => {
-      //console.log(data)
-
-      if (data.success === true) {
-        this.setState({ userScore: data.score })
-      }
-      else {
-        message.error({ content: "Oops. Unknown error" })
-      }
-
-
-    }).catch((error) => {
-      console.log(error)
-      message.error({ content: "Oops. There was an issue connecting with the server" });
-    })
   }
 
   parseCategories(data) {
@@ -94,37 +69,33 @@ class Challenges extends React.Component {
 
   }
 
-  fetchCategories() {
-    fetch("https://api.irscybersec.tk/v1/challenge/list", {
+  fetchCategories = async () => {
+    await fetch(window.ipAddress + "/v1/challenge/list", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
-    }).then((data) => {
-      console.log(data)
+    }).then(async (data) => {
 
       if (data.success === true) {
 
-        const parseData = async () => {
-          let originalData = JSON.parse(JSON.stringify(data.challenges))
-          const newData = await this.parseCategories(data.challenges)
+        let originalData = JSON.parse(JSON.stringify(data.challenges))
+        const newData = await this.parseCategories(data.challenges) //this statement changes the object data
 
-          //convert array to dict
+        //convert array to dict
 
-          let originalDataDictionary = {}
-          for (let i = 0; i < originalData.length; i++) {
-            originalDataDictionary[originalData[i]._id] = originalData[i].challenges
-          }
-
-          await this.setState({ categories: newData, originalData: originalDataDictionary, loadingChall: false })
-
-
-          const category = this.props.match.params.category;
-          if (typeof category !== "undefined") {
-            this.setState({ challengeCategory: true, currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
-          }
+        let originalDataDictionary = {}
+        for (let i = 0; i < originalData.length; i++) {
+          originalDataDictionary[originalData[i]._id] = originalData[i].challenges
         }
-        parseData()
+
+        await this.setState({ categories: newData, originalData: originalDataDictionary, loadingChall: false })
+
+        console.log(this.state.originalData)
+        const category = this.props.match.params.category;
+        if (typeof category !== "undefined") {
+          await this.setState({ challengeCategory: true, currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
+        }
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -167,17 +138,30 @@ class Challenges extends React.Component {
     }
   }
 
+  handleRefresh = async (tagSorting) => {
+
+    await this.fetchCategories()
+    if (tagSorting) {
+      await this.sortDifferent({ target: { value: "Type" } })
+    }
+    else {
+      await this.setState({ currentCategoryChallenges: this.state.originalData[this.state.currentCategory] })
+    }
+
+    await this.props.obtainScore()
+  }
+
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, position: "fixed", overflowX: "hidden", height: "100%"}}>
-        <Layout style={{ width: "100%", paddingRight: "10px"}}>
-          <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh" }}>
-            <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg")} />
+      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+          <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
+            <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg").default} />
 
             {!this.state.currentCategory && (
               <h1 style={{
-                color: "white", 
+                color: "white",
                 position: "relative",
                 bottom: "60%",
                 fontSize: "250%",
@@ -203,31 +187,28 @@ class Challenges extends React.Component {
               }}> CHALLENGES <p style={{ fontSize: "210%", letterSpacing: "normal", paddingBottom: "10px", fontWeight: 400 }}>{this.state.currentCategory}</p></h1>
 
             )}
-            {this.state.currentCategory && (
-              <Button type="primary" style={{ display: "block", position: "relative", bottom: "75%", left: "1%" }} icon={<LeftCircleTwoTone twoToneColor="#d89614" />} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: "", sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
-            )}
+
 
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh" }}>
-            <h1 style={{ fontSize: "120%", padding: "5px", borderRadius: "5px", borderStyle: "solid", borderWidth: "1px", borderColor: "#177ddc", color: "#d89614", backgroundColor: "#1f1f1f", fontWeight: 600 }}>Current Score: <u>{this.state.userScore}</u></h1>
+
+            <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{backgroundColor: "#1f1f1f"}} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: false, sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
             <div>
-              {this.state.currentCategory && !this.state.sortByTags && (
-                <Select defaultValue="points" style={{ marginRight: "1.5vw", width: "10vw" }} onChange={this.sortCats.bind(this)}>
-                  <Option value="points">Sort by Points</Option>
-                  <Option value="abc">Sort A→Z</Option>
-                  <Option value="abcrev">Sort Z→A</Option>
-                </Select>
-              )}
-              <Radio.Group buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)} value={this.state.RadioValue}>
-                <Radio.Button value="Category">Category <AppstoreOutlined /> </Radio.Button>
-                <Radio.Button value="Type">Type <GroupOutlined /> </Radio.Button>
+              <Select disabled={!(this.state.currentCategory && !this.state.sortByTags)} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
+                <Option value="points">Sort by Points</Option>
+                <Option value="abc">Sort A→Z</Option>
+                <Option value="abcrev">Sort Z→A</Option>
+              </Select>
+              <Radio.Group buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)} value={this.state.RadioValue} style={{ backgroundColor: "#1f1f1f" }}>
+                <Radio.Button value="Category">Sort By Category <AppstoreOutlined /> </Radio.Button>
+                <Radio.Button value="Type">Sort By Type <GroupOutlined /> </Radio.Button>
               </Radio.Group>
 
             </div>
           </div>
 
 
-          <div style={{ position: "relative" }}>
+          <div>
             <Transition
               items={this.state.loadingChall}
               from={{ opacity: 0 }}
@@ -244,7 +225,15 @@ class Challenges extends React.Component {
                     return (<div style={{ ...props }}>
                       {!this.state.challengeCategory && !this.state.sortByTags && (
                         <List
-                          grid={{ column: 4, gutter: 20 }}
+                          grid={{
+                            xs: 1,
+                            sm: 1,
+                            md: 2,
+                            lg: 3,
+                            xl: 3,
+                            xxl: 4,
+                            gutter: 20
+                          }}
                           dataSource={this.state.categories}
                           locale={{
                             emptyText: (
@@ -268,18 +257,18 @@ class Challenges extends React.Component {
                                       bodyStyle={{ backgroundColor: "#262626" }}
                                       className="card-design"
                                       style={{ overflow: "hidden" }}
-                                      cover={<img style={{ height: "20vh", width: "30vw", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                                      cover={<img style={{ height: "35ch", width: "55ch", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
                                     >
                                       <Meta
                                         title={
                                           <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                                            <h1 style={{ color: "white", fontSize: "100%", width: "15vw", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
+                                            <h1 style={{ color: "white", fontSize: "2.5ch", width: "40ch", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
                                             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-                                              <h2 style={{ fontSize: "1vw", marginLeft: "1vw" }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
-                                              <Progress type="circle" percent={item.challenges.percentage} width="3.2vw" strokeColor={{
+                                              <h2 style={{ fontSize: "2.5ch", marginLeft: "1vw", color: "#faad14", fontWeight: 700 }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
+                                              <Progress type="circle" percent={item.challenges.percentage} width="7ch" strokeColor={{
                                                 '0%': '#177ddc',
                                                 '100%': '#49aa19',
-                                              }} style={{ marginLeft: "1vw", fontSize: "1vw" }} />
+                                              }} style={{ marginLeft: "1vw", fontSize: "2ch" }} />
                                             </div>
                                           </div>
                                         }
@@ -295,11 +284,11 @@ class Challenges extends React.Component {
                       )}
 
                       {this.state.challengeCategory && (
-                        <ChallengesCategory ref={this.child} currentCategoryChallenges={this.state.currentCategoryChallenges} category={this.state.currentCategory} challengeFetchCategory={this.fetchCategories.bind(this)}></ChallengesCategory>
+                        <ChallengesCategory handleRefresh={this.handleRefresh.bind(this)} ref={this.child} currentCategoryChallenges={this.state.currentCategoryChallenges} category={this.state.currentCategory}></ChallengesCategory>
                       )}
 
                       {this.state.sortByTags && (
-                        <ChallengesTagSort tagData={this.state.tagData}></ChallengesTagSort>
+                        <ChallengesTagSort tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)}></ChallengesTagSort>
                       )}
                     </div>)
                   }

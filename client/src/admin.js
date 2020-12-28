@@ -9,10 +9,11 @@ import './App.css';
 import AdminUsers from "./adminUsers.js";
 import AdminChallenges from "./adminChallenges.js";
 import AdminSubmissions from "./adminSubmissions.js";
+import { animated } from 'react-spring/renderprops';
 
 const { TabPane } = Tabs;
 
-class admin extends React.Component {
+class Admin extends React.Component {
   constructor(props) {
     super(props);
 
@@ -23,36 +24,41 @@ class admin extends React.Component {
   render() {
     return (
 
-      <Layout className="pageSwitch" style={{ height: "100%", width: "100%" }}>
-        <Tabs defaultActiveKey="home" style={{ overflowY: "auto", overflowX: "auto" }}>
-          <TabPane
-            tab={<span> Home </span>}
-            key="home"
-          >
-            Admin Panel. Still WIP
-          </TabPane>
-          <TabPane
-            tab={<span><UserOutlined />Users</span>}
-            key="users"
-          >
-            <AdminUsers></AdminUsers>
-          </TabPane>
-          <TabPane
-            tab={<span><AppstoreOutlined />Challenges</span>}
-            key="challenges"
-          >
-            <AdminChallenges></AdminChallenges>
-          </TabPane>
-          <TabPane
-            tab={<span><BarsOutlined />Submissions</span>}
-            key="submissions"
-          >
-            <AdminSubmissions></AdminSubmissions>
-          </TabPane>
-        </Tabs>
-      </Layout>
+      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+          <Tabs defaultActiveKey="home" style={{ overflowY: "auto", overflowX: "auto" }}>
+            <TabPane
+              tab={<span> Home </span>}
+              key="home"
+            >
+              <p>
+                Welcome to Sieberrsec CTF Platform's admin panel. <br />
+              Platform Version: 0.5 28/12/20
+              </p>
+            </TabPane>
+            <TabPane
+              tab={<span><UserOutlined />Users</span>}
+              key="users"
+            >
+              <AdminUsers></AdminUsers>
+            </TabPane>
+            <TabPane
+              tab={<span><AppstoreOutlined />Challenges</span>}
+              key="challenges"
+            >
+              <AdminChallenges></AdminChallenges>
+            </TabPane>
+            <TabPane
+              tab={<span><BarsOutlined />Submissions</span>}
+              key="submissions"
+            >
+              <AdminSubmissions></AdminSubmissions>
+            </TabPane>
+          </Tabs>
+        </Layout>
+      </animated.div>
     );
   }
 }
 
-export default admin;
+export default Admin;

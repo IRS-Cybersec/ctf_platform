@@ -7,7 +7,8 @@ import './App.css';
 import { orderBy } from "lodash";
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis } from 'react-spinners-css';
-import { animated } from 'react-spring/renderprops'
+import { animated } from 'react-spring/renderprops';
+import { Link } from 'react-router-dom';
 
 const { Column } = Table;
 
@@ -20,7 +21,8 @@ class Scoreboard extends React.Component {
       scores: [],
       graphData: [{ "": 0 }],
       top10: [""] * 10,
-      loadingGraph: false
+      loadingGraph: false,
+      loadingTable: false
     };
   }
 
@@ -29,8 +31,8 @@ class Scoreboard extends React.Component {
   }
 
   getFinalScores() {
-    this.setState({ loadingGraph: true })
-    fetch("https://api.irscybersec.tk/v1/scores", {
+    this.setState({ loadingGraph: true, loadingTable: true })
+    fetch(window.ipAddress + "/v1/scores", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
@@ -71,12 +73,13 @@ class Scoreboard extends React.Component {
   }
 
   plotGraph(top10, top10scores, scoreArray) {
-    fetch("https://api.irscybersec.tk/v1/scoreboard", {
+    fetch(window.ipAddress + "/v1/scoreboard", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
+      console.log(scoreArray)
       let formattedData = []
       let finalPoint = {}
 
@@ -136,7 +139,7 @@ class Scoreboard extends React.Component {
           }
         }
         scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
-        //console.log(scoreArray);
+        console.log(scoreArray);
         for (let x = 0; x < scoreArray.length; x++) {
           scoreArray[x].position = String(x + 1) + "."
         }
@@ -160,8 +163,8 @@ class Scoreboard extends React.Component {
         finalData.push(finalPoint)
         //console.log(finalData)
         //Temp fix for table data to use timestamp
-
-        this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray })
+        console.log(finalData)
+        this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray, loadingTable: false })
 
       }
       else {
@@ -178,54 +181,56 @@ class Scoreboard extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, position: "fixed", height: "100%", overflowX: "auto", width: "100%"}}>
-        <Layout style={{width: "100%", paddingRight: "10px"}}>
-          <div style={{ display: "flex", flexDirection: "row"}}>
-
-            <ResponsiveContainer width="80%" height={350}>
+      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)", display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center" }}>
+          <div>
+            <h1 style={{ fontSize: "5ch" }}>Scoreboard</h1>
+          </div>
+          <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
+            <ResponsiveContainer width="90%" height={350}>
               <AreaChart height={350} data={this.state.graphData}
                 margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
 
                 <defs>
                   <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#791a1f" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#791a1f" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c4a15" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f8cf8d" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#7c4a15" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f8cf8d" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c5914" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f8df8b" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#7c5914" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f8df8b" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color4" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#536d13" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#e4f88b" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#536d13" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#e4f88b" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color5" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#306317" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#b2e58b" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#306317" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#b2e58b" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color6" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#146262" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#84e2d8" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#146262" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#84e2d8" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color7" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#164c7e" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8dcff8" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#164c7e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8dcff8" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color8" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#203175" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#a8c1f8" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#203175" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#a8c1f8" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color9" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3e2069" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#cda8f0" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#3e2069" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#cda8f0" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="color10" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#75204f" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f8a8cc" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#75204f" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f8a8cc" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="Time">
@@ -260,20 +265,28 @@ class Scoreboard extends React.Component {
               </div>
             )}
           </div>
-          <Table style={{ marginTop: "2vh"}} dataSource={this.state.scores} pagination={{ pageSize: 30 }} locale={{
-            emptyText: (
-
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <Ellipsis size={100} color="#177ddc" />
-              </div>
-            )
-          }}>
-            <Column title="Position" dataIndex="position" key="position" />
-            <Column title="Username" dataIndex="username" key="username" />
-            <Column title="Score" dataIndex="score" key="score" />
-          </Table>
+          {!this.state.loadingTable && (
+            <div style={{ height: "70%", width: "100%", minWidth: "80vw" }}>
+              <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 20 }} locale={{
+                emptyText: (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                    <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                    <h1 style={{ fontSize: "200%" }}>That's odd. There are no users</h1>
+                  </div>
+                )
+              }}>
+                <Column width={1} title="Position" dataIndex="position" key="position" />
+                <Column width={30} title="Username" dataIndex="username" key="username"
+                  render={(text, row, index) => {
+                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}>{text}</a></Link>;
+                  }}
+                />
+                <Column width={30} title="Score" dataIndex="score" key="score" />
+              </Table>
+            </div>
+          )}
         </Layout>
-      </animated.div>
+      </animated.div >
     );
   }
 }

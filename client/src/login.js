@@ -25,7 +25,7 @@ class Login extends React.Component {
 
     handleRegister = values => {
         this.setState({ loading: true })
-        fetch("https://api.irscybersec.tk//v1/account/create", {
+        fetch(window.ipAddress + "/v1/account/create", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -66,7 +66,7 @@ class Login extends React.Component {
 
     handleLogin = values => {
         this.setState({ loading: true })
-        fetch("https://api.irscybersec.tk/v1/account/login", {
+        fetch(window.ipAddress + "/v1/account/login", {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -110,25 +110,25 @@ class Login extends React.Component {
 
         return (
 
-            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh", overflow: "hidden" }}>
-                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", width: "70vw", backgroundImage: "url(" + require("./assets/login_photo.jpg") + ")", backgroundSize: "cover", overflow: `hidden` }}>
-                        <div style={{ fontSize: "3.5vw", color: "white" }}>
+            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh", overflow: "hidden", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.png").default + ")" }}>
+                    <div style={{ display: "flex", flexDirection: "column", textAlign: "center", alignItems: "center", justifyContent: "center", height: "100vh", width: "70vw", backgroundSize: "cover", overflow: `hidden` }}>
+                        <div style={{ fontSize: "7ch", color: "white" }}>
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}> IRS Cybersec CTF Platform</span>
                         </div>
-                        <div style={{ color: "white", fontSize: "1.5vw" }}>
+                        <div style={{ color: "white", fontSize: "5ch" }}>
                             <p style={{ textShadow: '1px 1px 1px 1px #000000' }}>The Wheel. Reinvented.™</p>
                         </div>
                     </div>
 
 
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", boxShadow: "-5px 0px 20px black" }}>
+                    <div style={{ display: "flex", flexDirection: "column", backgroundColor: "rgba(0, 0, 0, 0.8)", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", boxShadow: "-5px 0px 20px black" }}>
                         <div style={{ padding: "15px", marginBottom: "5vh" }}>
-                            <img src={require("./sieberrsec_ctf.svg")} style={{ width: "100%" }}></img>
+                            <img src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
                         </div>
                         {this.state.login && (
                             <div>
-                                <h1 style={{ color: "white", fontSize: "2vw" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>
+                                <h1 style={{ color: "white", fontSize: "3ch" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="normal_login"
                                     className="login-form"

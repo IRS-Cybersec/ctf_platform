@@ -1,16 +1,18 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Modal, Transfer } from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Modal, Transfer, Divider } from 'antd';
 import {
     LoadingOutlined,
     ExclamationCircleTwoTone,
     DeleteOutlined,
     FlagOutlined,
     EditOutlined,
+    FileUnknownTwoTone
 } from '@ant-design/icons';
 import './App.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
 import { difference } from "lodash";
+import { Ellipsis } from 'react-spinners-css';
 
 const { Column } = Table;
 
@@ -48,7 +50,7 @@ class AdminChallenges extends React.Component {
         let allCat = []
 
         const getInfo = async () => {
-            fetch("https://api.irscybersec.tk/v1/challenge/list_categories", {
+            fetch(window.ipAddress + "/v1/challenge/list_categories", {
                 method: 'get',
                 headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             }).then((results) => {
@@ -68,7 +70,7 @@ class AdminChallenges extends React.Component {
                 message.error({ content: "Oops. There was an issue connecting with the server" });
             })
 
-            await fetch("https://api.irscybersec.tk/v1/challenge/list_all_categories", {
+            await fetch(window.ipAddress + "/v1/challenge/list_all_categories", {
                 method: 'get',
                 headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             }).then((results) => {
@@ -122,7 +124,7 @@ class AdminChallenges extends React.Component {
 
     editCategoryVisibility(visbility, categories) {
 
-        fetch("https://api.irscybersec.tk/v1/challenge/edit/category", {
+        fetch(window.ipAddress + "/v1/challenge/edit/category", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
@@ -149,7 +151,8 @@ class AdminChallenges extends React.Component {
     }
 
     fillTableData = () => {
-        fetch("https://api.irscybersec.tk/v1/challenge/list_all", {
+        this.setState({ loading: true })
+        fetch(window.ipAddress + "/v1/challenge/list_all", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -165,7 +168,7 @@ class AdminChallenges extends React.Component {
                         data.challenges[i].visibility = "Shown"
                     }
                 }
-                this.setState({ dataSource: data.challenges })
+                this.setState({ dataSource: data.challenges, loading: false })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -181,7 +184,7 @@ class AdminChallenges extends React.Component {
 
     deleteChallenge = () => {
         this.setState({ modalLoading: true })
-        fetch("https://api.irscybersec.tk/v1/challenge/delete", {
+        fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
@@ -235,82 +238,93 @@ class AdminChallenges extends React.Component {
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%"}}>
-                <Modal
-                    title={"Are you sure you want to delete \"" + this.state.challengeName + "\" ?"}
-                    visible={this.state.deleteModal}
-                    onOk={this.deleteChallenge}
-                    onCancel={() => { this.setState({ deleteModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
-                >
-                    <h4>This action of mass destruction is irreveisble! <ExclamationCircleTwoTone twoToneColor="#d32029" /> </h4>
-                </Modal>
+            <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
-                {!this.state.challengeCreate && !this.state.editChallenge && (
-                    <div>
-
-                        <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }) }}>Create New Challenge</Button>
-
-
-
-                        <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
-                            emptyText: (
-                                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", fontSize: "3vw" }}>
-                                    <LoadingOutlined style={{ color: "#177ddc" }} />
-                                </div>
-                            )
-                        }}>
-                            <Column title="Name" dataIndex="name" key="name" />
-                            <Column title="Category" dataIndex="category" key="category" />
-                            <Column title="Points" dataIndex="points" key="points" />
-                            <Column title="Visbility" dataIndex="visibility" key="visibility" />
-                            <Column
-                                title="Edit"
-                                key="edit"
-                                render={(text, record) => (
-                                    <Dropdown trigger={['click']} overlay={
-                                        <Menu>
-                                            <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }) }}>
-                                                <span>
-                                                    Edit Challenge <EditOutlined />
-                                                </span>
-                                            </Menu.Item>
-                                            <Menu.Divider />
-                                            <Menu.Item onClick={() => { this.setState({ challengeName: record.name, deleteModal: true }) }}>
-                                                <span style={{ color: "#d32029" }} >
-                                                    Delete Challenge <DeleteOutlined />
-                                                </span>
-                                            </Menu.Item>
-                                        </Menu>
-                                    } placement="bottomCenter">
-                                        <Button>Actions</Button>
-                                    </Dropdown>
-                                )}
-                            />
-                        </Table>
-
-                        <h1 style={{ fontSize: "150%", marginTop: "5vh" }}>Category Management {this.state.transferDisabled && (<LoadingOutlined style={{ color: "#177ddc" }} />)}</h1> 
-
-                        <Transfer
-                            dataSource={this.state.allCat}
-                            titles={['Visible Categories', 'Hidden Categories']}
-                            targetKeys={this.state.targetKeys}
-                            selectedKeys={this.state.selectedKeys}
-                            onChange={this.handleChange}
-                            onSelectChange={this.handleSelectChange}
-                            render={item => item.key}
-                            pagination
-                            disabled={this.state.transferDisabled}
-                        />
+                {this.state.loading && (
+                    <div style={{ position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                        <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
+                {!this.state.loading && (
+                    <div>
+                        <Modal
+                            title={"Are you sure you want to delete \"" + this.state.challengeName + "\" ?"}
+                            visible={this.state.deleteModal}
+                            onOk={this.deleteChallenge}
+                            onCancel={() => { this.setState({ deleteModal: false }) }}
+                            confirmLoading={this.state.modalLoading}
+                        >
+                            <h4>This action of mass destruction is irreveisble! <ExclamationCircleTwoTone twoToneColor="#d32029" /> </h4>
+                        </Modal>
 
-                {this.state.challengeCreate && !this.state.editChallenge && (
-                    <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)}></AdminChallengeCreate>
-                )}
+                        {!this.state.challengeCreate && !this.state.editChallenge && (
+                            <div>
 
-                {this.state.editChallenge && !this.state.challengeCreate && (
-                    <AdminChallengeEdit challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
+                                <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }) }}>Create New Challenge</Button>
+
+                                <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
+                                    emptyText: (
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                            <h1 style={{ fontSize: "200%" }}>There are no challenges created.</h1>
+                                        </div>
+                                    )
+                                }}>
+                                    <Column title="Name" dataIndex="name" key="name" />
+                                    <Column title="Category" dataIndex="category" key="category" />
+                                    <Column title="Points" dataIndex="points" key="points" />
+                                    <Column title="Visbility" dataIndex="visibility" key="visibility" />
+                                    <Column
+                                        title="Edit"
+                                        key="edit"
+                                        render={(text, record) => (
+                                            <Dropdown trigger={['click']} overlay={
+                                                <Menu>
+                                                    <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }) }}>
+                                                        <span>
+                                                            Edit Challenge <EditOutlined />
+                                                        </span>
+                                                    </Menu.Item>
+                                                    <Menu.Divider />
+                                                    <Menu.Item onClick={() => { this.setState({ challengeName: record.name, deleteModal: true }) }}>
+                                                        <span style={{ color: "#d32029" }} >
+                                                            Delete Challenge <DeleteOutlined />
+                                                        </span>
+                                                    </Menu.Item>
+                                                </Menu>
+                                            } placement="bottomCenter">
+                                                <Button>Actions</Button>
+                                            </Dropdown>
+                                        )}
+                                    />
+                                </Table>
+                                <Divider />
+                                <h1 style={{ fontSize: "150%" }}>Category Management {this.state.transferDisabled && (<LoadingOutlined style={{ color: "#177ddc" }} />)}</h1>
+
+                                <Transfer
+                                    dataSource={this.state.allCat}
+                                    titles={['Visible Categories', 'Hidden Categories']}
+                                    targetKeys={this.state.targetKeys}
+                                    selectedKeys={this.state.selectedKeys}
+                                    onChange={this.handleChange}
+                                    onSelectChange={this.handleSelectChange}
+                                    render={item => item.key}
+                                    pagination
+                                    disabled={this.state.transferDisabled}
+                                />
+
+                                <Divider />
+                            </div>
+                        )}
+
+                        {this.state.challengeCreate && !this.state.editChallenge && (
+                            <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)}></AdminChallengeCreate>
+                        )}
+
+                        {this.state.editChallenge && !this.state.challengeCreate && (
+                            <AdminChallengeEdit challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
+                        )}
+                    </div>
                 )}
 
             </Layout>
