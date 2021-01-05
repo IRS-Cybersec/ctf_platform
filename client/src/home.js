@@ -1,12 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Breadcrumb } from 'antd';
-import {
-  FlagTwoTone,
-  HomeTwoTone,
-  FundTwoTone,
-  NotificationTwoTone,
-  SmileTwoTone,
-} from '@ant-design/icons';
+import { Layout } from 'antd';
 import './App.css';
 import { animated } from 'react-spring/renderprops'
 
@@ -25,9 +18,10 @@ class Home extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-          <h2>Welcome to the IRS Cybersec CTF Platform!</h2>
+        <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
+          <h2>Welcome to the Sieberrsec CTF Platform V0.5.2!</h2>
           <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
           <br />
           <h4><u><b>General Rules for the platform:</b></u></h4>
@@ -40,49 +34,7 @@ class Home extends React.Component {
           ~ <i>Sincerely, Sieberrsec 18/19 &amp; 19/20 &amp; 20/21</i>
           </p>
 
-
-          <div style={{ textAlign: "start" }}>
-            <h3>Changelog:</h3>
-            <p><u>Version 0.14.0 (21/6/2020)</u></p>
-            <ul>
-              <li>Fixed challenge loading error</li>
-              <li>Overhauled challenge loading - It now only loads once when you click on challenges</li>
-              <li>Sorting by tags for each category</li>
-              <li>Fixed minor visual bug with login status</li>
-            </ul>
-            <p><u>Version 0.13.5 (15/6/2020)</u></p>
-            <ul>
-              <li>Improved loading screens</li>
-              <li>Fixed ghost hints</li>
-              <li>Sorting by Tags (There is a bug where the loading challenge indicator will not show :/)</li>
-            </ul>
-            <p><u>Version 0.13.0 (15/6/2020)</u></p>
-            <ul>
-              <li>Made mobile view slightly better</li>
-              <li>Added a few filters for challenges :D</li>
-              <li>Scoreboard now has dynamic sizing</li>
-              <li>Login indicator</li>
-              <li>Forms will in general, no longer clear itself when the request fails</li>
-              <li>Fixed edit challenge in admin panel to show correct author</li>
-              <li>Removed lots of redundant imports and console.log()s</li>
-            </ul>
-            <p><u>Version 0.12.6 (11/6/2020)</u></p>
-            <ul>
-              <li>Solve counts for each challenge</li>
-              <li>Even more page transitions</li>
-              <li>Fix scoreboard to take into account time of submission</li>
-            </ul>
-            <br />
-            <p><u>Version 0.12.5 (10/6/2020)</u></p>
-            <ul>
-              <li>Fixed Scoreboard</li>
-              <li>Page transitions</li>
-              <li>New admin panel tab - Submissions</li>
-              <li>Added sieberrsec favicon</li>
-              <li>Fixed Free Hints text</li>
-            </ul>
-          </div>
-        </Layout>}
+        </Layout>
       </animated.div>
 
 

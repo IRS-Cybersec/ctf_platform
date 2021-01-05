@@ -17,7 +17,7 @@ class Announcements extends React.Component {
 
   render() {
     return (
-      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout className="pageSwitch" style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <p>Announcements <NotificationTwoTone /> </p>
         </Layout>

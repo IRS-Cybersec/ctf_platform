@@ -76,7 +76,6 @@ class Challenges extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then(async (data) => {
-
       if (data.success === true) {
 
         let originalData = JSON.parse(JSON.stringify(data.challenges))
@@ -91,11 +90,13 @@ class Challenges extends React.Component {
 
         await this.setState({ categories: newData, originalData: originalDataDictionary, loadingChall: false })
 
-        console.log(this.state.originalData)
         const category = this.props.match.params.category;
         if (typeof category !== "undefined") {
           await this.setState({ challengeCategory: true, currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
+          this.sortDifferent({ target: { value: "Type" } })
         }
+
+
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -115,7 +116,9 @@ class Challenges extends React.Component {
   sortDifferent(value) {
     this.setState({ RadioValue: value.target.value })
     if (value.target.value === "Type" && !this.state.sortByTags) {
+
       if (this.state.currentCategory) { //currentCategory is whether a category has been set, challengeCategory is for the visibility of the component
+        console.log("waddle")
         let originalData = this.state.originalData
         //Since the category is not the key, we will need to loop through the list to find the category
         this.setState({ tagData: [originalData[this.state.currentCategory]], sortByTags: true, challengeCategory: false })
@@ -154,7 +157,7 @@ class Challenges extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
             <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg").default} />
@@ -192,7 +195,7 @@ class Challenges extends React.Component {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh" }}>
 
-            <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{backgroundColor: "#1f1f1f"}} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: false, sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
+            <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: false, sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
             <div>
               <Select disabled={!(this.state.currentCategory && !this.state.sortByTags)} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
                 <Option value="points">Sort by Points</Option>
@@ -201,7 +204,7 @@ class Challenges extends React.Component {
               </Select>
               <Radio.Group buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)} value={this.state.RadioValue} style={{ backgroundColor: "#1f1f1f" }}>
                 <Radio.Button value="Category">Sort By Category <AppstoreOutlined /> </Radio.Button>
-                <Radio.Button value="Type">Sort By Type <GroupOutlined /> </Radio.Button>
+                <Radio.Button value="Type">Sort By Tag <GroupOutlined /> </Radio.Button>
               </Radio.Group>
 
             </div>
@@ -249,7 +252,10 @@ class Challenges extends React.Component {
                             return (
                               <List.Item key={item._id}>
                                 <Link to={"/Challenges/" + item._id}>
-                                  <div onClick={() => { this.setState({ challengeCategory: true, currentCategory: item._id, currentSolvedStatus: item.challenges, currentCategoryChallenges: this.state.originalData[item._id] }) }}>
+                                  <div onClick={async () => {
+                                    await this.setState({ currentCategory: item._id, currentSolvedStatus: item.challenges, currentCategoryChallenges: this.state.originalData[item._id] });
+                                    this.sortDifferent({ target: { value: "Type" } })
+                                  }}>
                                     <Card
                                       hoverable
                                       type="inner"

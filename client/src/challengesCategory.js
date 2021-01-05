@@ -6,7 +6,8 @@ import {
   ProfileOutlined,
   FlagOutlined,
   SmileOutlined,
-  FileUnknownTwoTone
+  FileUnknownTwoTone,
+  EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -14,6 +15,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import JsxParser from 'react-jsx-parser';
 import { orderBy } from 'lodash';
 import { Ellipsis } from 'react-spinners-css';
+import { Link } from 'react-router-dom';
 
 const { Meta } = Card;
 const { TabPane } = Tabs;
@@ -339,7 +341,7 @@ class ChallengesCategory extends React.Component {
               <div>
                 {this.state.challengeTags}
               </div>
-              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
+              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
               <JsxParser
                 bindings={{
                   atomDark: atomDark
@@ -349,7 +351,7 @@ class ChallengesCategory extends React.Component {
               />
 
 
-              <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+              <div style={{ marginTop: "2vh", display: "flex", flexDirection: "column" }}>
                 {this.state.challengeHints}
               </div>
 
@@ -385,7 +387,7 @@ class ChallengesCategory extends React.Component {
                     <List.Item key={item}>
                       <List.Item.Meta
                         avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
-                        title={item}
+                        title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => {this.setState({challengeModal: false})}}>{item}</a></Link>}
                       />
                     </List.Item>
                   )
@@ -401,11 +403,12 @@ class ChallengesCategory extends React.Component {
             grid={{
               xs: 1,
               sm: 2,
-              md: 3,
-              lg: 4,
+              md: 2,
+              lg: 3,
               xl: 4,
               xxl: 5,
-              gutter: 20 }}
+              gutter: 20
+            }}
             dataSource={this.state.challenges}
             locale={{
               emptyText: (
@@ -431,18 +434,21 @@ class ChallengesCategory extends React.Component {
                         bordered={true}
                         bodyStyle={{ backgroundColor: "#262626" }}
                         className="card-design"
-                        style={{ overflow: "hidden" }}
+                        style={{ overflow: "hidden"}}
                       >
                         <Meta
                           description={
                             <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
-                              <h1 style={{ textOverflow: "ellipsis", width: "25ch", fontSize: "3ch",overflow: "hidden", whiteSpace: "nowrap"}}>{item.name}</h1>
+                              <h1 style={{ textOverflow: "ellipsis", width: "13vw", fontSize: "2.3ch", overflow: "hidden", whiteSpace: "nowrap" }}>{item.name}</h1>
                               <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
                               <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                 </div>
+                              )}
+                              {item.visibility === false && (
+                                <h1 style={{color: "#d9d9d9"}}>Hidden Challenge <EyeInvisibleOutlined /></h1>
                               )}
                             </div>
 
@@ -469,13 +475,16 @@ class ChallengesCategory extends React.Component {
                         <Meta
                           description={
                             <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
-                              <h1 style={{ textOverflow: "ellipsis", width: "25ch", fontSize: "3ch",overflow: "hidden", whiteSpace: "nowrap"}}>{item.name}</h1>
+                              <h1 style={{ textOverflow: "ellipsis", width: "13vw", fontSize: "2.3ch", overflow: "hidden", whiteSpace: "nowrap" }}>{item.name}</h1>
                               <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
                               <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                 </div>
+                              )}
+                              {item.visibility === false && (
+                                <h1 style={{color: "#d9d9d9"}}>Hidden Challenge <EyeInvisibleOutlined /></h1>
                               )}
                             </div>
 

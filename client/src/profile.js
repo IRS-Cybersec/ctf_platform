@@ -119,8 +119,6 @@ class Profile extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
-
             if (data.success === true) {
                 message.success({ content: "Password changed successfully." })
                 this.setState({ passwordChangeModal: false })
@@ -150,7 +148,6 @@ class Profile extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
             if (data.success === true) {
                 let challengeDS = []
                 let challengeArray = orderBy(data.scores, ["timestamp"], ["desc"])
@@ -237,7 +234,6 @@ class Profile extends React.Component {
                 }
                 graphData.push(graphPoint)
 
-                console.log(this.state.targetUser)
 
                 fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {
                     method: 'get',
@@ -245,7 +241,6 @@ class Profile extends React.Component {
                 }).then((results) => {
                     return results.json(); //return data in JSON (since its JSON data)
                 }).then((data) => {
-                    console.log(data)
 
                     if (data.success === true) {
                         this.setState({ userScore: data.score, scores: challengeDS, graphData: graphData, loading: false })
@@ -262,14 +257,13 @@ class Profile extends React.Component {
                     message.error({ content: "Oops. There was an issue connecting with the server" });
                 })
             }
-            else if (data.success == false) {
+            else if (data.success === false) {
                 fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {
                     method: 'get',
                     headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                 }).then((results) => {
                     return results.json(); //return data in JSON (since its JSON data)
                 }).then((data) => {
-                    console.log(data)
 
                     if (data.success === true) {
                         this.setState({ userScore: data.score, scores: [], graphData: [], loading: false })
@@ -300,7 +294,7 @@ class Profile extends React.Component {
 
     render() {
         return (
-            <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+            <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
                 <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
                     <Modal title="Change Password" visible={this.state.passwordChangeModal} onCancel={() => { this.setState({ passwordChangeModal: false }) }} footer={null}>
@@ -333,7 +327,7 @@ class Profile extends React.Component {
                                             <h1 style={{ fontSize: "5ch", color: "#faad14" }}><span style={{ color: "#d48806", fontSize: "1.5ch" }}><u>Score:</u> </span>{this.state.userScore}</h1>
                                         </div>
                                     </div>
-                                    {this.state.targetUser !== this.props.username && (
+                                    {this.state.targetUser === this.props.username && (
                                         <div>
                                             <Button size="large" style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.setState({ passwordChangeModal: true }) }}>Change Password</Button>
                                         </div>
@@ -370,7 +364,7 @@ class Profile extends React.Component {
                                     </ResponsiveContainer>
 
                                 </div>
-                                <div style={{ height: "70%", width: "100%", minWidth: "80vw" }}>
+                                <div style={{ height: "70%", width: "100%" }}>
                                     <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
                                         emptyText: (
                                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>

@@ -24,7 +24,7 @@ import UserChallengeCreate from "./userChallengeCreate.js";
 import { Transition, animated } from 'react-spring/renderprops';
 
 
-const { Header, Content, Sider } = Layout;
+const { Content, Sider } = Layout;
 
 var previousLocation = ""
 const useirsCyber = false
@@ -132,7 +132,6 @@ class App extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
 
       if (data.success === true) {
         this.setState({ userScore: data.score })
@@ -266,7 +265,7 @@ class App extends React.Component {
                         </Menu>
                       </Sider>
 
-                      <Content style={{ width: "85vw", height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
+                      <Content style={{ width: "85vw", height: "100vh", position: "static", overflow: "hidden", margin: "30px"}}>
                         <Route
                           render={({ location, ...rest }) => (
                             <div className="fill">

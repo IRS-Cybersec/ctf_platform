@@ -79,7 +79,6 @@ class Scoreboard extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(scoreArray)
       let formattedData = []
       let finalPoint = {}
 
@@ -139,7 +138,6 @@ class Scoreboard extends React.Component {
           }
         }
         scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
-        console.log(scoreArray);
         for (let x = 0; x < scoreArray.length; x++) {
           scoreArray[x].position = String(x + 1) + "."
         }
@@ -163,7 +161,6 @@ class Scoreboard extends React.Component {
         finalData.push(finalPoint)
         //console.log(finalData)
         //Temp fix for table data to use timestamp
-        console.log(finalData)
         this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray, loadingTable: false })
 
       }
@@ -181,7 +178,7 @@ class Scoreboard extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)", display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center" }}>
           <div>
             <h1 style={{ fontSize: "5ch" }}>Scoreboard</h1>
@@ -266,7 +263,7 @@ class Scoreboard extends React.Component {
             )}
           </div>
           {!this.state.loadingTable && (
-            <div style={{ height: "70%", width: "100%", minWidth: "80vw" }}>
+            <div style={{ height: "70%", width: "100%", minWidth: "70vw" }}>
               <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 20 }} locale={{
                 emptyText: (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>

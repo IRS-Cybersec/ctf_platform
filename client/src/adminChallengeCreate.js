@@ -98,16 +98,16 @@ const CreateChallengeForm = (props) => {
             <h1>Challenge Category:</h1>
             <Form.Item
                 name="category"
-                rules={[{ required: true, message: 'Please enter a challenge description' }]}
+                rules={[{ required: true, message: 'Please enter a challenge category' }]}
             >
 
-                <Input allowClear placeholder="Enter a challenge description" />
+                <Input allowClear placeholder="Enter a challenge category" />
             </Form.Item>
 
             <h1>Challenge Description (JSX Supported):</h1>
             <Form.Item
                 name="description"
-                rules={[{ required: true, message: 'Please enter a category' }]}
+                rules={[{ required: true, message: 'Please enter a description' }]}
             >
 
                 <TextArea rows={7} allowClear placeholder="Enter a challenge description. JSX is very similiar to HTML, only difference being that there MUST be closing tags for everything." />

@@ -48,7 +48,7 @@ class Login extends React.Component {
                 message.warn({ content: "Oops. Username already taken" })
             }
             else if (data.error === "email-formatting") {
-                message.error({ content: "Oops, registration is not enabled for any email domains outside HCI"})
+                message.error({ content: "Oops. Your email has not been registered for Sieberrsec CTF yet, please register using the form."})
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -113,16 +113,16 @@ class Login extends React.Component {
             <Layout style={{ maxWidth: "100vw", maxHeight: "100vh", overflow: "hidden", backgroundColor: "rgba(0, 0, 0, 0)" }}>
                 <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.png").default + ")" }}>
                     <div style={{ display: "flex", flexDirection: "column", textAlign: "center", alignItems: "center", justifyContent: "center", height: "100vh", width: "70vw", backgroundSize: "cover", overflow: `hidden` }}>
-                        <div style={{ fontSize: "7ch", color: "white" }}>
+                        <div style={{ fontSize: "7ch", color: "#595959" }}>
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}> IRS Cybersec CTF Platform</span>
                         </div>
-                        <div style={{ color: "white", fontSize: "5ch" }}>
+                        <div style={{ color: "#595959", fontSize: "5ch" }}>
                             <p style={{ textShadow: '1px 1px 1px 1px #000000' }}>The Wheel. Reinvented.™</p>
                         </div>
                     </div>
 
 
-                    <div style={{ display: "flex", flexDirection: "column", backgroundColor: "rgba(0, 0, 0, 0.8)", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", boxShadow: "-5px 0px 20px black" }}>
+                    <div style={{ display: "flex", flexDirection: "column", backgroundColor: "rgba(0, 0, 0, 0.8)", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", minWidth: "65ch", boxShadow: "-5px 0px 20px black" }}>
                         <div style={{ padding: "15px", marginBottom: "5vh" }}>
                             <img src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
                         </div>
@@ -134,7 +134,7 @@ class Login extends React.Component {
                                     className="login-form"
                                     initialValues={{ remember: true }}
                                     onFinish={this.handleLogin}
-                                    style={{ width: "25vw" }}
+                                    style={{ width: "60ch" }}
                                 >
                                     <Form.Item
                                         name="username"
@@ -175,7 +175,7 @@ class Login extends React.Component {
                                     name="register_form"
                                     className="register-form"
                                     onFinish={this.handleRegister}
-                                    style={{ width: "25vw" }}
+                                    style={{ width: "60ch" }}
                                 >
                                     <Form.Item
                                         name="username"
