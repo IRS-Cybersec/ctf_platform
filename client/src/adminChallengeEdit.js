@@ -370,13 +370,13 @@ class AdminChallengeEdit extends React.Component {
 
     getChallengeDetails = (name) => {
         this.setState({ loading: true })
-        fetch(window.ipAddress + "/v1/challenge/show/" + name + "/detailed", {
+        fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name) + "/detailed", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            //console.log(data)
+            console.log(data)
             if (data.success === true) {
                 this.setState({ challengeData: data.chall })
             }
@@ -388,6 +388,7 @@ class AdminChallengeEdit extends React.Component {
 
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
     }

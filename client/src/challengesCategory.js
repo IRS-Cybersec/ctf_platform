@@ -7,7 +7,8 @@ import {
   FlagOutlined,
   SmileOutlined,
   FileUnknownTwoTone,
-  EyeInvisibleOutlined
+  EyeInvisibleOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -19,6 +20,7 @@ import { Link } from 'react-router-dom';
 
 const { Meta } = Card;
 const { TabPane } = Tabs;
+const { confirm } = Modal;
 
 const SubmitFlagForm = (props) => {
   const [form] = Form.useForm();
@@ -92,7 +94,7 @@ class ChallengesCategory extends React.Component {
     this.setState({ challenges: challenges, loadingCat: false })
   }
 
-  handleHint(id, chall, bought) {
+  handleBuyHint(close, id, chall) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -105,23 +107,50 @@ class ChallengesCategory extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-        if (bought === true) {
-          this.setState({ hintModal: true, hintContent: data.hint })
-        }
-        else {
           message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
           let challengeHints = this.state.challengeHints
           challengeHints[id] = (
             <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
           )
           this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
-        }
-
+          close()
       }
     }).catch((error) => {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting to the server" });
+      close()
     })
+  }
+
+  handleHint(id, chall, bought) {
+    if (bought === false) {
+      confirm({
+        title: 'Are you sure you want to purchase hint ' + parseInt(id+1) + ' for "' + chall + '"?',
+        icon: <ExclamationCircleOutlined />,
+        onOk: (close) => {this.handleBuyHint(close.bind(this), id, chall)},
+        onCancel() {},
+      });
+    }
+    else {
+      fetch(window.ipAddress + "/v1/challenge/hint", {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        body: JSON.stringify({
+          "id": parseInt(id),
+          "chall": chall,
+        })
+      }).then((results) => {
+        return results.json(); //return data in JSON (since its JSON data)
+      }).then((data) => {
+        //console.log(data)
+        if (data.success === true) {
+            this.setState({ hintModal: true, hintContent: data.hint })
+        }
+      }).catch((error) => {
+        console.log(error)
+        message.error({ content: "Oops. There was an issue connecting to the server" });
+      })
+    }
   }
 
   loadChallengeDetails(name, solved) {

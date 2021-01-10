@@ -88,7 +88,6 @@ class Scoreboard extends React.Component {
         finalPoint = top10scores
         finalPoint["Time"] = new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
 
-
         for (let i = 0; i < data.users.length; i++) {
           let currentPoint = {}
 
@@ -109,14 +108,14 @@ class Scoreboard extends React.Component {
 
           //Process timestamps
           let scores2 = data.users[i].changes
-
+          console.log(scores2)
 
           for (let x = 0; x < scores2.length; x++) {
             if (data.users[i]._id in timestamp) {
 
               let d1 = new Date(timestamp[data.users[i]._id])
               let d2 = new Date(scores2[x].timestamp)
-              if (d1 < d2) {
+              if (d1 < d2 && scores2[x].points > 0) {
                 timestamp[data.users[i]._id] = scores2[x].timestamp
               }
             }
@@ -127,6 +126,7 @@ class Scoreboard extends React.Component {
 
 
         }
+
         //console.log(timestamp)
         // More processing & sort by timestamp
         for (let x = 0; x < scoreArray.length; x++) {
@@ -139,7 +139,55 @@ class Scoreboard extends React.Component {
         }
         scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
         for (let x = 0; x < scoreArray.length; x++) {
-          scoreArray[x].position = String(x + 1) + "."
+
+          if ("timestamp" in scoreArray[x]) {
+            scoreArray[x].position = String(x + 1) + "."
+            const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+            let minutes = Math.ceil(dateTime / 60)
+            let hours = 0
+            let days = 0
+            let months = 0
+            let years = 0
+            if (minutes >= 60) {
+              hours = Math.floor(minutes / 60)
+              minutes = minutes - hours * 60
+
+              if (hours >= 24) {
+                days = Math.floor(hours / 24)
+                hours = hours - days * 24
+
+                if (days >= 30) {
+                  months = Math.floor(days / 30)
+                  days = days - months * 30
+
+                  if (months >= 12) {
+                    years = Math.floor(months / 12)
+                    months = months - years * 12
+                  }
+                }
+              }
+            }
+            let finalTime = " ago."
+            if (minutes !== 0) {
+              finalTime = minutes.toString() + " minutes " + finalTime
+            }
+            if (hours !== 0) {
+              finalTime = hours.toString() + " hours " + finalTime
+            }
+            if (days !== 0) {
+              finalTime = days.toString() + " days " + finalTime
+            }
+            if (months !== 0) {
+              finalTime = months.toString() + " months " + finalTime
+            }
+            if (years !== 0) {
+              finalTime = years.toString() + " years " + finalTime
+            }
+            scoreArray[x].timestamp = finalTime
+          }
+          else {
+            scoreArray[x].timestamp = "No solves yet"
+          }
         }
 
 
@@ -272,13 +320,14 @@ class Scoreboard extends React.Component {
                   </div>
                 )
               }}>
-                <Column width={1} title="Position" dataIndex="position" key="position" />
-                <Column width={30} title="Username" dataIndex="username" key="username"
+                <Column title="Position" dataIndex="position" key="position" />
+                <Column title="Username" dataIndex="username" key="username"
                   render={(text, row, index) => {
                     return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}>{text}</a></Link>;
                   }}
                 />
-                <Column width={30} title="Score" dataIndex="score" key="score" />
+                <Column title="Score" dataIndex="score" key="score" />
+                <Column title="Last Solve" dataIndex="timestamp" key="timestamp" />
               </Table>
             </div>
           )}

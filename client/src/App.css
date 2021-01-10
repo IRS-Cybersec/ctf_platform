@@ -18,7 +18,7 @@
 }
 
 .pageTransition {
-    animation-duration: 0.35s;
+    animation-duration: 0.3s;
     animation-timing-function: ease-out;
     animation-delay: 0s;
     animation-iteration-count: 1;

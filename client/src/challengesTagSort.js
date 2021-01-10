@@ -5,6 +5,7 @@ import {
   ProfileOutlined,
   FlagOutlined,
   SmileOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -16,6 +17,7 @@ import { orderBy } from 'lodash';
 
 
 const { TabPane } = Tabs;
+const { confirm } = Modal;
 
 const SubmitFlagForm = (props) => {
   const [form] = Form.useForm();
@@ -70,7 +72,7 @@ class ChallengesTagSort extends React.Component {
       hintContent: "",
       hintModal: false,
       currentSorting: "points",
-      tag: {},
+      tag: false,
       loadingTag: false
 
     };
@@ -118,7 +120,7 @@ class ChallengesTagSort extends React.Component {
 
   }
 
-  handleHint(id, chall, bought) {
+  handleBuyHint(close, id, chall) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -131,23 +133,52 @@ class ChallengesTagSort extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-        if (bought === true) {
-          this.setState({ hintModal: true, hintContent: data.hint })
-        }
-        else {
           message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
           let challengeHints = this.state.challengeHints
           challengeHints[id] = (
             <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
           )
           this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
-        }
-
+          close()
       }
     }).catch((error) => {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting to the server" });
+      close()
     })
+  }
+
+  handleHint(id, chall, bought) {
+
+    if (bought === false) {
+      confirm({
+        title: 'Are you sure you want to purchase hint ' + parseInt(id+1) + ' for "' + chall + '"?',
+        icon: <ExclamationCircleOutlined />,
+        onOk: (close) => {this.handleBuyHint(close.bind(this), id, chall)},
+        onCancel() {},
+      });
+    }
+    else {
+      fetch(window.ipAddress + "/v1/challenge/hint", {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        body: JSON.stringify({
+          "id": parseInt(id),
+          "chall": chall,
+        })
+      }).then((results) => {
+        return results.json(); //return data in JSON (since its JSON data)
+      }).then((data) => {
+        //console.log(data)
+        if (data.success === true) {
+            this.setState({ hintModal: true, hintContent: data.hint })
+        }
+      }).catch((error) => {
+        console.log(error)
+        message.error({ content: "Oops. There was an issue connecting to the server" });
+      })
+    }
+
   }
 
   loadChallengeDetails = async (name, solved) => {
@@ -158,7 +189,7 @@ class ChallengesTagSort extends React.Component {
     else {
       this.setState({ currentChallengeStatus: "Enter the flag (case-sensitive)" })
     }
-    document.getElementById(name).style.pointerEvents = "none"
+    //document.getElementById(name).style.pointerEvents = "none"
     fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -254,7 +285,7 @@ class ChallengesTagSort extends React.Component {
       else {
         message.error({ content: "Oops. Unknown error" })
       }
-      document.getElementById(name).style.pointerEvents = "auto"
+      //document.getElementById(name).style.pointerEvents = "auto"
 
 
     }).catch((error) => {
@@ -407,8 +438,9 @@ class ChallengesTagSort extends React.Component {
 
         </Modal>
 
-        <ChallengesTagSortList tag={this.state.tag} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
-
+        {this.state.tag && (
+          <ChallengesTagSortList tag={this.state.tag} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
+        )}
       </Layout>
 
     );

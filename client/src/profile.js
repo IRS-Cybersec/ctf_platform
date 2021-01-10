@@ -156,6 +156,11 @@ class Profile extends React.Component {
                 let graphPoint = {}
                 let scoreTotal = 0
 
+                graphData.push({
+                    Score: 0,
+                    Time: "0"
+                })
+
                 for (let x = 0; x < challengeArray.length; x++) {
                     //Plot graph
                     scoreTotal += challengeArrayReversed[x].points
@@ -181,6 +186,7 @@ class Profile extends React.Component {
                         currentDS.challenge = currentStuff.challenge
                     }
                     currentDS.score = currentStuff.points
+                    console.log(currentStuff.timestamp)
                     const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
                     let minutes = Math.ceil(dateTime / 60)
                     let hours = 0
@@ -233,6 +239,7 @@ class Profile extends React.Component {
                     Time: new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
                 }
                 graphData.push(graphPoint)
+                console.log(graphData)
 
 
                 fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {

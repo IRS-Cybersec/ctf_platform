@@ -1,5 +1,5 @@
 import React from 'react';
-import { Divider, Card, List } from 'antd';
+import { Card, List, Collapse } from 'antd';
 import {
   FileUnknownTwoTone,
   LoadingOutlined,
@@ -8,6 +8,7 @@ import {
 import './App.css';
 
 const { Meta } = Card;
+const { Panel } = Collapse;
 
 
 class ChallengesTagSortList extends React.Component {
@@ -15,20 +16,19 @@ class ChallengesTagSortList extends React.Component {
     super(props);
 
     this.state = {
+      activeKey: []
     };
 
   }
-
   render() {
     return (
-      <div>
+      <Collapse bordered={false} defaultActiveKey={[Object.keys(this.props.tag)[0]]}>
         {
         Object.entries(this.props.tag).map((currentCat, index) => {
           const key = currentCat[0]
           const value = currentCat[1]
             return (
-              <div key={key + "div"}>
-                <Divider orientation="left" style={{ fontSize: "180%", color: "#177ddc", textTransform: "capitalize" }}><u>{key}</u> ({value.length})</Divider>
+              <Panel header={<span style={{color: "#177ddc", fontSize: "120%", textTransform: "capitalize", textAlign: "center", fontWeight: 700}}>{key} - <span style={{color: "#d89614"}}>{"(" + String(value.length) + ")"}</span> </span>} key={key}>
                 <List
                   grid={{
                     xs: 1,
@@ -129,12 +129,12 @@ class ChallengesTagSortList extends React.Component {
                   }
                   }
                 />
-              </div>
+              </Panel>
             )
           })
           
         }
-      </div>
+      </Collapse>
     )
 
   }
