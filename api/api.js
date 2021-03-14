@@ -113,7 +113,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
 			await collections.users.insertOne({
 				username: req.body.username.toLowerCase(),
-				email: req.body.email,
+				email: req.body.email.toLowerCase(),
 				password: await argon2.hash(req.body.password),
 				type: 0,
 				score: 0
@@ -347,12 +347,24 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			res.send({
-				success: true,
-				challenges: await collections.challs.aggregate([{
-					$match: {visibility: true}
-				}, {
+			const permissions = await checkPermissions(username);
+			if (permissions === false) throw new Error('BadToken');
+			let aggregation = [{
+				$match: {visibility: true}
+			}, {
+				$group: {
+					_id: '$category',
+					challenges: {$push: {
+						name: '$name',
+						points: '$points',
+						solved: {$in: [username.toLowerCase(), '$solves']},
+						firstBlood: {$arrayElemAt: ['$solves', 0]},
+						tags: '$tags'
+					}}
+				}
+			}];
+			if (permissions == 2) {
+				aggregation = [{
 					$group: {
 						_id: '$category',
 						challenges: {$push: {
@@ -360,10 +372,15 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 							points: '$points',
 							solved: {$in: [username.toLowerCase(), '$solves']},
 							firstBlood: {$arrayElemAt: ['$solves', 0]},
-							tags: '$tags'
+							tags: '$tags',
+							visibility: '$visibility'
 						}}
 					}
-				}]).toArray()
+				}];
+			}
+			res.send({
+				success: true,
+				challenges: await collections.challs.aggregate(aggregation).toArray()
 			});
 		}
 		catch (err) {
@@ -446,8 +463,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			let chall = await collections.challs.findOne({visibility: true, name: req.params.chall}, {projection: {visibility: 0, flags: 0, _id: 0}});
+			const permissions = await checkPermissions(username);
+			if (permissions === false) throw new Error('BadToken');
+			const filter = permissions == 2 ? {name: req.params.chall} : {visibility: true, name: req.params.chall};
+			let chall = await collections.challs.findOne(filter, {projection: {visibility: 0, flags: 0, _id: 0}});
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -817,12 +836,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}, {
 				$inc: {score: -delReq.value.points}
 			});
-			for (hint of delReq.value.hints) {
-				await collections.users.updateMany({
-					username: {$in: hint.purchased}
-				}, {
-					$inc: {score: hint.cost}
-				});
+			if (delReq.value.hints) {
+				for (hint of delReq.value.hints) {
+					await collections.users.updateMany({
+						username: {$in: hint.purchased}
+					}, {
+						$inc: {score: hint.cost}
+					});
+				}
 			}
 			res.send({
 				success: true
@@ -862,7 +883,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 			res.send({
 				success: true,
-				scores: await collections.users.find({}, {projection: {username: 1, score: 1, _id: 0}}).toArray()
+				scores: await collections.users.find({type: {$ne: 2}}, {projection: {username: 1, score: 1, _id: 0}}).toArray()
 			});
 		}
 		catch (err) {
@@ -872,11 +893,11 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.get('/v1/scoreboard/:username', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) === false) throw new Error('BadToken');
+			if (await checkPermissions(signer.unsign(req.headers.authorization)) == false) throw new Error('BadToken');
+			const scores = await collections.transactions.find({points: {'$ne': 0}, author: req.params.username}, {projection: {points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0}}).toArray();
 			res.send({
 				success: true,
-				scores: await collections.transactions.find({points: {'$ne': 0}, author: req.params.username}, {projection: {points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0}}).toArray()
+				scores: scores
 			});
 		}
 		catch (err) {
@@ -886,11 +907,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	app.get('/v1/scores/:username', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) === false) throw new Error('BadToken');
+			if (await checkPermissions(signer.unsign(req.headers.authorization)) === false) throw new Error('BadToken');
+			const score = (await collections.users.find({username: req.params.username, type: {$ne: 2}}, {projection: {score: 1, _id: 0}}).toArray());
+			if (score.length == 0) throw new Error('NotFound');
 			res.send({
 				success: true,
-				score: (await collections.users.find({username: username}, {projection: {score: 1, _id: 0}}).toArray())[0].score
+				score: score[0].score
 			});
 		}
 		catch (err) {
