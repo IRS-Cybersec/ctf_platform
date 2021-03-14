@@ -4,7 +4,6 @@ import {
   FlagTwoTone,
   HomeTwoTone,
   FundTwoTone,
-  NotificationTwoTone,
   UserOutlined,
   LogoutOutlined,
   CodeTwoTone,
@@ -16,7 +15,6 @@ import Home from "./home.js";
 import Challenges from "./challenges.js";
 import Profile from "./profile.js";
 import Scoreboard from "./Scoreboard.js";
-import Announcements from "./announcements.js";
 import Login from "./login.js";
 import Admin from "./admin.js";
 import Oops from "./oops.js";
@@ -234,13 +232,6 @@ class App extends React.Component {
                             </NavLink>
                           </Menu.Item>
 
-                          <Menu.Item key="Announcements" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center" }}>
-                            <NavLink to="/Announcements">
-                              <NotificationTwoTone style={{ fontSize: "110%" }} />
-                              <span>Announcements</span>
-                            </NavLink>
-                          </Menu.Item>
-
                           <Menu.Divider />
 
                           {this.state.permissions === 1 && (
@@ -284,7 +275,7 @@ class App extends React.Component {
                                       <Route exact path='/Challenges' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Challenges/:category' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
-                                      <Route exact path='/Announcements' render={(props) => <Announcements {...props} transition={style} />} />
+                                      
                                       <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} />} />
                                       <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} />} />
                                       <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />

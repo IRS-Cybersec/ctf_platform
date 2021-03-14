@@ -21,7 +21,9 @@ class Home extends React.Component {
       <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
         <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
-          <h2>Welcome to the Sieberrsec CTF Platform V0.5.2!</h2>
+        <br/>
+        <br/>
+          <h2>Welcome to the Sieberrsec Training Platform V0.5.5 14-3-21!</h2>
           <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
           <br />
           <h4><u><b>General Rules for the platform:</b></u></h4>
