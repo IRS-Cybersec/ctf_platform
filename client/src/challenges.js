@@ -158,7 +158,7 @@ class Challenges extends React.Component {
     return (
 
       <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
-        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+        <Layout style={{ minHeight: "95vh", margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
             <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.jpg").default} />
 

@@ -318,11 +318,11 @@ class AdminChallenges extends React.Component {
                         )}
 
                         {this.state.challengeCreate && !this.state.editChallenge && (
-                            <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)}></AdminChallengeCreate>
+                            <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)} allCat={this.state.allCat}></AdminChallengeCreate>
                         )}
 
                         {this.state.editChallenge && !this.state.challengeCreate && (
-                            <AdminChallengeEdit challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
+                            <AdminChallengeEdit allCat={this.state.allCat} challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
                         )}
                     </div>
                 )}

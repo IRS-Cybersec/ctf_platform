@@ -140,7 +140,8 @@ class Scoreboard extends React.Component {
         scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
         for (let x = 0; x < scoreArray.length; x++) {
 
-          if ("timestamp" in scoreArray[x]) {
+          if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
+            console.log(scoreArray[x])
             scoreArray[x].position = String(x + 1) + "."
             const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
             let minutes = Math.ceil(dateTime / 60)
@@ -232,8 +233,9 @@ class Scoreboard extends React.Component {
             <h1 style={{ fontSize: "5ch" }}>Scoreboard</h1>
           </div>
           <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
-            <ResponsiveContainer width="90%" height={350}>
+            <ResponsiveContainer width="90%" height={350} debounce={200}>
               <AreaChart height={350} data={this.state.graphData}
+
                 margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
 
                 <defs>

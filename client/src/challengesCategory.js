@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Card, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification } from 'antd';
+import { Layout, Card, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip } from 'antd';
 import {
   LoadingOutlined,
   UnlockOutlined,
@@ -8,7 +8,8 @@ import {
   SmileOutlined,
   FileUnknownTwoTone,
   EyeInvisibleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  SolutionOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -75,7 +76,8 @@ class ChallengesCategory extends React.Component {
       hintContent: "",
       hintModal: false,
       currentSorting: "points",
-      loadingCat: false
+      loadingCat: false,
+      challengeWriteup: ""
 
     };
   }
@@ -107,13 +109,13 @@ class ChallengesCategory extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-          message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
-          let challengeHints = this.state.challengeHints
-          challengeHints[id] = (
-            <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
-          )
-          this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
-          close()
+        message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
+        let challengeHints = this.state.challengeHints
+        challengeHints[id] = (
+          <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
+        )
+        this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
+        close()
       }
     }).catch((error) => {
       console.log(error)
@@ -125,10 +127,10 @@ class ChallengesCategory extends React.Component {
   handleHint(id, chall, bought) {
     if (bought === false) {
       confirm({
-        title: 'Are you sure you want to purchase hint ' + parseInt(id+1) + ' for "' + chall + '"?',
+        title: 'Are you sure you want to purchase hint ' + parseInt(id + 1) + ' for "' + chall + '"?',
         icon: <ExclamationCircleOutlined />,
-        onOk: (close) => {this.handleBuyHint(close.bind(this), id, chall)},
-        onCancel() {},
+        onOk: (close) => { this.handleBuyHint(close.bind(this), id, chall) },
+        onCancel() { },
       });
     }
     else {
@@ -144,7 +146,7 @@ class ChallengesCategory extends React.Component {
       }).then((data) => {
         //console.log(data)
         if (data.success === true) {
-            this.setState({ hintModal: true, hintContent: data.hint })
+          this.setState({ hintModal: true, hintContent: data.hint })
         }
       }).catch((error) => {
         console.log(error)
@@ -224,6 +226,13 @@ class ChallengesCategory extends React.Component {
           }
         }
 
+        //Render writeup link
+        let writeupLink = ""
+        if (typeof data.chall.writeup !== "undefined") {
+          writeupLink = data.chall.writeup
+        }
+        else writeupLink = ""
+
 
         //Handle hints
         if (typeof data.chall.hints !== "undefined") {
@@ -252,7 +261,7 @@ class ChallengesCategory extends React.Component {
         }
 
 
-        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, loadingChallenge: false, challengeHints: renderHints })
+        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, challengeWriteup: writeupLink, loadingChallenge: false, challengeHints: renderHints })
 
       }
       else {
@@ -366,6 +375,16 @@ class ChallengesCategory extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
+              {this.state.challengeWriteup !== "" && (
+                <Tooltip title="View writeups for this challenge">
+                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
+                </Tooltip>
+              )}
+              {this.state.challengeWriteup === "" && (
+                <Tooltip title="Writeups are not available for this challenge">
+                  <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
+                </Tooltip>
+              )}
               <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>
               <div>
                 {this.state.challengeTags}
@@ -416,7 +435,7 @@ class ChallengesCategory extends React.Component {
                     <List.Item key={item}>
                       <List.Item.Meta
                         avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
-                        title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => {this.setState({challengeModal: false})}}>{item}</a></Link>}
+                        title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>
                   )
@@ -463,7 +482,7 @@ class ChallengesCategory extends React.Component {
                         bordered={true}
                         bodyStyle={{ backgroundColor: "#262626" }}
                         className="card-design"
-                        style={{ overflow: "hidden"}}
+                        style={{ overflow: "hidden" }}
                       >
                         <Meta
                           description={
@@ -477,7 +496,7 @@ class ChallengesCategory extends React.Component {
                                 </div>
                               )}
                               {item.visibility === false && (
-                                <h1 style={{color: "#d9d9d9"}}>Hidden Challenge <EyeInvisibleOutlined /></h1>
+                                <h1 style={{ color: "#d9d9d9" }}>Hidden Challenge <EyeInvisibleOutlined /></h1>
                               )}
                             </div>
 
@@ -513,7 +532,7 @@ class ChallengesCategory extends React.Component {
                                 </div>
                               )}
                               {item.visibility === false && (
-                                <h1 style={{color: "#d9d9d9"}}>Hidden Challenge <EyeInvisibleOutlined /></h1>
+                                <h1 style={{ color: "#d9d9d9" }}>Hidden Challenge <EyeInvisibleOutlined /></h1>
                               )}
                             </div>
 

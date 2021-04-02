@@ -25,7 +25,7 @@ import { Transition, animated } from 'react-spring/renderprops';
 const { Content, Sider } = Layout;
 
 var previousLocation = ""
-const useirsCyber = false
+const useirsCyber = true
 window.ipAddress = useirsCyber ? "https://api.irscybersec.tk" : "https://api.sieberrsec.tech"
 
 
@@ -166,7 +166,7 @@ class App extends React.Component {
                 return (
                   <animated.div style={{ ...props, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.png").default + ")", backgroundSize: "cover" }}>
                     <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                      <Sider style={{ width: "15vw", height: "100vh" }}>
+                      <Sider style={{ height: "100vh" }}>
                         <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
                           <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
                         </div>
@@ -256,7 +256,7 @@ class App extends React.Component {
                         </Menu>
                       </Sider>
 
-                      <Content style={{ width: "85vw", height: "100vh", position: "static", overflow: "hidden", margin: "30px"}}>
+                      <Content style={{height: "100vh", position: "static", overflow: "hidden", margin: "30px"}}>
                         <Route
                           render={({ location, ...rest }) => (
                             <div className="fill">
@@ -265,10 +265,11 @@ class App extends React.Component {
                                 <Transition
                                   native
                                   items={location}
+                                  trail={10}
                                   keys={location.pathname.split('/')[1]}
-                                  from={{ transform: 'translateY(100px)', opacity: 0, position: "fixed" }}
+                                  from={{ transform: 'translateY(-50vh)', opacity: 0, position: "absolute" }}
                                   enter={{ transform: 'translateY(0px)', opacity: 1, position: "static" }}
-                                  leave={{ transform: 'translateY(100px)', opacity: 0, position: "fixed" }}>
+                                  leave={{ transform: 'translateY(50vh)', opacity: 0, position: "absolute" }}>
                                   {(loc, state) => style => (
                                     <Switch location={state === 'update' ? location : loc}>
                                       <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
@@ -276,8 +277,8 @@ class App extends React.Component {
                                       <Route exact path='/Challenges/:category' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
                                       
-                                      <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} />} />
-                                      <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} />} />
+                                      <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
+                                      <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
                                       <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
 
                                       {this.state.permissions >= 1 ? (

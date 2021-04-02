@@ -317,7 +317,7 @@ class Profile extends React.Component {
                         !this.state.targetUser && !this.state.loading && (
                             <Layout style={{ height: "100%", width: "100%" }}>
                                 <br /><br /><br />
-                                <Empty>That user doesn't exist</Empty>
+                                <Empty>Unable to find this user</Empty>
                             </Layout>
                         )
                     }
@@ -382,7 +382,7 @@ class Profile extends React.Component {
                                     }}>
                                         <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge" />
                                         <Column width={30} title="Score Change" dataIndex="score" key="score" />
-                                        <Column width={30} title="Timestamp" dataIndex="time" key="time" />
+                                        <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
                                     </Table>
                                 </div>
                             </Layout>

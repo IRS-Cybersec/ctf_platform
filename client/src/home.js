@@ -18,8 +18,8 @@ class Home extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
-        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+      <animated.div style={{ ...this.props.transition, height: "95vh",  overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px",backgroundColor: "rgba(0, 0, 0, 0)" }}>
         <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
         <br/>
         <br/>

@@ -1,12 +1,13 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag } from 'antd';
+import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
     LeftOutlined,
     ProfileOutlined,
     FlagOutlined,
-    FlagTwoTone
+    FlagTwoTone,
+    SolutionOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -28,6 +29,11 @@ const CreateChallengeForm = (props) => {
 
         form.setFieldsValue(currentValues)
     }
+    //Render existing categories select options
+    let existingCats = []
+    for (let i = 0; i < props.allCat.length; i++) {
+        existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
+    }
 
     return (
         <Form
@@ -41,31 +47,34 @@ const CreateChallengeForm = (props) => {
                 }
                 else {
                     //console.log(values)
-                    props.setState({loading: true})
+                    props.setState({ loading: true })
                     if (values.visibility === "false") {
                         values.visibility = false
                     }
                     else {
                         values.visibility = true
                     }
+                    const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
+
                     fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
                             "name": values.name,
-                            "category": values.category,
+                            "category": category,
                             "description": values.description,
                             "points": values.points,
                             "flags": values.flags,
                             "tags": values.tags,
                             "hints": values.hints,
                             "max_attempts": values.max_attempts,
-                            "visibility": values.visibility
+                            "visibility": values.visibility,
+                            "writeup": values.writeup
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
                     }).then((data) => {
-                        //console.log(data)
+                        console.log(data)
                         if (data.success === true) {
                             message.success({ content: "Created challenge " + values.name + " successfully!" })
                             form.resetFields()
@@ -81,7 +90,8 @@ const CreateChallengeForm = (props) => {
                         console.log(error)
                         message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
                     })
-                    
+
+
                 }
 
             }}
@@ -96,15 +106,42 @@ const CreateChallengeForm = (props) => {
             </Form.Item>
 
             <h1>Challenge Category:</h1>
+            <h4>Select an Existing Category: </h4>
             <Form.Item
-                name="category"
-                rules={[{ required: true, message: 'Please enter a challenge category' }]}
+                name="category1"
+                rules={[{ required: !props.state.selectCatDisabled, message: 'Please enter a challenge category' }]}
             >
 
-                <Input allowClear placeholder="Enter a challenge category" />
+                <Select
+                    disabled={props.state.selectCatDisabled}
+                    allowClear
+                    showSearch
+                    placeholder="Select an existing Category"
+                    onChange={(value) => {
+                        if (value) {
+                            props.setState({ inputCatDisabled: true })
+                        }
+                        else {
+                            props.setState({ inputCatDisabled: false })
+                        }
+                    }}
+                >
+                    {existingCats}
+                </Select>
+
+            </Form.Item>
+            <h4>Enter a New Category</h4>
+            <Form.Item
+                name="category2"
+                rules={[{ required: !props.state.inputCatDisabled, message: 'Please enter a challenge category' }]}
+            >
+
+                <Input onChange={(e) => {
+                    e.target.value.length > 0 ? props.setState({ selectCatDisabled: true }) : props.setState({ selectCatDisabled: false })
+                }} disabled={props.state.inputCatDisabled} allowClear placeholder="Enter a new challenge category" />
             </Form.Item>
 
-            <h1>Challenge Description (JSX Supported):</h1>
+            <h1>Challenge Description (Supports <a href="https://reactjs.org/docs/introducing-jsx.html" target="_blank" rel="noreferrer">JSX</a>):</h1>
             <Form.Item
                 name="description"
                 rules={[{ required: true, message: 'Please enter a description' }]}
@@ -113,9 +150,9 @@ const CreateChallengeForm = (props) => {
                 <TextArea rows={7} allowClear placeholder="Enter a challenge description. JSX is very similiar to HTML, only difference being that there MUST be closing tags for everything." />
             </Form.Item>
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "35vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "35vw" }}>
                     <h1>Challenge Points:</h1>
                     <Form.Item
                         name="points"
@@ -146,11 +183,12 @@ const CreateChallengeForm = (props) => {
 
                 <Divider type="vertical" style={{ height: "inherit" }}></Divider>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", justifyItems: "center", marginLeft: "10vw", width: "35vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", width: "35vw", marginLeft: "2vw" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
                             return (
                                 <div>
+                                    <h1>Flags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
                                             <Form.Item
@@ -185,7 +223,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Flag
-                </Button>
+                                        </Button>
                                     </Form.Item>
 
 
@@ -198,8 +236,10 @@ const CreateChallengeForm = (props) => {
                         {(fields, { add, remove }) => {
                             return (
                                 <div>
+                                    <h1>Tags</h1>
                                     {fields.map(field => (
-                                        <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }}>
+                                        <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
+
                                             <Form.Item
                                                 {...field}
                                                 name={[field.name]}
@@ -211,7 +251,8 @@ const CreateChallengeForm = (props) => {
 
 
                                             <MinusCircleOutlined
-                                                style={{ color: "red" }}
+                                                className="dynamic-delete-button"
+                                                style={{ margin: '0 8px', color: "red" }}
                                                 onClick={() => {
                                                     remove(field.name);
                                                 }}
@@ -292,6 +333,19 @@ const CreateChallengeForm = (props) => {
                 }}
             </Form.List>
 
+            <h1>Writeup Link (Optional)</h1>
+            <Form.Item
+                name="writeup"
+                rules={[
+                    {
+                        type: 'url',
+                        message: "Please enter a valid link",
+                    }]}
+            >
+
+                <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
+            </Form.Item>
+
             <h1>Visibility</h1>
             <Form.Item
                 name="visibility"
@@ -342,7 +396,10 @@ class AdminChallengeCreate extends React.Component {
             },
             challengeTags: [],
             challengeHints: [],
-            previewModal: false
+            previewModal: false,
+            inputCatDisabled: false,
+            selectCatDisabled: false,
+            challengeWriteup: ""
         }
     }
 
@@ -356,34 +413,43 @@ class AdminChallengeCreate extends React.Component {
         }
 
         //Replace <code> with syntax highlighter
-        let description = values.description
-        let position = description.search("<code>")
+        if (typeof values.description !== "undefined") {
+            let description = values.description
+            let position = description.search("<code>")
 
 
-        if (position !== -1) {
+            if (position !== -1) {
 
-            let language = ""
-            let offset = 0
-            position += 6
+                let language = ""
+                let offset = 0
+                position += 6
 
-            while (true) {
-                let currentLetter = description.slice(position + offset, position + offset + 1)
-                if (currentLetter === "\n") {
-                    language = description.slice(position, position + offset)
-                    description = description.slice(0, position) + description.slice(position + offset)
-                    description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
-                    description = description.replace("</code>", "`}</SyntaxHighlighter>")
-                    values.description = description
-                    break
+                while (true) {
+                    let currentLetter = description.slice(position + offset, position + offset + 1)
+                    if (currentLetter === "\n") {
+                        language = description.slice(position, position + offset)
+                        description = description.slice(0, position) + description.slice(position + offset)
+                        description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
+                        description = description.replace("</code>", "`}</SyntaxHighlighter>")
+                        values.description = description
+                        break
+                    }
+                    else if (offset > 10) {
+                        break
+                    }
+                    offset += 1
                 }
-                else if (offset > 10) {
-                    break
-                }
-                offset += 1
+
+
             }
-
-
         }
+
+        //Render writeup link
+        let writeupLink = ""
+        if (typeof values.writeup !== "undefined") {
+            writeupLink = values.writeup
+        }
+        else writeupLink = ""
 
         var renderTags = []
         if (typeof values.tags !== "undefined") {
@@ -412,13 +478,13 @@ class AdminChallengeCreate extends React.Component {
 
         }
 
-        this.setState({ previewChallenge: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints })
+        this.setState({ previewChallenge: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints, challengeWriteup: writeupLink })
     }
 
     render() {
         return (
 
-            <Layout style={{ height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px"  }}>
+            <Layout style={{ minHeight: "100vh", height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
                 <Modal
                     title={null}
                     visible={this.state.previewModal}
@@ -431,6 +497,16 @@ class AdminChallengeCreate extends React.Component {
                             tab={<span><ProfileOutlined /> Challenge</span>}
                             key="challenge"
                         >
+                            {this.state.challengeWriteup !== "" && (
+                                <Tooltip title="View writeups for this challenge">
+                                    <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
+                                </Tooltip>
+                            )}
+                            {this.state.challengeWriteup === "" && (
+                                <Tooltip title="Writeups are not available for this challenge">
+                                    <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
+                                </Tooltip>
+                            )}
                             <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
                             <div>
                                 {this.state.challengeTags}
@@ -466,7 +542,7 @@ class AdminChallengeCreate extends React.Component {
                     <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
                 </div>
-                <CreateChallengeForm handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
+                <CreateChallengeForm allCat={this.props.allCat} handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} state={this.state} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
             </Layout>
         );
     }

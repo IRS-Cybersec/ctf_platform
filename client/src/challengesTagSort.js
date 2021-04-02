@@ -1,11 +1,12 @@
 import React from 'react';
-import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification } from 'antd';
+import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip } from 'antd';
 import {
   UnlockOutlined,
   ProfileOutlined,
   FlagOutlined,
   SmileOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  SolutionOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -73,7 +74,8 @@ class ChallengesTagSort extends React.Component {
       hintModal: false,
       currentSorting: "points",
       tag: false,
-      loadingTag: false
+      loadingTag: false,
+      challengeWriteup: ""
 
     };
   }
@@ -133,13 +135,13 @@ class ChallengesTagSort extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-          message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
-          let challengeHints = this.state.challengeHints
-          challengeHints[id] = (
-            <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
-          )
-          this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
-          close()
+        message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
+        let challengeHints = this.state.challengeHints
+        challengeHints[id] = (
+          <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
+        )
+        this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
+        close()
       }
     }).catch((error) => {
       console.log(error)
@@ -152,10 +154,10 @@ class ChallengesTagSort extends React.Component {
 
     if (bought === false) {
       confirm({
-        title: 'Are you sure you want to purchase hint ' + parseInt(id+1) + ' for "' + chall + '"?',
+        title: 'Are you sure you want to purchase hint ' + parseInt(id + 1) + ' for "' + chall + '"?',
         icon: <ExclamationCircleOutlined />,
-        onOk: (close) => {this.handleBuyHint(close.bind(this), id, chall)},
-        onCancel() {},
+        onOk: (close) => { this.handleBuyHint(close.bind(this), id, chall) },
+        onCancel() { },
       });
     }
     else {
@@ -171,7 +173,7 @@ class ChallengesTagSort extends React.Component {
       }).then((data) => {
         //console.log(data)
         if (data.success === true) {
-            this.setState({ hintModal: true, hintContent: data.hint })
+          this.setState({ hintModal: true, hintContent: data.hint })
         }
       }).catch((error) => {
         console.log(error)
@@ -196,7 +198,7 @@ class ChallengesTagSort extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      //console.log(data)
+      console.log(data)
       if (data.success === true) {
 
         //Replace <code> with syntax highlighter
@@ -251,6 +253,13 @@ class ChallengesTagSort extends React.Component {
           }
         }
 
+        //Render writeup link
+        let writeupLink = ""
+        if (typeof data.chall.writeup !== "undefined") {
+          writeupLink = data.chall.writeup
+        }
+        else writeupLink = ""
+
 
         //Handle hints
         if (typeof data.chall.hints !== "undefined") {
@@ -279,7 +288,7 @@ class ChallengesTagSort extends React.Component {
         }
 
 
-        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, loadingChallenge: false, challengeHints: renderHints })
+        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, challengeWriteup: writeupLink, loadingChallenge: false, challengeHints: renderHints })
 
       }
       else {
@@ -377,6 +386,16 @@ class ChallengesTagSort extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
+              {this.state.challengeWriteup !== "" && (
+                <Tooltip title="View writeups for this challenge">
+                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => {window.open(this.state.challengeWriteup)}}/>
+                </Tooltip>
+              )}
+              {this.state.challengeWriteup === "" && (
+                <Tooltip title="Writeups are not available for this challenge">
+                  <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
+                </Tooltip>
+              )}
               <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>
               <div>
                 {this.state.challengeTags}

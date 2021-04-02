@@ -6,6 +6,11 @@
     background-color: #15395b;
 }
 
+.ant-layout-sider {
+    width: "10vw" !important;
+    min-width: "5vw" !important;
+}
+
 @keyframes slideInFromLeft {
     0% {
         transform: translateX(-20%);

@@ -5,7 +5,8 @@ import {
     PlusOutlined,
     ProfileOutlined,
     FlagOutlined,
-    FlagTwoTone
+    FlagTwoTone,
+    LoadingOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -18,16 +19,23 @@ const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
-
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
-
     if (typeof form.getFieldValue("flags") === "undefined") {
         var currentValues = form.getFieldsValue()
         currentValues.flags = [""]
 
         form.setFieldsValue(currentValues)
     }
+    let existingCats = []
+    console.log(props.allCat)
+    for (let i = 0; i < props.allCat.length; i++) {
+        existingCats.push(<Option key={props.allCat[i]} value={props.allCat[i]}>{props.allCat[i]}</Option>)
+    }
+
+    //Render existing categories select options
+
+
 
     return (
         <Form
@@ -40,6 +48,7 @@ const CreateChallengeForm = (props) => {
                     message.warn("Please enter at least 1 flag")
                 }
                 else {
+                    //console.log(values)
                     props.setState({ loading: true })
                     if (values.visibility === "false") {
                         values.visibility = false
@@ -47,12 +56,14 @@ const CreateChallengeForm = (props) => {
                     else {
                         values.visibility = true
                     }
+                    const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
+
                     fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
                             "name": values.name,
-                            "category": values.category,
+                            "category": category,
                             "description": values.description,
                             "points": values.points,
                             "flags": values.flags,
@@ -68,16 +79,18 @@ const CreateChallengeForm = (props) => {
                         if (data.success === true) {
                             message.success({ content: "Created challenge " + values.name + " successfully!" })
                             form.resetFields()
-                            props.setState({ loading: false })
                         }
                         else {
-                            message.error({ content: "Oops. Unknown error" })
+                            message.error({ content: "Oops. Unknown error, please contact an admin." })
                         }
+                        props.setState({ loading: false })
 
 
                     }).catch((error) => {
-                        message.error({ content: "Oops. There was an issue connecting with the server" });
+                        console.log(error)
+                        message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
                     })
+
 
                 }
 
@@ -93,26 +106,53 @@ const CreateChallengeForm = (props) => {
             </Form.Item>
 
             <h1>Challenge Category:</h1>
+            <h4>Select an Existing Category: </h4>
             <Form.Item
-                name="category"
-                rules={[{ required: true, message: 'Please enter a challenge description' }]}
+                name="category1"
+                rules={[{ required: !props.state.selectCatDisabled, message: 'Please enter a challenge category' }]}
             >
 
-                <Input allowClear placeholder="Enter a challenge description" />
+                <Select
+                    disabled={props.state.selectCatDisabled}
+                    allowClear
+                    showSearch
+                    placeholder="Select an existing Category"
+                    onChange={(value) => {
+                        if (value) {
+                            props.setState({ inputCatDisabled: true })
+                        }
+                        else {
+                            props.setState({ inputCatDisabled: false })
+                        }
+                    }}
+                >
+                    {existingCats}
+                </Select>
+
+            </Form.Item>
+            <h4>Enter a New Category</h4>
+            <Form.Item
+                name="category2"
+                rules={[{ required: !props.state.inputCatDisabled, message: 'Please enter a challenge category' }]}
+            >
+
+                <Input onChange={(e) => {
+                    e.target.value.length > 0 ? props.setState({ selectCatDisabled: true }) : props.setState({ selectCatDisabled: false })
+                }} disabled={props.state.inputCatDisabled} allowClear placeholder="Enter a new challenge category" />
             </Form.Item>
 
-            <h1>Challenge Description (JSX Supported):</h1>
+            <h1>Challenge Description (Supports <a href="https://reactjs.org/docs/introducing-jsx.html" target="_blank" rel="noreferrer">JSX</a>):</h1>
             <Form.Item
                 name="description"
-                rules={[{ required: true, message: 'Please enter a category' }]}
+                rules={[{ required: true, message: 'Please enter a description' }]}
             >
 
                 <TextArea rows={7} allowClear placeholder="Enter a challenge description. JSX is very similiar to HTML, only difference being that there MUST be closing tags for everything." />
             </Form.Item>
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "35vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "35vw" }}>
                     <h1>Challenge Points:</h1>
                     <Form.Item
                         name="points"
@@ -143,11 +183,12 @@ const CreateChallengeForm = (props) => {
 
                 <Divider type="vertical" style={{ height: "inherit" }}></Divider>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", justifyItems: "center", marginLeft: "10vw", width: "35vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", width: "35vw", marginLeft: "2vw" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
                             return (
                                 <div>
+                                    <h1>Flags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
                                             <Form.Item
@@ -182,7 +223,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Flag
-                </Button>
+                                            </Button>
                                     </Form.Item>
 
 
@@ -195,8 +236,10 @@ const CreateChallengeForm = (props) => {
                         {(fields, { add, remove }) => {
                             return (
                                 <div>
+                                    <h1>Tags</h1>
                                     {fields.map(field => (
-                                        <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }}>
+                                        <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
+
                                             <Form.Item
                                                 {...field}
                                                 name={[field.name]}
@@ -208,7 +251,8 @@ const CreateChallengeForm = (props) => {
 
 
                                             <MinusCircleOutlined
-                                                style={{ color: "red" }}
+                                                className="dynamic-delete-button"
+                                                style={{ margin: '0 8px', color: "red" }}
                                                 onClick={() => {
                                                     remove(field.name);
                                                 }}
@@ -226,7 +270,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Tag
-                </Button>
+                    </Button>
                                     </Form.Item>
                                 </div>
                             );
@@ -282,7 +326,7 @@ const CreateChallengeForm = (props) => {
                                     style={{ width: "50ch" }}
                                 >
                                     <PlusOutlined /> Add Hint
-                </Button>
+                    </Button>
                             </Form.Item>
                         </div>
                     );
@@ -316,14 +360,15 @@ const CreateChallengeForm = (props) => {
 
         </Form>
     );
-};
 
+};
 
 class UserChallengeCreate extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            mainLoading: true,
             loading: false,
             previewChallenge: {
                 name: "",
@@ -339,8 +384,32 @@ class UserChallengeCreate extends React.Component {
             },
             challengeTags: [],
             challengeHints: [],
-            previewModal: false
+            previewModal: false,
+            selectCatDisabled: false,
+            selectInputDisabled: false
         }
+    }
+
+    componentDidMount = () => {
+        fetch(window.ipAddress + "/v1/challenge/list_categories", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then(async (data) => {
+    
+            if (data.success === true) {
+                await this.setState({allCat: data.categories})
+                await this.setState({ mainLoading: false })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+    
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
     }
 
     previewChallenge = (values) => {
@@ -416,7 +485,7 @@ class UserChallengeCreate extends React.Component {
         return (
             <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
                 <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                    <div style={{padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px"}}>
+                    <div style={{ padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
                         <Modal
                             title={null}
                             visible={this.state.previewModal}
@@ -463,7 +532,16 @@ class UserChallengeCreate extends React.Component {
                             <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
                         </div>
-                        <CreateChallengeForm setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
+                        {!this.state.mainLoading && this.state.allCat !== [] && (
+                            <CreateChallengeForm allCat={this.state.allCat} state={this.state} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
+                        )}
+                        {this.state.mainLoading && (
+                            <div>
+                                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                    <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </Layout>
             </animated.div>
