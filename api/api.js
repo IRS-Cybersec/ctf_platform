@@ -94,7 +94,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	const collections = {
 		users: db.collection('users'),
 		challs: db.collection('challs'),
-		transactions: db.collection('transactions')
+		transactions: db.collection('transactions'),
+		pages: db.collection('pages')
 	};
 	console.info('MongoDB connected');
 
@@ -682,6 +683,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					hint.purchased = [];
 				});
 			}
+			if (req.body.writeup) doc.writeup = req.body.writeup
 			// if (req.body.files) {
 			// 	for (file of req.body.files) {
 			// 		if (typeof file.url != 'string' || typeof file.name != 'string') {
@@ -761,7 +763,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 
 			let updateObj = {};
-			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility'];
+			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup'];
 			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
 			if (updateObj.hints) {
 				updateObj.hints.forEach(hint => {
