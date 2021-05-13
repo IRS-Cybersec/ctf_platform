@@ -9,3 +9,7 @@ updates:
     directory: "/client" # Location of package manifests
     schedule:
       interval: "daily"
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/api" # Location of package manifests
+    schedule:
+      interval: "daily"      
