@@ -10,7 +10,9 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - "Categories" for better organization of challenges into different "events"
 - Automatic Tag Sorting
 - Easy management of challenges and users
-- ReactJS goodness
+- JSX supported Challenge Descriptions which allow you to add videos, code blocks and more!
+- Writeup links per challenge
+- ReactJS Goodness
 
 ## Screenshots
 
