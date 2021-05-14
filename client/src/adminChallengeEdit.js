@@ -430,6 +430,12 @@ class AdminChallengeEdit extends React.Component {
         }
     }
 
+    componentDidUpdate = () => {
+        if (this.state.edited) {
+            window.onbeforeunload = () => {}
+        }
+    }
+
     componentDidMount() {
         this.getChallengeDetails(this.props.challengeName)
         this.setState({ oldChallengeName: this.props.challengeName })

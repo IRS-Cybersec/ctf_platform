@@ -85,6 +85,12 @@ class ChallengesCategory extends React.Component {
   componentDidMount() {
     const startup = async () => {
       await this.fetchCategories()
+
+      const challenge = this.props.match.params.challenge;
+      if (typeof challenge !== "undefined") {
+        const solved = this.state.challenges.find(element => element.name === challenge).solved
+        this.loadChallengeDetails(challenge, solved)
+      }
     }
 
     startup()
@@ -156,6 +162,7 @@ class ChallengesCategory extends React.Component {
   }
 
   loadChallengeDetails(name, solved) {
+    this.props.history.push("/Challenges/" + this.props.category + "/" + name)
     this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
@@ -294,13 +301,16 @@ class ChallengesCategory extends React.Component {
           notification["success"]({
             message: 'Challenge Solved! Congratulations!',
             description:
-              'Congratulations for solving "' + this.state.currentChallenge + '".',
+              'Congratulations on solving "' + this.state.currentChallenge + '".',
             duration: 0
           });
           const refresh = async () => {
+            await this.setState({ challengeModal: false })
+            this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(false)
             await this.fetchCategories()
-            await this.setState({ challengeModal: false })
+            
+            
           }
           refresh()
 
@@ -368,7 +378,7 @@ class ChallengesCategory extends React.Component {
           visible={this.state.challengeModal}
           footer={null}
           bodyStyle={{ textAlign: "center" }}
-          onCancel={() => { this.setState({ challengeModal: false }) }}
+          onCancel={() => { this.setState({ challengeModal: false }); this.props.history.push("/Challenges/" + this.props.category); }}
         >
           <Tabs defaultActiveKey="challenge">
             <TabPane
@@ -430,14 +440,14 @@ class ChallengesCategory extends React.Component {
                   )
                 }}
                 renderItem={item => {
-                    return (
-                      <List.Item key={item}>
-                        <List.Item.Meta
-                          avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
-                          title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
-                        />
-                      </List.Item>
-                    )
+                  return (
+                    <List.Item key={item}>
+                      <List.Item.Meta
+                        avatar={<Avatar src={require("./assets/profile.jpg").default} />}
+                        title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
+                      />
+                    </List.Item>
+                  )
                 }} />
             </TabPane>
           </Tabs>
@@ -474,7 +484,7 @@ class ChallengesCategory extends React.Component {
               if (!item.solved) {
                 return (
                   <List.Item key={item.name}>
-                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood) }}>
+                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood)}}>
                       <Card
                         hoverable
                         type="inner"

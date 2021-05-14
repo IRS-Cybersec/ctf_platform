@@ -414,6 +414,12 @@ class AdminChallengeCreate extends React.Component {
         }
     }
 
+    componentDidUpdate = () => {
+        if (this.state.edited) {
+            window.onbeforeunload = () => {}
+        }
+    }
+
     previewChallenge = (values) => {
 
         if (values.max_attempts === 0) {

@@ -392,6 +392,12 @@ class UserChallengeCreate extends React.Component {
         }
     }
 
+    componentDidUpdate = () => {
+        if (this.state.edited) {
+            window.onbeforeunload = () => {}
+        }
+    }
+
     componentDidMount = () => {
         fetch(window.ipAddress + "/v1/challenge/list_categories", {
             method: 'get',

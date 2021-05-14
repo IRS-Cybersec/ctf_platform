@@ -83,6 +83,12 @@ class ChallengesTagSort extends React.Component {
   componentDidMount() {
     const startup = async () => {
       await this.sortByTags()
+
+      const challenge = this.props.match.params.challenge;
+      if (typeof challenge !== "undefined") {
+        const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge).solved
+        this.loadChallengeDetails(challenge, solved)
+      }
     }
 
     startup()
@@ -117,7 +123,7 @@ class ChallengesTagSort extends React.Component {
       tag[key] = orderBy(tag[key], ['points'], ['asc'])
 
     }
-    console.log(tag)
+    //console.log(tag)
     this.setState({ tag: tag, loadingTag: false })
 
   }
@@ -184,6 +190,7 @@ class ChallengesTagSort extends React.Component {
   }
 
   loadChallengeDetails = async (name, solved) => {
+    this.props.history.push("/Challenges/" + this.props.category + "/" + name);
     await this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved, tagList: this.state.tagLists })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
@@ -198,7 +205,7 @@ class ChallengesTagSort extends React.Component {
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-      console.log(data)
+      //console.log(data)
       if (data.success === true) {
 
         //Replace <code> with syntax highlighter
@@ -321,12 +328,15 @@ class ChallengesTagSort extends React.Component {
           notification["success"]({
             message: 'Challenge Solved! Congratulations!',
             description:
-              'Congratulations for solving "' + this.state.currentChallenge + '".',
+              'Congratulations on solving "' + this.state.currentChallenge + '".',
             duration: 0
           });
           const refresh = async () => {
+            await this.setState({ challengeModal: false })
+            this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(true)
             await this.sortByTags()
+            
 
           }
           refresh()
@@ -336,7 +346,7 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Incorrect Flag',
             description:
-              'It seems like you submitted an incorrect flag (' + values.flag + ') for "' + this.state.currentChallenge + '".',
+              'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.currentChallenge + '".',
             duration: 0
           });
         }
@@ -379,7 +389,7 @@ class ChallengesTagSort extends React.Component {
           visible={this.state.challengeModal}
           footer={null}
           bodyStyle={{ textAlign: "center" }}
-          onCancel={() => { this.setState({ challengeModal: false }) }}
+          onCancel={() => { this.setState({ challengeModal: false }); this.props.history.push("/Challenges/" + this.props.category); }}
         >
           <Tabs defaultActiveKey="challenge">
             <TabPane
@@ -388,7 +398,7 @@ class ChallengesTagSort extends React.Component {
             >
               {this.state.challengeWriteup !== "" && (
                 <Tooltip title="View writeups for this challenge">
-                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => {window.open(this.state.challengeWriteup)}}/>
+                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
                 </Tooltip>
               )}
               {this.state.challengeWriteup === "" && (
@@ -444,7 +454,7 @@ class ChallengesTagSort extends React.Component {
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
-                        avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
+                        avatar={<Avatar src={require("./assets/profile.jpg").default} />}
                         title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>

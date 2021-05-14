@@ -108,7 +108,7 @@ class Scoreboard extends React.Component {
 
           //Process timestamps
           let scores2 = data.users[i].changes
-          console.log(scores2)
+          //console.log(scores2)
 
           for (let x = 0; x < scores2.length; x++) {
             if (data.users[i]._id in timestamp) {
@@ -141,7 +141,7 @@ class Scoreboard extends React.Component {
         for (let x = 0; x < scoreArray.length; x++) {
 
           if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
-            console.log(scoreArray[x])
+            //console.log(scoreArray[x])
             scoreArray[x].position = String(x + 1) + "."
             const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
             let minutes = Math.ceil(dateTime / 60)
@@ -307,7 +307,7 @@ class Scoreboard extends React.Component {
               </AreaChart>
             </ResponsiveContainer>
             {this.state.loadingGraph && (
-              <div style={{ position: "absolute", left: "47%", transform: "translate(-47%, 0%)", zIndex: 10 }}>
+              <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                 <Ellipsis color="#177ddc" size={120} ></Ellipsis>
               </div>
             )}

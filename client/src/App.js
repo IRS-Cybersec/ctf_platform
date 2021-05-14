@@ -7,7 +7,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   CodeTwoTone,
-  PlusSquareTwoTone
+  PlusSquareTwoTone,
+  GithubOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { NavLink, Switch, Route, withRouter, Redirect } from 'react-router-dom';
@@ -53,7 +54,8 @@ class App extends React.Component {
 
   componentDidMount() {
     // Handle any page changes via manual typing/direct access
-    const page = this.props.location.pathname.slice(1);
+    const page = this.props.location.pathname.split("/")[1]
+
 
     if (previousLocation !== page) {
       previousLocation = page
@@ -188,7 +190,7 @@ class App extends React.Component {
                             style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                               <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                              <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
+                              <Avatar size="large" src={require("./assets/profile.jpg").default}/>
                             </div>
                             <div>
                               <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
@@ -253,7 +255,11 @@ class App extends React.Component {
                             </Menu.Item>
                           )}
 
+
                         </Menu>
+                        <div style={{textAlign: "center", marginTop: "3ch", color: "#8c8c8c"}}>
+                          <p>Sieberrsec CTF Platform 0.6 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                        </div>
                       </Sider>
 
                       <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
@@ -265,22 +271,20 @@ class App extends React.Component {
                                 <Transition
                                   native
                                   items={location}
-                                  trail={10}
+                                  trail={5}
                                   keys={location.pathname.split('/')[1]}
-                                  from={{ transform: 'translateY(-50vh)', opacity: 0, position: "absolute" }}
-                                  enter={{ transform: 'translateY(0px)', opacity: 1, position: "static" }}
-                                  leave={{ transform: 'translateY(50vh)', opacity: 0, position: "absolute" }}>
+                                  from={{ opacity: 0 }}
+                                  enter={{ opacity: 1 }}
+                                  leave={{ opacity: 0, display: "none" }}>
                                   {(loc, state) => style => (
                                     <Switch location={state === 'update' ? location : loc}>
                                       <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
-                                      <Route exact path='/Challenges' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
-                                      <Route exact path='/Challenges/:category' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
-                                      <Route exact path='/Challenges/:category/:challenge' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
+                                      <Route path='/Challenges/:category?/:challenge?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
 
                                       <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
                                       <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
-                                      <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
+
 
                                       {this.state.permissions >= 1 ? (
                                         <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />
@@ -289,13 +293,11 @@ class App extends React.Component {
                                       )}
 
                                       {this.state.permissions === 2 ? (
-                                        <div>
-                                          <Route exact path='/Admin' render={(props) => <Admin {...props} transition={style} />} />
-                                          <Route exact path='/Admin/:tabPane' render={(props) => <Admin {...props} transition={style} />} />
-                                        </div>
+                                        <Route path={['/Admin/:tabPane?']} render={(props) => <Admin {...props} transition={style} />} />
                                       ) : (
                                         <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
                                       )}
+                                      <Route path='/*' render={(props) => <Oops {...props} transition={style} />} />
 
                                     </Switch>
                                   )}

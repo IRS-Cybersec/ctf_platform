@@ -6,6 +6,7 @@ import {
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
 import './App.css';
+import { Link } from 'react-router-dom';
 
 const { Column } = Table;
 
@@ -69,7 +70,7 @@ class AdminSubmissions extends React.Component {
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
                 {this.state.loading && (
-                    <div style={{ position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
@@ -77,14 +78,16 @@ class AdminSubmissions extends React.Component {
                     <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                         emptyText: (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                            <h1 style={{ fontSize: "200%" }}>There are no submissions yet.</h1>
-                        </div>
+                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                <h1 style={{ fontSize: "200%" }}>There are no submissions yet.</h1>
+                            </div>
                         )
                     }}>
                         <Column title="Submission ID" dataIndex="_id" key="_id" />
                         <Column title="Time" dataIndex="timestamp" key="timestamp" />
-                        <Column title="Submittor" dataIndex="author" key="author" />
+                        <Column title="Submittor" dataIndex="author" key="author" render={(text, row, index) => {
+                            return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                        }} />
                         <Column title="Challenge" dataIndex="challenge" key="challenge" />
                         <Column title="Type" dataIndex="type" key="type" />
                         <Column title="Points Awarded" dataIndex="points" key="points" />

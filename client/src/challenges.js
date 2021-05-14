@@ -16,7 +16,7 @@ import { Transition, animated } from 'react-spring/renderprops';
 const { Meta } = Card;
 const { Option } = Select;
 
-const categoryImages = [require("./assets/catPhoto1.jpg").default, require("./assets/catPhoto2.jpg").default, require("./assets/catPhoto3.jpg").default]
+const categoryImages = [require("./assets/catPhoto1.jpg").default]
 
 
 
@@ -115,7 +115,7 @@ class Challenges extends React.Component {
 
   sortDifferent(value) {
     this.setState({ RadioValue: value.target.value })
-    if (value.target.value === "Type" && !this.state.sortByTags) {
+    if (value.target.value === "Type") {
 
       if (this.state.currentCategory) { //currentCategory is whether a category has been set, challengeCategory is for the visibility of the component
         let originalData = this.state.originalData
@@ -128,7 +128,7 @@ class Challenges extends React.Component {
       }
 
     }
-    else if (this.state.sortByTags && value.target.value === "Category") {
+    else if (value.target.value === "Category") {
 
       if (this.state.currentCategory) {
         this.setState({ sortByTags: false, challengeCategory: true })
@@ -143,11 +143,9 @@ class Challenges extends React.Component {
   handleRefresh = async (tagSorting) => {
 
     await this.fetchCategories()
-    if (tagSorting) {
-      await this.sortDifferent({ target: { value: "Type" } })
-    }
-    else {
-      await this.setState({ currentCategoryChallenges: this.state.originalData[this.state.currentCategory] })
+    if (!tagSorting) {
+      await this.sortDifferent({ target: { value: "Category" } })
+      await this.setState({ currentCategoryChallenges: this.state.originalData[this.state.currentCategory]})
     }
 
     await this.props.obtainScore()
@@ -219,7 +217,7 @@ class Challenges extends React.Component {
               {toggle => (
                 props => {
                   if (toggle === true) {
-                    return (<div style={{ ...props, position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                    return (<div style={{ ...props, position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                       <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>)
                   }
@@ -289,11 +287,11 @@ class Challenges extends React.Component {
                       )}
 
                       {this.state.challengeCategory && (
-                        <ChallengesCategory handleRefresh={this.handleRefresh.bind(this)} ref={this.child} currentCategoryChallenges={this.state.currentCategoryChallenges} category={this.state.currentCategory}></ChallengesCategory>
+                        <ChallengesCategory match={this.props.match} history={this.props.history} handleRefresh={this.handleRefresh.bind(this)} ref={this.child} currentCategoryChallenges={this.state.currentCategoryChallenges} category={this.state.currentCategory}></ChallengesCategory>
                       )}
 
                       {this.state.sortByTags && (
-                        <ChallengesTagSort tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)}></ChallengesTagSort>
+                        <ChallengesTagSort match={this.props.match} history={this.props.history} tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                       )}
                     </div>)
                   }

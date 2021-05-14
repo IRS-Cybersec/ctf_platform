@@ -201,7 +201,7 @@ class AdminUsers extends React.Component {
                 "email": values.email
             })
         }).then((results) => {
-            console.log(results)
+            //console.log(results)
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
@@ -237,7 +237,7 @@ class AdminUsers extends React.Component {
 
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
                 {this.state.loading && (
-                    <div style={{ position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
@@ -292,7 +292,7 @@ class AdminUsers extends React.Component {
                         }}>
                             <Column title="Username" dataIndex="username" key="username"
                                 render={(text, row, index) => {
-                                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}>{text}</a></Link>;
+                                    return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                                 }}
                             />
                             <Column title="Email" dataIndex="email" key="email" />

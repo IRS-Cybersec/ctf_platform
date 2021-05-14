@@ -23,7 +23,7 @@ class Home extends React.Component {
         <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
         <br/>
         <br/>
-          <h2>Welcome to the Sieberrsec Training Platform V0.5.5 14-3-21!</h2>
+          <h2>Welcome to the Sieberrsec Training Platform!</h2>
           <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
           <br />
           <h4><u><b>General Rules for the platform:</b></u></h4>

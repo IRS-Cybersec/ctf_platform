@@ -187,7 +187,7 @@ class Profile extends React.Component {
                         currentDS.challenge = currentStuff.challenge
                     }
                     currentDS.score = currentStuff.points
-                    console.log(currentStuff.timestamp)
+                    //console.log(currentStuff.timestamp)
                     const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
                     let minutes = Math.ceil(dateTime / 60)
                     let hours = 0
@@ -240,7 +240,7 @@ class Profile extends React.Component {
                     Time: new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
                 }
                 graphData.push(graphPoint)
-                console.log(graphData)
+                //console.log(graphData)
 
 
                 fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {
@@ -310,7 +310,7 @@ class Profile extends React.Component {
                     </Modal>
 
                     {this.state.loading && (
-                        <div style={{ position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                        <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                             <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                         </div>
                     )}
@@ -328,7 +328,7 @@ class Profile extends React.Component {
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <div style={{ display: "flex" }}>
                                         <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                                            <Avatar style={{ backgroundColor: "Red", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
+                                            <Avatar style={{ backgroundColor: "Red", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.jpg").default} />
                                             <h1 style={{ fontSize: "5ch" }}>{this.state.targetUser}</h1>
                                         </div>
                                         <div>

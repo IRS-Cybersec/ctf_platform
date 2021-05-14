@@ -21,10 +21,10 @@ class Admin extends React.Component {
       key: ""
     }
   }
-  componentDidMount = async () => {
+  componentDidMount = () => {
     const tabPane = this.props.match.params.tabPane;
     if (typeof tabPane !== "undefined") {
-      await this.setState({ key: decodeURIComponent(tabPane) })
+      this.setState({ key: decodeURIComponent(tabPane) })
     }
 
   }
@@ -34,7 +34,10 @@ class Admin extends React.Component {
 
       <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-          <Tabs activeKey={this.state.key} onTabClick={(key) => { this.setState({ key: key }); this.props.history.push("/Admin/" + key); }} style={{ overflowY: "auto", overflowX: "auto" }}>
+          <Tabs activeKey={this.state.key} onTabClick={(key) => {
+            this.setState({ key: key })
+            this.props.history.push("/Admin/" + key)
+          }} style={{ overflowY: "auto", overflowX: "auto" }}>
             <TabPane
               tab={<span> Home </span>}
               key=""
@@ -43,7 +46,7 @@ class Admin extends React.Component {
               <div style={{ textAlign: "start" }}>
                 <p>
                   Welcome to Sieberrsec CTF Platform's admin panel. <br />
-              Platform Version: 0.5.2 31/12/20
+              Platform Version: 0.6 14/5/21
               </p>
                 <h3>Changelog:</h3>
                 <p><u>Version 0.5.2 (31/12/2020)</u></p>
@@ -112,7 +115,7 @@ class Admin extends React.Component {
               tab={<span><AppstoreOutlined />Challenges</span>}
               key="Challenges"
             >
-              <AdminChallenges></AdminChallenges>
+              <AdminChallenges history={this.props.history} location={this.props.location}></AdminChallenges>
             </TabPane>
             <TabPane
               tab={<span><BarsOutlined />Submissions</span>}

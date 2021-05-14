@@ -15,6 +15,7 @@ import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
 import { difference } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
+import { Switch, Route, Link } from 'react-router-dom';
 
 const { Column } = Table;
 const { confirm } = Modal;
@@ -40,7 +41,15 @@ class AdminChallenges extends React.Component {
     }
 
 
-    componentDidMount() {
+    componentDidMount = async () => {
+        const location = this.props.location.pathname
+        if (location === "/Admin/Challenges/Create") {
+            await this.setState({ challengeCreate: true })
+        }
+        else if (location === "/Admin/Challenges/Edit") {
+            message.warn("Please select a challenge from the table to edit")
+            await this.props.history.push("/Admin/Challenges")
+        }
         this.fillTableData()
         this.handleCategoryData()
     }
@@ -165,10 +174,10 @@ class AdminChallenges extends React.Component {
             if (data.success === true) {
                 for (var i = 0; i < data.challenges.length; i++) {
                     if (data.challenges[i].visibility === false) {
-                        data.challenges[i].visibility = <span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span>
+                        data.challenges[i].visibility = <span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span>
                     }
                     else {
-                        data.challenges[i].visibility = <span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span>
+                        data.challenges[i].visibility = <span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
                     }
                 }
                 this.setState({ dataSource: data.challenges, loading: false })
@@ -200,7 +209,7 @@ class AdminChallenges extends React.Component {
                 message.success({ content: "Deleted challenge \"" + challengeName + "\" successfully" })
                 this.fillTableData()
                 this.handleCategoryData()
-                
+
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -217,21 +226,25 @@ class AdminChallenges extends React.Component {
 
     }
 
-    handleBack() {
-        this.setState({ challengeCreate: false })
+    handleBack = async () => {
+        await this.props.history.push("/Admin/Challenges")
+        if (this.props.location.pathname === "/Admin/Challenges") this.setState({ challengeCreate: false })
     }
 
-    handleEditBack() {
-        this.setState({ editChallenge: false })
+    handleEditBack = async () => {
+        await this.props.history.push("/Admin/Challenges")
+        if (this.props.location.pathname === "/Admin/Challenges") this.setState({ editChallenge: false })
     }
 
     handleCreateBack() {
+        this.props.history.push("/Admin/Challenges")
         this.setState({ challengeCreate: false })
         this.fillTableData()
         this.handleCategoryData()
     }
 
     handleEditChallBack() {
+        this.props.history.push("/Admin/Challenges")
         this.setState({ editChallenge: false })
         this.fillTableData()
         this.handleCategoryData()
@@ -247,7 +260,7 @@ class AdminChallenges extends React.Component {
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
                 {this.state.loading && (
-                    <div style={{ position: "absolute", left: "50%", transform: "translate(-50%, 0%)", zIndex: 10 }}>
+                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
@@ -257,7 +270,7 @@ class AdminChallenges extends React.Component {
                         {!this.state.challengeCreate && !this.state.editChallenge && (
                             <div>
 
-                                <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }) }}>Create New Challenge</Button>
+                                <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }, this.props.history.push("/Admin/Challenges/Create")) }}>Create New Challenge</Button>
 
                                 <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                                     emptyText: (
@@ -267,8 +280,12 @@ class AdminChallenges extends React.Component {
                                         </div>
                                     )
                                 }}>
-                                    <Column title="Name" dataIndex="name" key="name" />
-                                    <Column title="Category" dataIndex="category" key="category" />
+                                    <Column title="Name" dataIndex="name" key="name" render={(text, row, index) => {
+                                        return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                    }} />
+                                    <Column title="Category" dataIndex="category" key="category" render={(text, row, index) => {
+                                        return <Link to={"/Challenges/" + row.category}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                    }} />
                                     <Column title="Points" dataIndex="points" key="points" />
                                     <Column title="Visbility" dataIndex="visibility" key="visibility" />
                                     <Column
@@ -277,7 +294,7 @@ class AdminChallenges extends React.Component {
                                         render={(text, record) => (
                                             <Dropdown trigger={['click']} overlay={
                                                 <Menu>
-                                                    <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }) }}>
+                                                    <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>
                                                         <span>
                                                             Edit Challenge <EditOutlined />
                                                         </span>
@@ -320,14 +337,14 @@ class AdminChallenges extends React.Component {
                                 <Divider />
                             </div>
                         )}
+                        <Switch>
+                            <Route exact path='/Admin/Challenges/Create' render={(props) => <AdminChallengeCreate {...props} handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)} allCat={this.state.allCat} />} />
+                            <Route exact path='/Admin/Challenges/Edit' render={(props) => <AdminChallengeEdit {...props} allCat={this.state.allCat} challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)} />} />
 
-                        {this.state.challengeCreate && !this.state.editChallenge && (
-                            <AdminChallengeCreate handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)} allCat={this.state.allCat}></AdminChallengeCreate>
-                        )}
+                        </Switch>
 
-                        {this.state.editChallenge && !this.state.challengeCreate && (
-                            <AdminChallengeEdit allCat={this.state.allCat} challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)}></AdminChallengeEdit>
-                        )}
+
+
                     </div>
                 )}
 
