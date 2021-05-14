@@ -130,7 +130,7 @@ class ChallengesCategory extends React.Component {
         title: 'Are you sure you want to purchase hint ' + parseInt(id + 1) + ' for "' + chall + '"?',
         icon: <ExclamationCircleOutlined />,
         onOk: (close) => { this.handleBuyHint(close.bind(this), id, chall) },
-        onCancel() { },
+        onCancel: () => { },
       });
     }
     else {
@@ -430,15 +430,14 @@ class ChallengesCategory extends React.Component {
                   )
                 }}
                 renderItem={item => {
-
-                  return (
-                    <List.Item key={item}>
-                      <List.Item.Meta
-                        avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
-                        title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
-                      />
-                    </List.Item>
-                  )
+                    return (
+                      <List.Item key={item}>
+                        <List.Item.Meta
+                          avatar={<Avatar src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />}
+                          title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
+                        />
+                      </List.Item>
+                    )
                 }} />
             </TabPane>
           </Tabs>
@@ -475,7 +474,7 @@ class ChallengesCategory extends React.Component {
               if (!item.solved) {
                 return (
                   <List.Item key={item.name}>
-                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved) }}>
+                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood) }}>
                       <Card
                         hoverable
                         type="inner"

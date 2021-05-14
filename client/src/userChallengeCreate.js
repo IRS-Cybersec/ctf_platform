@@ -6,7 +6,9 @@ import {
     ProfileOutlined,
     FlagOutlined,
     FlagTwoTone,
-    LoadingOutlined
+    LoadingOutlined,
+    EyeOutlined,
+    EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -340,8 +342,8 @@ const CreateChallengeForm = (props) => {
                 initialValue="false"
             >
                 <Select style={{ width: "10vw" }}>
-                    <Option value="false">Hidden</Option>
-                    <Option value="true">Visible</Option>
+                <Option value="false"><span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span></Option>
+                    <Option value="true"><span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span></Option>
                 </Select>
 
             </Form.Item>
@@ -397,15 +399,15 @@ class UserChallengeCreate extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then(async (data) => {
-    
+
             if (data.success === true) {
-                await this.setState({allCat: data.categories})
+                await this.setState({ allCat: data.categories })
                 await this.setState({ mainLoading: false })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-    
+
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });

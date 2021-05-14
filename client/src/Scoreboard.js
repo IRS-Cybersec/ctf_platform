@@ -307,8 +307,8 @@ class Scoreboard extends React.Component {
               </AreaChart>
             </ResponsiveContainer>
             {this.state.loadingGraph && (
-              <div className="demo-loading-container">
-                <Ellipsis size={40} color="#177ddc" />
+              <div style={{ position: "absolute", left: "47%", transform: "translate(-47%, 0%)", zIndex: 10 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
               </div>
             )}
           </div>
@@ -318,7 +318,7 @@ class Scoreboard extends React.Component {
                 emptyText: (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                     <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                    <h1 style={{ fontSize: "200%" }}>That's odd. There are no users</h1>
+                    <h1 style={{ fontSize: "200%" }}>That's odd. There are no users created yet.</h1>
                   </div>
                 )
               }}>

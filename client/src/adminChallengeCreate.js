@@ -7,12 +7,15 @@ import {
     ProfileOutlined,
     FlagOutlined,
     FlagTwoTone,
-    SolutionOutlined
+    SolutionOutlined,
+    EyeOutlined,
+    EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser'
+import JsxParser from 'react-jsx-parser';
+import { Prompt } from 'react-router';
 
 
 const { Option } = Select;
@@ -40,6 +43,7 @@ const CreateChallengeForm = (props) => {
             form={form}
             name="create_challenge_form"
             className="create_challenge_form"
+            onValuesChange={() => {if (props.state.edited === false) props.setState({edited: true})}}
             onFinish={(values) => {
                 //console.log(values)
                 if (typeof values.flags === "undefined") {
@@ -95,7 +99,13 @@ const CreateChallengeForm = (props) => {
                 }
 
             }}
+
         >
+            <Prompt
+                when={props.state.edited}
+                message='The challenge details you entered have not been saved. Are you sure you want to leave?'
+            />
+
             <h1>Challenge Name:</h1>
             <Form.Item
                 name="name"
@@ -353,8 +363,8 @@ const CreateChallengeForm = (props) => {
                 initialValue="false"
             >
                 <Select style={{ width: "10vw" }}>
-                    <Option value="false">Hidden</Option>
-                    <Option value="true">Visible</Option>
+                    <Option value="false"><span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span></Option>
+                    <Option value="true"><span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span></Option>
                 </Select>
 
             </Form.Item>
@@ -399,7 +409,8 @@ class AdminChallengeCreate extends React.Component {
             previewModal: false,
             inputCatDisabled: false,
             selectCatDisabled: false,
-            challengeWriteup: ""
+            challengeWriteup: "",
+            edited: false
         }
     }
 
@@ -485,6 +496,7 @@ class AdminChallengeCreate extends React.Component {
         return (
 
             <Layout style={{ minHeight: "100vh", height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
+
                 <Modal
                     title={null}
                     visible={this.state.previewModal}

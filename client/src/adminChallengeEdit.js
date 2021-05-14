@@ -7,13 +7,16 @@ import {
     ProfileOutlined,
     FlagOutlined,
     EditTwoTone,
-    LoadingOutlined,
     SolutionOutlined,
+    EyeOutlined,
+    EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { Ellipsis } from 'react-spinners-css';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser'
+import JsxParser from 'react-jsx-parser';
+import { Prompt } from 'react-router';
 
 
 const { Option } = Select;
@@ -25,10 +28,11 @@ const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
 
     if (typeof form.getFieldValue("flags") === "undefined") {
+        console.log(props.initialData)
         if (props.initialData.visibility === false) {
             props.initialData.visibility = "false"
         }
-        else {
+        else if (props.initialData.visibility === true) {
             props.initialData.visibility = "true"
         }
         props.initialData.category1 = props.initialData.category
@@ -45,6 +49,7 @@ const CreateChallengeForm = (props) => {
             form={form}
             name="create_challenge_form"
             className="create_challenge_form"
+            onValuesChange={() => {if (props.state.edited === false) props.setState({edited: true})}}
             onFinish={(values) => {
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
@@ -99,6 +104,11 @@ const CreateChallengeForm = (props) => {
 
             }}
         >
+            <Prompt
+                when={props.state.edited}
+                message='The challenge details you modified have not been saved. Are you sure you want to leave?'
+            />
+
             <h1>Challenge Name:</h1>
             <Form.Item
                 name="name"
@@ -354,11 +364,10 @@ const CreateChallengeForm = (props) => {
             <Form.Item
                 name="visibility"
                 rules={[{ required: true, message: 'Please set the challenge visibility' }]}
-                initialValue={"false"}
             >
                 <Select style={{ width: "10vw" }}>
-                    <Option value="false">Hidden</Option>
-                    <Option value="true">Visible</Option>
+                    <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                    <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
                 </Select>
 
             </Form.Item>
@@ -416,7 +425,8 @@ class AdminChallengeEdit extends React.Component {
             oldChallengeName: "",
             selectCatDisabled: false,
             inputCatDisabled: true,
-            challengeWriteup: ""
+            challengeWriteup: "",
+            edited: false
         }
     }
 
@@ -597,7 +607,7 @@ class AdminChallengeEdit extends React.Component {
                 {this.state.loading && (
                     <div>
                         <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                            <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
+                            <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                         </div>
                     </div>
                 )}

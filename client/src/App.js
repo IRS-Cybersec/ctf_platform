@@ -135,7 +135,7 @@ class App extends React.Component {
         this.setState({ userScore: data.score })
       }
       else if (data.success === false && data.error === "not-found") {
-        this.setState({ userScore: "Hidden"})
+        this.setState({ userScore: "Hidden" })
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -191,7 +191,7 @@ class App extends React.Component {
                               <Avatar size="large" src="https://www.todayifoundout.com/wp-content/uploads/2017/11/rick-astley.png" />
                             </div>
                             <div>
-                              <h3 style={{color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
+                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
                             </div>
                           </div>
                         </Dropdown>
@@ -256,7 +256,7 @@ class App extends React.Component {
                         </Menu>
                       </Sider>
 
-                      <Content style={{height: "100vh", position: "static", overflow: "hidden", margin: "30px"}}>
+                      <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
                         <Route
                           render={({ location, ...rest }) => (
                             <div className="fill">
@@ -275,8 +275,9 @@ class App extends React.Component {
                                       <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
                                       <Route exact path='/Challenges' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Challenges/:category' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
+                                      <Route exact path='/Challenges/:category/:challenge' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                       <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
-                                      
+
                                       <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
                                       <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
                                       <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
@@ -285,13 +286,16 @@ class App extends React.Component {
                                         <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />
                                       ) : (
                                         <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
-                                        )}
+                                      )}
 
                                       {this.state.permissions === 2 ? (
-                                        <Route path='/Admin' render={(props) => <Admin {...props} transition={style} />} />
+                                        <div>
+                                          <Route exact path='/Admin' render={(props) => <Admin {...props} transition={style} />} />
+                                          <Route exact path='/Admin/:tabPane' render={(props) => <Admin {...props} transition={style} />} />
+                                        </div>
                                       ) : (
                                         <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
-                                        )}
+                                      )}
 
                                     </Switch>
                                   )}

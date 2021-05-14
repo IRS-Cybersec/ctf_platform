@@ -82,12 +82,12 @@ class AdminSubmissions extends React.Component {
                         </div>
                         )
                     }}>
-                        <Column title="ID" dataIndex="_id" key="_id" />
+                        <Column title="Submission ID" dataIndex="_id" key="_id" />
                         <Column title="Time" dataIndex="timestamp" key="timestamp" />
                         <Column title="Submittor" dataIndex="author" key="author" />
                         <Column title="Challenge" dataIndex="challenge" key="challenge" />
                         <Column title="Type" dataIndex="type" key="type" />
-                        <Column title="Points" dataIndex="points" key="points" />
+                        <Column title="Points Awarded" dataIndex="points" key="points" />
                         <Column title="Flag Submitted" dataIndex="submission" key="submission" />
                         <Column title="Correct" dataIndex="correct" key="correct" />
                     </Table>

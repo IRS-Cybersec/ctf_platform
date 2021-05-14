@@ -2,11 +2,12 @@ import React from 'react';
 import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input } from 'antd';
 import {
     FileUnknownTwoTone,
-    ExclamationCircleTwoTone,
+    ExclamationCircleOutlined,
     DeleteOutlined,
     ClusterOutlined,
     UserOutlined,
-    MailOutlined
+    MailOutlined,
+    LockOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -14,6 +15,7 @@ import './App.css';
 
 const { Column } = Table;
 const { Option } = Select;
+const { confirm } = Modal;
 
 
 const RegisterForm = (props) => {
@@ -54,7 +56,7 @@ const RegisterForm = (props) => {
                 ]}
                 hasFeedback
             >
-                <Input.Password allowClear placeholder="Enter a new password" />
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
             </Form.Item>
 
             <Form.Item
@@ -76,7 +78,7 @@ const RegisterForm = (props) => {
                     }),
                 ]}
             >
-                <Input.Password allowClear placeholder="Confirm new password" />
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
             </Form.Item>
             <Form.Item>
                 <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ createUserModal: false }) }}>Cancel</Button>
@@ -97,7 +99,6 @@ class AdminUsers extends React.Component {
             permissionModal: false,
             permissionLevel: 0,
             permissionChangeTo: 0,
-            deleteModal: false,
             createUserModal: false,
             username: "",
             modalLoading: false,
@@ -159,31 +160,32 @@ class AdminUsers extends React.Component {
 
 
 
-    deleteAccount = () => {
-        this.setState({ modalLoading: true })
+    deleteAccount = (close, username) => {
         fetch(window.ipAddress + "/v1/account/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "username": this.state.username,
+                "username": username,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "User deleted successfully" })
-                this.setState({ deleteModal: false, modalLoading: false })
+                
+                message.success({ content: "User \"" + username + "\" deleted successfully" })
                 this.fillTableData()
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
+            close()
 
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
+            close()
         })
 
     }
@@ -243,28 +245,25 @@ class AdminUsers extends React.Component {
                 {!this.state.loading && (
                     <div>
                         <Modal
-                            title="Set permissions"
+                            title={<span>Change User Permissions <ClusterOutlined /></span>}
                             visible={this.state.permissionModal}
                             onOk={this.changePermissions}
                             onCancel={() => { this.setState({ permissionModal: false }) }}
                             confirmLoading={this.state.modalLoading}
                         >
-                            <h4>Current Permission Level: <u>{this.state.permissionLevel}</u></h4>
-                            <Select defaultValue={0} style={{ width: "10vw" }} onSelect={(value) => { this.setState({ permissionChangeTo: value }) }}>
-                                <Option value="0">0</Option>
-                                <Option value="1">1</Option>
-                                <Option value="2">2</Option>
+                            <Select size="large" value={this.state.permissionChangeTo} style={{ width: "30ch" }} onSelect={(value) => { this.setState({ permissionChangeTo: value }) }}>
+                                <Option value="0">0 - Normal User</Option>
+                                <Option value="1">1 - Challenge Creator User</Option>
+                                <Option value="2">2 - Admin User</Option>
                             </Select>
-                        </Modal>
+                            <br />
+                            <br />
 
-                        <Modal
-                            title={"Are you sure you want to delete \"" + this.state.username + "\" ?"}
-                            visible={this.state.deleteModal}
-                            onOk={this.deleteAccount}
-                            confirmLoading={this.state.modalLoading}
-                            onCancel={() => { this.setState({ deleteModal: false }) }}
-                        >
-                            <h4>This action of mass destruction is irreveisble! <ExclamationCircleTwoTone twoToneColor="#d32029" /> </h4>
+                            <ul>
+                                <li><b>0 - Normal User</b>: Has access to the basic functions and nothing else</li>
+                                <li><b>1 - Challenge Creator User</b>: Has the additional power of submitting new challenges, but not modifying existing ones</li>
+                                <li><b>2 - Admin User</b>: Has full access to the platform via the admin panel.</li>
+                            </ul>
                         </Modal>
 
                         <Modal
@@ -286,9 +285,9 @@ class AdminUsers extends React.Component {
                         <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                             emptyText: (
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
-                            </div>
+                                    <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                    <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
+                                </div>
                             )
                         }}>
                             <Column title="Username" dataIndex="username" key="username"
@@ -300,18 +299,27 @@ class AdminUsers extends React.Component {
                             <Column title="Score" dataIndex="score" key="score" />
                             <Column title="Permissions" dataIndex="type" key="type" />
                             <Column
-                                title="Action"
+                                title=""
                                 key="action"
                                 render={(text, record) => (
                                     <Dropdown trigger={['click']} overlay={
                                         <Menu>
-                                            <Menu.Item onClick={() => { this.setState({ permissionModal: true, username: record.username, permissionLevel: record.type }) }}>
+                                            <Menu.Item onClick={() => {
+                                                this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
+                                            }}>
                                                 <span>
                                                     Change Permissions <ClusterOutlined />
                                                 </span>
                                             </Menu.Item>
                                             <Menu.Divider />
-                                            <Menu.Item onClick={() => { this.setState({ username: record.username, deleteModal: true }) }}>
+                                            <Menu.Item onClick={() => {
+                                                confirm({
+                                                    title: 'Are you sure you want to delete the user \"' + record.username + '\"? This action is irreversible.',
+                                                    icon: <ExclamationCircleOutlined />,
+                                                    onOk: (close) => { this.deleteAccount(close.bind(this), record.username) },
+                                                    onCancel: () => { },
+                                                });
+                                            }}>
                                                 <span style={{ color: "#d32029" }} >
                                                     Delete Account <DeleteOutlined />
                                                 </span>

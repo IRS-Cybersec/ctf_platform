@@ -18,7 +18,15 @@ class Admin extends React.Component {
     super(props);
 
     this.state = {
-    };
+      key: ""
+    }
+  }
+  componentDidMount = async () => {
+    const tabPane = this.props.match.params.tabPane;
+    if (typeof tabPane !== "undefined") {
+      await this.setState({ key: decodeURIComponent(tabPane) })
+    }
+
   }
 
   render() {
@@ -26,10 +34,10 @@ class Admin extends React.Component {
 
       <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-          <Tabs defaultActiveKey="home" style={{ overflowY: "auto", overflowX: "auto" }}>
+          <Tabs activeKey={this.state.key} onTabClick={(key) => { this.setState({ key: key }); this.props.history.push("/Admin/" + key); }} style={{ overflowY: "auto", overflowX: "auto" }}>
             <TabPane
               tab={<span> Home </span>}
-              key="home"
+              key=""
             >
 
               <div style={{ textAlign: "start" }}>
@@ -96,23 +104,24 @@ class Admin extends React.Component {
             </TabPane>
             <TabPane
               tab={<span><UserOutlined />Users</span>}
-              key="users"
+              key="Users"
             >
               <AdminUsers></AdminUsers>
             </TabPane>
             <TabPane
               tab={<span><AppstoreOutlined />Challenges</span>}
-              key="challenges"
+              key="Challenges"
             >
               <AdminChallenges></AdminChallenges>
             </TabPane>
             <TabPane
               tab={<span><BarsOutlined />Submissions</span>}
-              key="submissions"
+              key="Submissions"
             >
               <AdminSubmissions></AdminSubmissions>
             </TabPane>
           </Tabs>
+
         </Layout>
       </animated.div>
     );

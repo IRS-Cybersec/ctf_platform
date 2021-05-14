@@ -205,7 +205,7 @@ class Login extends React.Component {
                                         ]}
                                         hasFeedback
                                     >
-                                        <Input.Password allowClear placeholder="Enter a new password" />
+                                        <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
                                     </Form.Item>
 
                                     <Form.Item
@@ -227,7 +227,7 @@ class Login extends React.Component {
                                             }),
                                         ]}
                                     >
-                                        <Input.Password allowClear placeholder="Confirm new password" />
+                                        <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
                                     </Form.Item>
                                     <Form.Item>
                                         <Button loading={this.state.loading} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>

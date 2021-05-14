@@ -2,11 +2,13 @@ import React from 'react';
 import { Layout, Menu, Table, message, Dropdown, Button, Modal, Transfer, Divider } from 'antd';
 import {
     LoadingOutlined,
-    ExclamationCircleTwoTone,
+    ExclamationCircleOutlined,
     DeleteOutlined,
     FlagOutlined,
     EditOutlined,
-    FileUnknownTwoTone
+    FileUnknownTwoTone,
+    EyeOutlined,
+    EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
@@ -15,6 +17,7 @@ import { difference } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
 
 const { Column } = Table;
+const { confirm } = Modal;
 
 
 
@@ -25,7 +28,6 @@ class AdminChallenges extends React.Component {
         this.state = {
             loading: false,
             dataSource: [],
-            deleteModal: false,
             challengeName: "",
             modalLoading: false,
             challengeCreate: false,
@@ -142,6 +144,7 @@ class AdminChallenges extends React.Component {
                 message.error({ content: "Oops. Unknown error" })
             }
             this.setState({ transferDisabled: false })
+            this.fillTableData()
 
 
         }).catch((error) => {
@@ -162,10 +165,10 @@ class AdminChallenges extends React.Component {
             if (data.success === true) {
                 for (var i = 0; i < data.challenges.length; i++) {
                     if (data.challenges[i].visibility === false) {
-                        data.challenges[i].visibility = "Hidden"
+                        data.challenges[i].visibility = <span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span>
                     }
                     else {
-                        data.challenges[i].visibility = "Shown"
+                        data.challenges[i].visibility = <span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span>
                     }
                 }
                 this.setState({ dataSource: data.challenges, loading: false })
@@ -182,33 +185,34 @@ class AdminChallenges extends React.Component {
 
 
 
-    deleteChallenge = () => {
-        this.setState({ modalLoading: true })
+    deleteChallenge = (close, challengeName) => {
         fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "chall": this.state.challengeName,
+                "chall": challengeName,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Deleted challenge " + this.state.challengeName + " successfully" })
+                message.success({ content: "Deleted challenge \"" + challengeName + "\" successfully" })
                 this.fillTableData()
-                this.setState({ deleteModal: false })
+                this.handleCategoryData()
+                
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
+            close()
 
-            this.setState({ modalLoading: false })
 
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
+            close()
         })
 
     }
@@ -224,11 +228,13 @@ class AdminChallenges extends React.Component {
     handleCreateBack() {
         this.setState({ challengeCreate: false })
         this.fillTableData()
+        this.handleCategoryData()
     }
 
     handleEditChallBack() {
         this.setState({ editChallenge: false })
         this.fillTableData()
+        this.handleCategoryData()
     }
 
 
@@ -247,15 +253,6 @@ class AdminChallenges extends React.Component {
                 )}
                 {!this.state.loading && (
                     <div>
-                        <Modal
-                            title={"Are you sure you want to delete \"" + this.state.challengeName + "\" ?"}
-                            visible={this.state.deleteModal}
-                            onOk={this.deleteChallenge}
-                            onCancel={() => { this.setState({ deleteModal: false }) }}
-                            confirmLoading={this.state.modalLoading}
-                        >
-                            <h4>This action of mass destruction is irreveisble! <ExclamationCircleTwoTone twoToneColor="#d32029" /> </h4>
-                        </Modal>
 
                         {!this.state.challengeCreate && !this.state.editChallenge && (
                             <div>
@@ -275,7 +272,7 @@ class AdminChallenges extends React.Component {
                                     <Column title="Points" dataIndex="points" key="points" />
                                     <Column title="Visbility" dataIndex="visibility" key="visibility" />
                                     <Column
-                                        title="Edit"
+                                        title=""
                                         key="edit"
                                         render={(text, record) => (
                                             <Dropdown trigger={['click']} overlay={
@@ -286,7 +283,14 @@ class AdminChallenges extends React.Component {
                                                         </span>
                                                     </Menu.Item>
                                                     <Menu.Divider />
-                                                    <Menu.Item onClick={() => { this.setState({ challengeName: record.name, deleteModal: true }) }}>
+                                                    <Menu.Item onClick={() => {
+                                                        confirm({
+                                                            title: 'Are you sure you want to delete the challenge \"' + record.name + '\"? This action is irreversible.',
+                                                            icon: <ExclamationCircleOutlined />,
+                                                            onOk: (close) => { this.deleteChallenge(close.bind(this), record.name) },
+                                                            onCancel: () => { },
+                                                        });
+                                                    }}>
                                                         <span style={{ color: "#d32029" }} >
                                                             Delete Challenge <DeleteOutlined />
                                                         </span>

@@ -4,7 +4,7 @@ import {
   FileUnknownTwoTone,
   LeftCircleOutlined,
   AppstoreOutlined,
-  GroupOutlined
+  TagsOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Link } from 'react-router-dom';
@@ -118,7 +118,6 @@ class Challenges extends React.Component {
     if (value.target.value === "Type" && !this.state.sortByTags) {
 
       if (this.state.currentCategory) { //currentCategory is whether a category has been set, challengeCategory is for the visibility of the component
-        console.log("waddle")
         let originalData = this.state.originalData
         //Since the category is not the key, we will need to loop through the list to find the category
         this.setState({ tagData: [originalData[this.state.currentCategory]], sortByTags: true, challengeCategory: false })
@@ -204,7 +203,7 @@ class Challenges extends React.Component {
               </Select>
               <Radio.Group buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)} value={this.state.RadioValue} style={{ backgroundColor: "#1f1f1f" }}>
                 <Radio.Button value="Category">Sort By Category <AppstoreOutlined /> </Radio.Button>
-                <Radio.Button value="Type">Sort By Tag <GroupOutlined /> </Radio.Button>
+                <Radio.Button value="Type">Sort By Tag <TagsOutlined /> </Radio.Button>
               </Radio.Group>
 
             </div>

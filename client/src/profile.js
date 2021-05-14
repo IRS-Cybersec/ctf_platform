@@ -6,7 +6,8 @@ import { Ellipsis } from 'react-spinners-css';
 import { orderBy } from "lodash";
 import {
     KeyOutlined,
-    FileUnknownTwoTone
+    FileUnknownTwoTone,
+    LockOutlined
 } from '@ant-design/icons';
 import './App.css';
 
@@ -28,7 +29,7 @@ const ChangePasswordForm = (props) => {
                 name="oldPass"
                 rules={[{ required: true }]}>
 
-                <Input.Password allowClear placeholder="Enter your old password." />
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter your old password." />
             </Form.Item>
             <h3>New Password:</h3>
             <Form.Item
@@ -42,7 +43,7 @@ const ChangePasswordForm = (props) => {
                 hasFeedback
             >
 
-                <Input.Password allowClear placeholder="Enter a new password" />
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
             </Form.Item>
 
             <h3>Confirm New Password:</h3>
@@ -66,7 +67,7 @@ const ChangePasswordForm = (props) => {
                 ]}
             >
 
-                <Input.Password allowClear placeholder="Confirm new password" />
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
             </Form.Item>
             <Form.Item>
                 <Button type="primary" htmlType="submit" icon={<KeyOutlined />}>Change Password</Button>

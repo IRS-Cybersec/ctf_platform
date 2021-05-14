@@ -2,6 +2,7 @@ const { override, addLessLoader, fixBabelImports } = require('customize-cra');
 const { getThemeVariables } = require('antd/dist/theme');
 //const TerserPlugin = require('terser-webpack-plugin');
 
+/*
 const Terser = config => {
 	config.plugins.push(new TerserPlugin({
     parallel: true,
@@ -12,7 +13,7 @@ const Terser = config => {
   return config
 	
 }
-
+*/
 
 module.exports = override(
 //customise-cra plugins
