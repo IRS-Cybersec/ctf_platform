@@ -2166,7 +2166,7 @@
   dependencies:
     "@types/istanbul-lib-report" "*"
 
-"@types/jsdom@^16.2.6":
+"@types/jsdom@^16.2.4":
   version "16.2.10"
   resolved "https://registry.yarnpkg.com/@types/jsdom/-/jsdom-16.2.10.tgz#c05ea94682d035943ae2453b79d56178496b6653"
   integrity sha512-q3aIjp3ehhVSXSbvNyuireAfvU2umRiZ2aLumyeZewCnoNaokrRDdTu5IvaeE9pzNtWHXrUnM9lb22Vl3W08EA==
@@ -2257,7 +2257,7 @@
     "@types/prop-types" "*"
     csstype "^2.2.0"
 
-"@types/react@^17.0.1":
+"@types/react@^17.0.0":
   version "17.0.5"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.5.tgz#3d887570c4489011f75a3fc8f965bf87d09a1bea"
   integrity sha512-bj4biDB9ZJmGAYTWSKJly6bMr4BLUiBrx9ujiJEoP9XIDY9CTaPGxE5QWN/1WjpPLzYF7/jRNnV2nNxNe970sw==
@@ -2681,17 +2681,12 @@ acorn@^6.4.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.4.2.tgz#35866fd710528e92de10cf06016498e47e39e1e6"
   integrity sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==
 
-acorn@^7.1.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.1.0.tgz#949d36f2c292535da602283586c2477c57eb2d6c"
-  integrity sha512-kL5CuoXA/dgxlBbVrflsflzQ3PAas7RYZB52NOm/6839iVYJgKMJ3cQJD+t2i5+qFa8h3MDpEOJiS64E8JLnSQ==
-
-acorn@^7.1.1, acorn@^7.4.0:
+acorn@^7.1.0, acorn@^7.1.1, acorn@^7.4.0:
   version "7.4.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
-acorn@^8.0.5, acorn@^8.1.0:
+acorn@^8.0.4, acorn@^8.1.0:
   version "8.2.4"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.2.4.tgz#caba24b08185c3b56e3168e97d15ed17f4d31fd0"
   integrity sha512-Ibt84YwBDDA890eDiDCEqcbwvHlBvzzDkU2cGBBDDI1QWT12jTiXIOn2CIw5KK4i6N5Z2HUxwYjzriDyqaqqZg==
@@ -4270,7 +4265,7 @@ core-js@^2.4.0:
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.10.tgz#8a5b8391f8cc7013da703411ce5b585706300d7f"
   integrity sha512-I39t74+4t+zau64EN1fE5v2W31Adtc/REhzWN+gWRRXg6WH5qAsZm62DHpQ1+Yhe4047T55jvzz7MUqF/dBBlA==
 
-core-js@^3.6.5, core-js@^3.8.3:
+core-js@^3.6.5:
   version "3.12.1"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.12.1.tgz#6b5af4ff55616c08a44d386f1f510917ff204112"
   integrity sha512-Ne9DKPHTObRuB09Dru5AjwKjY4cJHVGu+y5f7coGn1E9Grkc3p2iBwE9AI/nJzsE29mQF7oq+mhYYRqOMFN1Bw==
@@ -10983,17 +10978,17 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-jsx-parser@^1.25.0:
-  version "1.28.3"
-  resolved "https://registry.yarnpkg.com/react-jsx-parser/-/react-jsx-parser-1.28.3.tgz#589713d3ec73b05af955887fe302b8393a8f5fce"
-  integrity sha512-Le4+BGdEvRWGbji9Gy/zWc84WSOtNJA1H0Mily/o5SYv4vx7gPNELDt3Qv5beOFc+gS0lrfQjQrelvUGmCAPEQ==
+react-jsx-parser@^1.28.1:
+  version "1.28.1"
+  resolved "https://registry.yarnpkg.com/react-jsx-parser/-/react-jsx-parser-1.28.1.tgz#eb8f727c49174e6de20529c9ed1fb7007bb405b8"
+  integrity sha512-cZVdccm7tfeciIKiweg9GmhMe+r0+TZXcJWL/FZ4sVZebNdQvW7f0PVSGVwKN6p3zIhX/1T/4URFbQ/uuoX98w==
   dependencies:
-    "@types/jsdom" "^16.2.6"
-    acorn "^8.0.5"
+    "@types/jsdom" "^16.2.4"
+    acorn "^8.0.4"
     acorn-jsx "^5.3.1"
-    core-js "^3.8.3"
+    core-js "^3.6.5"
   optionalDependencies:
-    "@types/react" "^17.0.1"
+    "@types/react" "^17.0.0"
     "@types/react-dom" "^17.0.0"
 
 react-lifecycles-compat@^3.0.4:
