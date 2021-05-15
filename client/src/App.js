@@ -24,11 +24,11 @@ import { Transition, animated } from 'react-spring/renderprops';
 
 
 const { Content, Sider } = Layout;
+var previousPage = ""
 
-var previousLocation = ""
 const useirsCyber = true
 window.ipAddress = useirsCyber ? "https://api.irscybersec.tk" : "https://api.sieberrsec.tech"
-
+//window.ipAddress = "http://localhost:20001"
 
 
 class App extends React.Component {
@@ -37,7 +37,7 @@ class App extends React.Component {
 
     this.state = {
       collapsed: false,
-      current: "Home",
+      current: "",
       token: false,
       logined: false,
       username: "",
@@ -51,17 +51,22 @@ class App extends React.Component {
     this.setState({ collapsed });
   }
 
+  componentDidUpdate(prevProps) {
+    // Handle any page changes 
+    if (this.props.location.pathname.split("/")[1] !== prevProps.location.pathname.split("/")[1]) {
+      console.log(this.props.location.pathname.split("/")[1].length)
+      this.setState({ current: this.props.location.pathname.split("/")[1] })
+    }
+  }
+
 
   componentDidMount() {
-    // Handle any page changes via manual typing/direct access
+
     const page = this.props.location.pathname.split("/")[1]
-
-
-    if (previousLocation !== page) {
-      previousLocation = page
+    if (page !== previousPage) {
       this.setState({ current: page })
+      previousPage = page
     }
-
 
     // Handles "remember me" logins
     if (!this.state.token) {
@@ -190,7 +195,7 @@ class App extends React.Component {
                             style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                               <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                              <Avatar size="large" src={require("./assets/profile.jpg").default}/>
+                              <Avatar size="large" src={require("./assets/profile.jpg").default} />
                             </div>
                             <div>
                               <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
@@ -213,7 +218,7 @@ class App extends React.Component {
 
 
 
-                          <Menu.Item key="Home" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center", marginTop: 0 }}>
+                          <Menu.Item key="" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center", marginTop: 0 }}>
                             <NavLink to="/">
                               <HomeTwoTone style={{ fontSize: "110%" }} />
                               <span>Home</span>
@@ -257,8 +262,8 @@ class App extends React.Component {
 
 
                         </Menu>
-                        <div style={{textAlign: "center", marginTop: "3ch", color: "#8c8c8c"}}>
-                          <p>Sieberrsec CTF Platform 0.6 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                        <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
+                          <p>Sieberrsec CTF Platform 0.6.1 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
                         </div>
                       </Sider>
 

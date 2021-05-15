@@ -27,7 +27,7 @@ const ChangePasswordForm = (props) => {
             <h3>Old Password:</h3>
             <Form.Item
                 name="oldPass"
-                rules={[{ required: true }]}>
+                rules={[{ required: true, message: 'Please input your old password', }]}>
 
                 <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter your old password." />
             </Form.Item>

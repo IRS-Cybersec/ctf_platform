@@ -488,6 +488,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					}
 					delete hint.purchased;
 				});
+			if (chall.writeup != undefined) {
+				//If only send writeup after submitting flag option is ticked, check if challenge is completed before sending writeup link
+				if (chall.writeupComplete) {
+					if (chall.solves.find(element => element === username) === undefined) chall.writeup = "CompleteFirst"
+				}
+			}
 			if (chall.max_attempts != 0)
 				chall.used_attempts = await collections.transactions.countDocuments({
 					author: username,
@@ -683,7 +689,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					hint.purchased = [];
 				});
 			}
-			if (req.body.writeup) doc.writeup = req.body.writeup
+			if (req.body.writeup) {
+				doc.writeup = req.body.writeup
+				doc.writeupComplete = req.body.writeupComplete
+			}
 			// if (req.body.files) {
 			// 	for (file of req.body.files) {
 			// 		if (typeof file.url != 'string' || typeof file.name != 'string') {
@@ -763,7 +772,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 
 			let updateObj = {};
-			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup'];
+			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete'];
 			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
 			if (updateObj.hints) {
 				updateObj.hints.forEach(hint => {

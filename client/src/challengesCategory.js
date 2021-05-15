@@ -309,8 +309,8 @@ class ChallengesCategory extends React.Component {
             this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(false)
             await this.fetchCategories()
-            
-            
+
+
           }
           refresh()
 
@@ -385,7 +385,7 @@ class ChallengesCategory extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
-              {this.state.challengeWriteup !== "" && (
+              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst" (
                 <Tooltip title="View writeups for this challenge">
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
                 </Tooltip>
@@ -393,6 +393,11 @@ class ChallengesCategory extends React.Component {
               {this.state.challengeWriteup === "" && (
                 <Tooltip title="Writeups are not available for this challenge">
                   <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
+                </Tooltip>
+              )}
+              {this.state.challengeWriteup === "CompleteFirst" && (
+                <Tooltip title="Writeups are available for this challenge but you must complete the challenge first to view it.">
+                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
               <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>
@@ -484,7 +489,7 @@ class ChallengesCategory extends React.Component {
               if (!item.solved) {
                 return (
                   <List.Item key={item.name}>
-                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood)}}>
+                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood) }}>
                       <Card
                         hoverable
                         type="inner"

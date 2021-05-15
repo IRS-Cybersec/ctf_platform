@@ -106,7 +106,7 @@ class ChallengesTagSort extends React.Component {
       for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
 
         if ("tags" in currentCat[x]) {
-          const firstTag = currentCat[x].tags[0]
+          const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
           if (firstTag.toLowerCase() in tag) {
             tag[firstTag.toLowerCase()].push(currentCat[x]) //add current challenge to that tag's category
           }
@@ -115,6 +115,13 @@ class ChallengesTagSort extends React.Component {
             tag[firstTag.toLowerCase()].push(currentCat[x])
           }
 
+        }
+        else {
+          if ("Uncategorised" in tag) tag["Uncategorised"].push(currentCat[x])
+          else {
+            tag["Uncategorised"] = []
+            tag["Uncategorised"].push(currentCat[x])
+          }
         }
       }
     }
@@ -207,7 +214,6 @@ class ChallengesTagSort extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-
         //Replace <code> with syntax highlighter
         let description = data.chall.description
         let position = description.search("<code>")
@@ -336,7 +342,7 @@ class ChallengesTagSort extends React.Component {
             this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(true)
             await this.sortByTags()
-            
+
 
           }
           refresh()
@@ -396,7 +402,7 @@ class ChallengesTagSort extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
-              {this.state.challengeWriteup !== "" && (
+              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst" && (
                 <Tooltip title="View writeups for this challenge">
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
                 </Tooltip>
@@ -404,6 +410,11 @@ class ChallengesTagSort extends React.Component {
               {this.state.challengeWriteup === "" && (
                 <Tooltip title="Writeups are not available for this challenge">
                   <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
+                </Tooltip>
+              )}
+              {this.state.challengeWriteup === "CompleteFirst" && (
+                <Tooltip title="Writeups are available for this challenge but you must complete the challenge first to view it.">
+                  <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
               <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>

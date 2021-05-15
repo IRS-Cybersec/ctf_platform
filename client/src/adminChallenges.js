@@ -40,6 +40,16 @@ class AdminChallenges extends React.Component {
         }
     }
 
+      componentDidUpdate(prevProps) {
+    // Handle any page changes 
+    if (this.state.editChallenge && this.props.location.pathname !== "/Admin/Challenges/Edit") {
+      this.setState({ editChallenge: false })
+    }
+    else if (this.state.challengeCreate && this.props.location.pathname !== "/Admin/Challenges/Create") {
+        this.setState({ challengeCreate: false })
+    }
+  }
+
 
     componentDidMount = async () => {
         const location = this.props.location.pathname

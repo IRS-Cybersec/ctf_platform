@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip } from 'antd';
+import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -43,9 +43,9 @@ const CreateChallengeForm = (props) => {
             form={form}
             name="create_challenge_form"
             className="create_challenge_form"
-            onValuesChange={() => {if (props.state.edited === false) props.setState({edited: true})}}
+            onValuesChange={() => { if (props.state.edited === false) props.setState({ edited: true }) }}
             onFinish={(values) => {
-                //console.log(values)
+                props.setState({ edited: false })
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
                 }
@@ -57,6 +57,11 @@ const CreateChallengeForm = (props) => {
                     }
                     else {
                         values.visibility = true
+                    }
+                    if (typeof values.writeup !== "undefined") {
+                        if (typeof values.writeupComplete === "undefined") {
+                            values.writeupComplete = true
+                        }
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
 
@@ -73,12 +78,13 @@ const CreateChallengeForm = (props) => {
                             "hints": values.hints,
                             "max_attempts": values.max_attempts,
                             "visibility": values.visibility,
-                            "writeup": values.writeup
+                            "writeup": values.writeup,
+                            "writeupComplete": values.writeupComplete
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
                     }).then((data) => {
-                        console.log(data)
+                        //console.log(data)
                         if (data.success === true) {
                             message.success({ content: "Created challenge " + values.name + " successfully!" })
                             form.resetFields()
@@ -343,18 +349,26 @@ const CreateChallengeForm = (props) => {
                 }}
             </Form.List>
 
-            <h1>Writeup Link (Optional)</h1>
-            <Form.Item
-                name="writeup"
-                rules={[
-                    {
-                        type: 'url',
-                        message: "Please enter a valid link",
-                    }]}
-            >
+                    <h1>Writeup Link (Optional)</h1>
+                    <Form.Item
+                        name="writeup"
+                        rules={[
+                            {
+                                type: 'url',
+                                message: "Please enter a valid link",
+                            }]}
+                    >
 
-                <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
-            </Form.Item>
+                        <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
+                    </Form.Item>
+                <div style={{ display: "flex", alignContent: "center" }}>
+                    <h4 style={{marginRight: "2ch"}}>Release Writeup Only After Completion: </h4>
+                    <Form.Item
+                        name="writeupComplete"
+                    >
+                        <Switch defaultChecked />
+                    </Form.Item>
+                </div>
 
             <h1>Visibility</h1>
             <Form.Item
@@ -363,8 +377,8 @@ const CreateChallengeForm = (props) => {
                 initialValue="false"
             >
                 <Select style={{ width: "10vw" }}>
-                    <Option value="false"><span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span></Option>
-                    <Option value="true"><span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span></Option>
+                    <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                    <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
                 </Select>
 
             </Form.Item>
@@ -416,7 +430,7 @@ class AdminChallengeCreate extends React.Component {
 
     componentDidUpdate = () => {
         if (this.state.edited) {
-            window.onbeforeunload = () => {}
+            window.onbeforeunload = () => { }
         }
     }
 

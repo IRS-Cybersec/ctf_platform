@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag } from 'antd';
+import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -30,7 +30,7 @@ const CreateChallengeForm = (props) => {
         form.setFieldsValue(currentValues)
     }
     let existingCats = []
-    console.log(props.allCat)
+    //console.log(props.allCat)
     for (let i = 0; i < props.allCat.length; i++) {
         existingCats.push(<Option key={props.allCat[i]} value={props.allCat[i]}>{props.allCat[i]}</Option>)
     }
@@ -45,6 +45,7 @@ const CreateChallengeForm = (props) => {
             name="create_challenge_form"
             className="create_challenge_form"
             onFinish={(values) => {
+                props.setState({ edited: false })
                 //console.log(values)
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
@@ -59,7 +60,11 @@ const CreateChallengeForm = (props) => {
                         values.visibility = true
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
-
+                    if (typeof values.writeup !== "undefined") {
+                        if (typeof values.writeupComplete === "undefined") {
+                            values.writeupComplete = true
+                        }
+                    }
                     fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -72,7 +77,9 @@ const CreateChallengeForm = (props) => {
                             "tags": values.tags,
                             "hints": values.hints,
                             "max_attempts": values.max_attempts,
-                            "visibility": values.visibility
+                            "visibility": values.visibility,
+                            "writeup": values.writeup,
+                            "writeupComplete": values.writeupComplete
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -335,6 +342,27 @@ const CreateChallengeForm = (props) => {
                 }}
             </Form.List>
 
+            <h1>Writeup Link (Optional)</h1>
+            <Form.Item
+                name="writeup"
+                rules={[
+                    {
+                        type: 'url',
+                        message: "Please enter a valid link",
+                    }]}
+            >
+
+                <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
+            </Form.Item>
+            <div style={{ display: "flex", alignContent: "center" }}>
+                <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                <Form.Item
+                    name="writeupComplete"
+                >
+                    <Switch defaultChecked />
+                </Form.Item>
+            </div>
+
             <h1>Visibility</h1>
             <Form.Item
                 name="visibility"
@@ -342,8 +370,8 @@ const CreateChallengeForm = (props) => {
                 initialValue="false"
             >
                 <Select style={{ width: "10vw" }}>
-                <Option value="false"><span style={{color: "#d32029"}}>Hidden <EyeInvisibleOutlined/></span></Option>
-                    <Option value="true"><span style={{color: "#49aa19"}}>Visible <EyeOutlined/></span></Option>
+                    <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                    <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
                 </Select>
 
             </Form.Item>
@@ -388,13 +416,14 @@ class UserChallengeCreate extends React.Component {
             challengeHints: [],
             previewModal: false,
             selectCatDisabled: false,
-            selectInputDisabled: false
+            selectInputDisabled: false,
+            edited: false
         }
     }
 
     componentDidUpdate = () => {
         if (this.state.edited) {
-            window.onbeforeunload = () => {}
+            window.onbeforeunload = () => { }
         }
     }
 

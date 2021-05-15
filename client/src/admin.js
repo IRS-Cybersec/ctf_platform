@@ -34,9 +34,10 @@ class Admin extends React.Component {
 
       <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-          <Tabs activeKey={this.state.key} onTabClick={(key) => {
-            this.setState({ key: key })
-            this.props.history.push("/Admin/" + key)
+          <Tabs activeKey={this.state.key} onTabClick={ async (key) => {
+            await this.props.history.push("/Admin/" + key)
+            if (this.props.location.pathname === "/Admin/" + key) this.setState({ key: key })
+            
           }} style={{ overflowY: "auto", overflowX: "auto" }}>
             <TabPane
               tab={<span> Home </span>}
