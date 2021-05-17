@@ -44,7 +44,7 @@
     ]
   },
   "devDependencies": {
-    "babel-plugin-import": "^1.13.0",
+    "babel-plugin-import": "^1.13.3",
     "css-loader": "^3.5.3",
     "customize-cra": "^1.0.0",
     "less-loader": "^6.1.0",
