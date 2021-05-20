@@ -92,7 +92,7 @@ class Challenges extends React.Component {
 
         const category = this.props.match.params.category;
         if (typeof category !== "undefined") {
-          await this.setState({ challengeCategory: true, currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
+          await this.setState({ currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
           this.sortDifferent({ target: { value: "Type" } })
         }
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Card, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip } from 'antd';
+import React, { useEffect, useRef } from 'react';
+import { Layout, Card, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover } from 'antd';
 import {
   LoadingOutlined,
   UnlockOutlined,
@@ -9,7 +9,8 @@ import {
   FileUnknownTwoTone,
   EyeInvisibleOutlined,
   ExclamationCircleOutlined,
-  SolutionOutlined
+  SolutionOutlined,
+  LinkOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -44,6 +45,20 @@ const SubmitFlagForm = (props) => {
       </Form.Item>
     </Form>
   );
+}
+
+const CopyLinkInput = (props) => {
+  const copyInput = useRef(null)
+
+  useEffect(() => {
+    copyInput.current.select()
+    document.execCommand('copy')
+    message.success('Challenge link copied to clipboard.')
+  })
+
+  return (
+    <Input ref={copyInput} value={window.location.href} />
+  )
 }
 
 
@@ -385,7 +400,7 @@ class ChallengesCategory extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
-              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst" (
+              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst"(
                 <Tooltip title="View writeups for this challenge">
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
                 </Tooltip>
@@ -400,7 +415,9 @@ class ChallengesCategory extends React.Component {
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
-              <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput />} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
+              </div>
               <div>
                 {this.state.challengeTags}
               </div>

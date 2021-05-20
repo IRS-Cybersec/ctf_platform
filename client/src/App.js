@@ -68,6 +68,8 @@ class App extends React.Component {
       previousPage = page
     }
 
+    message.config({maxCount: 2})
+
     // Handles "remember me" logins
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
@@ -263,7 +265,7 @@ class App extends React.Component {
 
                         </Menu>
                         <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
-                          <p>Sieberrsec CTF Platform 0.6.1 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                          <p>Sieberrsec CTF Platform 0.6.5 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
                         </div>
                       </Sider>
 

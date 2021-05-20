@@ -1,7 +1,8 @@
 import React from 'react';
-import { Layout, Table, message } from 'antd';
+import { Layout, Table, message, Button } from 'antd';
 import {
     FileUnknownTwoTone,
+    RedoOutlined
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
@@ -25,9 +26,9 @@ class AdminSubmissions extends React.Component {
         this.fillTableData()
     }
 
-    fillTableData = () => {
+    fillTableData = async () => {
         this.setState({ loading: true })
-        fetch(window.ipAddress + "/v1/submissions", {
+        await fetch(window.ipAddress + "/v1/submissions", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -69,6 +70,10 @@ class AdminSubmissions extends React.Component {
 
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Submissions list refreshed.") }} />
+                </div>
+
                 {this.state.loading && (
                     <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
@@ -95,7 +100,7 @@ class AdminSubmissions extends React.Component {
                         <Column title="Correct" dataIndex="correct" key="correct" />
                     </Table>
                 )}
-            </Layout>
+            </Layout >
         );
     }
 }

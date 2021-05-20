@@ -7,7 +7,8 @@ import {
     ClusterOutlined,
     UserOutlined,
     MailOutlined,
-    LockOutlined
+    LockOutlined,
+    RedoOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -109,9 +110,9 @@ class AdminUsers extends React.Component {
         this.fillTableData()
     }
 
-    fillTableData = () => {
+    fillTableData = async () => {
         this.setState({ loading: true })
-        fetch(window.ipAddress + "/v1/account/list", {
+        await fetch(window.ipAddress + "/v1/account/list", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -172,7 +173,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                
+
                 message.success({ content: "User \"" + username + "\" deleted successfully" })
                 this.fillTableData()
             }
@@ -241,98 +242,97 @@ class AdminUsers extends React.Component {
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
+                <Modal
+                    title={<span>Change User Permissions <ClusterOutlined /></span>}
+                    visible={this.state.permissionModal}
+                    onOk={this.changePermissions}
+                    onCancel={() => { this.setState({ permissionModal: false }) }}
+                    confirmLoading={this.state.modalLoading}
+                >
+                    <Select size="large" value={this.state.permissionChangeTo} style={{ width: "30ch" }} onSelect={(value) => { this.setState({ permissionChangeTo: value }) }}>
+                        <Option value="0">0 - Normal User</Option>
+                        <Option value="1">1 - Challenge Creator User</Option>
+                        <Option value="2">2 - Admin User</Option>
+                    </Select>
+                    <br />
+                    <br />
 
+                    <ul>
+                        <li><b>0 - Normal User</b>: Has access to the basic functions and nothing else</li>
+                        <li><b>1 - Challenge Creator User</b>: Has the additional power of submitting new challenges, but not modifying existing ones</li>
+                        <li><b>2 - Admin User</b>: Has full access to the platform via the admin panel.</li>
+                    </ul>
+                </Modal>
+
+                <Modal
+                    title="Create New Account"
+                    visible={this.state.createUserModal}
+                    onOk={this.createAccount}
+                    footer={null}
+                    onCancel={() => { this.setState({ createUserModal: false }) }}
+                    confirmLoading={this.state.modalLoading}
+                >
+
+                    <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
+                </Modal>
+
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
+                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Users list refreshed.") }} />
+                </div>
                 {!this.state.loading && (
-                    <div>
-                        <Modal
-                            title={<span>Change User Permissions <ClusterOutlined /></span>}
-                            visible={this.state.permissionModal}
-                            onOk={this.changePermissions}
-                            onCancel={() => { this.setState({ permissionModal: false }) }}
-                            confirmLoading={this.state.modalLoading}
-                        >
-                            <Select size="large" value={this.state.permissionChangeTo} style={{ width: "30ch" }} onSelect={(value) => { this.setState({ permissionChangeTo: value }) }}>
-                                <Option value="0">0 - Normal User</Option>
-                                <Option value="1">1 - Challenge Creator User</Option>
-                                <Option value="2">2 - Admin User</Option>
-                            </Select>
-                            <br />
-                            <br />
-
-                            <ul>
-                                <li><b>0 - Normal User</b>: Has access to the basic functions and nothing else</li>
-                                <li><b>1 - Challenge Creator User</b>: Has the additional power of submitting new challenges, but not modifying existing ones</li>
-                                <li><b>2 - Admin User</b>: Has full access to the platform via the admin panel.</li>
-                            </ul>
-                        </Modal>
-
-                        <Modal
-                            title="Create New Account"
-                            visible={this.state.createUserModal}
-                            onOk={this.createAccount}
-                            footer={null}
-                            onCancel={() => { this.setState({ createUserModal: false }) }}
-                            confirmLoading={this.state.modalLoading}
-                        >
-
-                            <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
-                        </Modal>
-
-
-
-                        <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
-
-                        <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
-                            emptyText: (
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                    <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                    <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
-                                </div>
-                            )
-                        }}>
-                            <Column title="Username" dataIndex="username" key="username"
-                                render={(text, row, index) => {
-                                    return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                                }}
-                            />
-                            <Column title="Email" dataIndex="email" key="email" />
-                            <Column title="Score" dataIndex="score" key="score" />
-                            <Column title="Permissions" dataIndex="type" key="type" />
-                            <Column
-                                title=""
-                                key="action"
-                                render={(text, record) => (
-                                    <Dropdown trigger={['click']} overlay={
-                                        <Menu>
-                                            <Menu.Item onClick={() => {
-                                                this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
-                                            }}>
-                                                <span>
-                                                    Change Permissions <ClusterOutlined />
-                                                </span>
-                                            </Menu.Item>
-                                            <Menu.Divider />
-                                            <Menu.Item onClick={() => {
-                                                confirm({
-                                                    title: 'Are you sure you want to delete the user \"' + record.username + '\"? This action is irreversible.',
-                                                    icon: <ExclamationCircleOutlined />,
-                                                    onOk: (close) => { this.deleteAccount(close.bind(this), record.username) },
-                                                    onCancel: () => { },
-                                                });
-                                            }}>
-                                                <span style={{ color: "#d32029" }} >
-                                                    Delete Account <DeleteOutlined />
-                                                </span>
-                                            </Menu.Item>
-                                        </Menu>
-                                    } placement="bottomCenter">
-                                        <Button>Actions</Button>
-                                    </Dropdown>
-                                )}
-                            />
-                        </Table>
-                    </div>
+                    <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
+                        emptyText: (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
+                            </div>
+                        )
+                    }}>
+                        <Column title="Username" dataIndex="username" key="username"
+                            render={(text, row, index) => {
+                                return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            }}
+                        />
+                        <Column title="Email" dataIndex="email" key="email" />
+                        <Column title="Score" dataIndex="score" key="score" />
+                        <Column title="Permissions" dataIndex="type" key="type" />
+                        <Column
+                            title=""
+                            key="action"
+                            render={(text, record) => (
+                                <Dropdown trigger={['click']} overlay={
+                                    <Menu>
+                                        <Menu.Item onClick={() => {
+                                            this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
+                                        }}>
+                                            <span>
+                                                Change Permissions <ClusterOutlined />
+                                            </span>
+                                        </Menu.Item>
+                                        <Menu.Divider />
+                                        <Menu.Item onClick={() => {
+                                            confirm({
+                                                title: 'Are you sure you want to delete the user \"' + record.username + '\"? This action is irreversible.',
+                                                icon: <ExclamationCircleOutlined />,
+                                                onOk: (close) => { this.deleteAccount(close.bind(this), record.username) },
+                                                onCancel: () => { },
+                                            });
+                                        }}>
+                                            <span style={{ color: "#d32029" }} >
+                                                Delete Account <DeleteOutlined />
+                                            </span>
+                                        </Menu.Item>
+                                    </Menu>
+                                } placement="bottomCenter">
+                                    <Button>Actions</Button>
+                                </Dropdown>
+                            )}
+                        />
+                    </Table>
                 )}
+
             </Layout>
         );
     }

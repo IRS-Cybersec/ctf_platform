@@ -1,12 +1,13 @@
-import React from 'react';
-import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip } from 'antd';
+import React, {useEffect, useRef} from 'react';
+import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover } from 'antd';
 import {
   UnlockOutlined,
   ProfileOutlined,
   FlagOutlined,
   SmileOutlined,
   ExclamationCircleOutlined,
-  SolutionOutlined
+  SolutionOutlined,
+  LinkOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -43,6 +44,20 @@ const SubmitFlagForm = (props) => {
   );
 }
 
+const CopyLinkInput = (props) => {
+  const copyInput = useRef(null)
+
+  useEffect(() => {
+    copyInput.current.select()
+    document.execCommand('copy')
+    message.success('Challenge link copied to clipboard.')
+  })
+
+  return (
+    <Input ref={copyInput} value={window.location.href} />
+  )
+}
+
 
 class ChallengesTagSort extends React.Component {
   constructor(props) {
@@ -75,63 +90,105 @@ class ChallengesTagSort extends React.Component {
       currentSorting: "points",
       tag: false,
       loadingTag: false,
-      challengeWriteup: ""
+      challengeWriteup: "",
+      moveTagToFront: ""
 
     };
   }
 
   componentDidMount() {
     const startup = async () => {
-      await this.sortByTags()
+
 
       const challenge = this.props.match.params.challenge;
       if (typeof challenge !== "undefined") {
+        await this.sortByTags(challenge)
         const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge).solved
         this.loadChallengeDetails(challenge, solved)
+      }
+      else {
+        await this.sortByTags(false)
       }
     }
 
     startup()
   }
 
-  sortByTags() {
-
+  sortByTags(findNOpenTag) {
+    console.log(findNOpenTag)
     let originalData = this.props.tagData
     let tag = {}
     this.setState({ loadingTag: true })
+    let moveTagToFront = ""
 
+    if (!findNOpenTag) {
+      for (const [key, value] of Object.entries(originalData)) {
+        let currentCat = originalData[key]
+        for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
 
-    for (const [key, value] of Object.entries(originalData)) {
-      let currentCat = originalData[key]
-      for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
+          if ("tags" in currentCat[x]) {
+            const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
+            if (firstTag.toLowerCase() in tag) {
+              tag[firstTag.toLowerCase()].push(currentCat[x]) //add current challenge to that tag's category
+            }
+            else {
+              tag[firstTag.toLowerCase()] = []
+              tag[firstTag.toLowerCase()].push(currentCat[x])
+            }
 
-        if ("tags" in currentCat[x]) {
-          const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
-          if (firstTag.toLowerCase() in tag) {
-            tag[firstTag.toLowerCase()].push(currentCat[x]) //add current challenge to that tag's category
           }
           else {
-            tag[firstTag.toLowerCase()] = []
-            tag[firstTag.toLowerCase()].push(currentCat[x])
+            if ("Uncategorised" in tag) tag["Uncategorised"].push(currentCat[x])
+            else {
+              tag["Uncategorised"] = []
+              tag["Uncategorised"].push(currentCat[x])
+            }
           }
-
         }
-        else {
-          if ("Uncategorised" in tag) tag["Uncategorised"].push(currentCat[x])
+      }
+      moveTagToFront = Object.keys(tag)[0] //Set to first tag
+    }
+    else {
+
+      let found = false
+      for (const [key, value] of Object.entries(originalData)) {
+        let currentCat = originalData[key]
+        for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
+
+          if (!found && currentCat[x].name === findNOpenTag) {
+            if ("tags" in currentCat[x]) moveTagToFront = currentCat[x].tags[0].toLowerCase()
+            else moveTagToFront = "Uncategorised"
+            found = true
+          }
+          if ("tags" in currentCat[x]) {
+            const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
+            if (firstTag.toLowerCase() in tag) {
+              tag[firstTag.toLowerCase()].push(currentCat[x]) //add current challenge to that tag's category
+            }
+            else {
+              tag[firstTag.toLowerCase()] = []
+              tag[firstTag.toLowerCase()].push(currentCat[x])
+            }
+
+          }
           else {
-            tag["Uncategorised"] = []
-            tag["Uncategorised"].push(currentCat[x])
+            if ("Uncategorised" in tag) tag["Uncategorised"].push(currentCat[x])
+            else {
+              tag["Uncategorised"] = []
+              tag["Uncategorised"].push(currentCat[x])
+            }
           }
         }
       }
     }
 
-    for (const [key, value] of Object.entries(tag)) {
+
+    for (const [key, value] of Object.entries(tag)) { //loop through each tag and sort the challenges in each tag by points
       tag[key] = orderBy(tag[key], ['points'], ['asc'])
 
     }
     //console.log(tag)
-    this.setState({ tag: tag, loadingTag: false })
+    this.setState({ tag: tag, loadingTag: false, moveTagToFront: moveTagToFront })
 
   }
 
@@ -402,6 +459,7 @@ class ChallengesTagSort extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
+
               {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst" && (
                 <Tooltip title="View writeups for this challenge">
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
@@ -417,7 +475,10 @@ class ChallengesTagSort extends React.Component {
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
-              <h1 style={{ fontSize: "150%" }}>{this.state.viewingChallengeDetails.name}</h1>
+
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput/>} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
+              </div>
               <div>
                 {this.state.challengeTags}
               </div>
@@ -479,7 +540,7 @@ class ChallengesTagSort extends React.Component {
         </Modal>
 
         {this.state.tag && (
-          <ChallengesTagSortList tag={this.state.tag} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
+          <ChallengesTagSortList tag={this.state.tag} moveTagToFront={this.state.moveTagToFront} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
         )}
       </Layout>
 

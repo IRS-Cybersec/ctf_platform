@@ -89,3 +89,7 @@
 .ant-table {
     background:rgba(0, 0, 0, 0.5) !important;
 }
+
+.ant-table-container {
+    overflow: auto;
+}
