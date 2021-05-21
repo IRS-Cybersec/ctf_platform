@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "babel-plugin-import": "^1.13.0",
-    "css-loader": "^3.5.3",
+    "css-loader": "^5.2.5",
     "customize-cra": "^1.0.0",
     "less-loader": "^6.1.0",
     "react-app-rewired": "^2.1.8",
