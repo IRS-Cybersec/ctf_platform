@@ -5,7 +5,7 @@
   "dependencies": {
     "@ant-design/dark-theme": "^2.0.2",
     "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
+    "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^7.1.2",
     "@uiw/react-md-editor": "^3.3.0",
     "antd": "^4.15.5",
@@ -20,7 +20,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-spinners-css": "^1.1.9",
-    "react-spring": "^8.0.27",
+    "react-spring": "^9.1.2",
     "react-syntax-highlighter": "^15.4.3",
     "recharts": "^2.0.9"
   },
@@ -46,7 +46,7 @@
     ]
   },
   "devDependencies": {
-    "babel-plugin-import": "^1.13.0",
+    "babel-plugin-import": "^1.13.3",
     "css-loader": "^3.5.3",
     "customize-cra": "^1.0.0",
     "less-loader": "^6.1.0",
