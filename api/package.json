@@ -22,7 +22,7 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "express-mongo-sanitize": "^2.1.0",
-    "mongodb": "^3.6.6",
+    "mongodb": "^3.6.8",
     "reallydangerous": "^2.1.0"
   }
 }
