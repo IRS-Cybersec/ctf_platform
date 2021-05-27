@@ -526,7 +526,7 @@ class ChallengesTagSort extends React.Component {
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
-                        avatar={<Avatar src={require("./assets/profile.jpg").default} />}
+                        avatar={<Avatar src={require("./assets/profile.webp").default} />}
                         title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>

@@ -27,8 +27,8 @@ const { Content, Sider } = Layout;
 var previousPage = ""
 
 const useirsCyber = true
-window.ipAddress = useirsCyber ? "https://api.irscybersec.tk" : "https://api.sieberrsec.tech"
-//window.ipAddress = "http://localhost:20001"
+//window.ipAddress = useirsCyber ? "https://api.irscybersec.tk" : "https://api.sieberrsec.tech"
+window.ipAddress = "http://localhost:20001";
 
 
 class App extends React.Component {
@@ -54,7 +54,6 @@ class App extends React.Component {
   componentDidUpdate(prevProps) {
     // Handle any page changes 
     if (this.props.location.pathname.split("/")[1] !== prevProps.location.pathname.split("/")[1]) {
-      console.log(this.props.location.pathname.split("/")[1].length)
       this.setState({ current: this.props.location.pathname.split("/")[1] })
     }
   }
@@ -173,7 +172,7 @@ class App extends React.Component {
             props => {
               if (toggle === true) {
                 return (
-                  <animated.div style={{ ...props, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.png").default + ")", backgroundSize: "cover" }}>
+                  <animated.div style={{ ...props, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")", backgroundSize: "cover" }}>
                     <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
                       <Sider style={{ height: "100vh" }}>
                         <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
@@ -181,7 +180,7 @@ class App extends React.Component {
                         </div>
                         <Dropdown overlay={
                           <Menu>
-                            <Menu.Item key="0">
+                            <Menu.Item key="Profile">
                               <NavLink to="/Profile">
                                 <span>Profile </span>
                                 <UserOutlined />
@@ -197,7 +196,7 @@ class App extends React.Component {
                             style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                               <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                              <Avatar size="large" src={require("./assets/profile.jpg").default} />
+                              <Avatar size="large" src={require("./assets/profile.webp").default} />
                             </div>
                             <div>
                               <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
@@ -216,6 +215,7 @@ class App extends React.Component {
         defaultSelectedKeys - default selected menu items
         defaultOpenKeys - default opened sub menus
         inline - Sidebar Menu
+
         */}
 
 

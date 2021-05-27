@@ -335,7 +335,7 @@ class AdminChallenges extends React.Component {
 
                         <Transfer
                             dataSource={this.state.allCat}
-                            titles={['Visible Categories', 'Hidden Categories']}
+                            titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}
                             targetKeys={this.state.targetKeys}
                             selectedKeys={this.state.selectedKeys}
                             onChange={this.handleChange}

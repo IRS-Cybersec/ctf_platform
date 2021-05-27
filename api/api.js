@@ -95,7 +95,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		users: db.collection('users'),
 		challs: db.collection('challs'),
 		transactions: db.collection('transactions'),
-		pages: db.collection('pages')
+		pages: db.collection('pages'),
+		announcements: db.collection('announcements'),
+		cache: db.collection('cache')
 	};
 	console.info('MongoDB connected');
 
@@ -107,6 +109,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			permissions[username] = type.type;
 			return type.type;
 		}
+	}
+
+	createCache = async () => {
+		await collections.cache.insertOne({announcements: 0, challenges: 0})
+		console.log('Cache created')
+		return 0;
 	}
 
 	app.post('/v1/account/create', async (req, res) => {
@@ -310,6 +318,56 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
+	app.get('/v1/announcements/list/:version', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			const permissions = await checkPermissions(username);
+			if (permissions === false) throw new Error('BadToken');
+
+			//Check announcements version to determine if it needs update
+			let version = await collections.cache.findOne(null, {projection: {_id: 0, announcements: 1}})
+			version === null ? version = await createCache() : version = version.announcements
+			if (parseInt(req.params.version) < version) {
+				res.send({
+					success: true,
+					data: await collections.announcements.find(null, {projection: {_id: 0}}).toArray(),
+					version: version
+				});
+			}
+			else {
+				res.send({
+					success: true,
+					data: "UpToDate"
+				});
+			}
+
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+	app.post('/v1/announcements/create', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			await collections.announcements.insertOne({
+				title: req.body.title,
+				content: req.body.content,
+				timestamp: new Date()
+			})
+			let version = await collections.cache.findOne(null, {projection: {_id: 0, announcements: 1}})
+			version === null ? version = await createCache() : version = version.announcements
+			if ((await collections.cache.updateOne({}, {'$set': {announcements: version+1}})).matchedCount > 0) res.send({success: true})
+			else res.send({success: false})
+
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+
 	app.get('/v1/account/list', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');

@@ -1,5 +1,12 @@
 import React from 'react';
-import { Layout } from 'antd';
+import { Layout, Divider, List, Card, message } from 'antd';
+import {
+  FileUnknownTwoTone,
+  LoadingOutlined,
+  NotificationTwoTone
+} from '@ant-design/icons';
+import ReactMarkdown from 'react-markdown'
+import { orderBy } from "lodash";
 import './App.css';
 import { animated } from 'react-spring/renderprops'
 
@@ -9,32 +16,91 @@ import { animated } from 'react-spring/renderprops'
 class Home extends React.Component {
   constructor(props) {
     super(props);
-
     this.state = {
+      announcements: [],
+      updatingIndicator: false
     };
+  }
+
+  componentDidMount = async () => {
+    this.setState({ updatingIndicator: true })
+    let announcementCache = JSON.parse(localStorage.getItem("announcements"))
+    let announcementVersion = -1
+    if (announcementCache !== null) {
+      announcementVersion = announcementCache.version
+      this.setState({ announcements: announcementCache.data })
+    }
+    await fetch(window.ipAddress + "/v1/announcements/list/" + announcementVersion.toString(), {
+      method: 'get',
+      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+    }).then((results) => {
+      return results.json(); //return data in JSON (since its JSON data)
+    }).then((data) => {
+      if (data.success === true) {
+        if (data.data !== "UpToDate") {
+          const orderedData = orderBy(data.data, ["timestamp"], ["desc"])
+          localStorage.setItem("announcements", JSON.stringify({ data: orderedData, version: data.version }))
+          this.setState({ announcements: orderedData })
+        }
+      }
+      else {
+        message.error("Oops, unknown error")
+      }
+    }).catch((error) => {
+      message.error("Oops, there was an issue connecting to the server");
+    })
+    announcementCache = JSON.parse(localStorage.getItem("announcements"))
+    this.setState({ updatingIndicator: false })
+
 
   }
 
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "95vh",  overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
-        <Layout style={{ margin: "20px",backgroundColor: "rgba(0, 0, 0, 0)" }}>
-        <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
-        <br/>
-        <br/>
+      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <h2>Welcome to the Sieberrsec Training Platform!</h2>
           <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
-          <br />
-          <h4><u><b>General Rules for the platform:</b></u></h4>
-          <p>
-            - Do not attack the server infrastructrure in anyway, if you found an exploit, please report it immediately. <br />
-          - Do not corrupt any challenges if you found a way to do so (that's just mean!)<br />
-          - No sharing of flags/solutions in chats. Try to not spoil this experience for anyone :D (Feel free to ask for help though)<br />
-          - If you need further clarification for any challenges, please contact the challenge author (whose name can be found in the challenge description)<br />
-          - Have fun, enjoy yourselves and we hope you learnt something :)!<br />
-          ~ <i>Sincerely, Sieberrsec 18/19 &amp; 19/20 &amp; 20/21</i>
-          </p>
+          <Divider />
+          <div style={{display: "flex", alignItems: "center"}}>
+            <h1 style={{ fontSize: "150%", marginRight: "1ch" }}>Announcements <NotificationTwoTone /></h1> {this.state.updatingIndicator && (<h4><LoadingOutlined style={{ color: "#177ddc" }} /> Checking for updates...</h4>)}
+          </div>
+          <List
+            grid={{ gutter: 0, column: 1 }}
+            dataSource={this.state.announcements}
+            locale={{
+              emptyText: (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                  <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                  <h1 style={{ fontSize: "200%" }}>There are no announcements.</h1>
+                </div>
+              )
+            }}
+            renderItem={item => {
+              return (
+                <List.Item key={item.title}>
+                  <Card
+
+                    hoverable
+                    type="inner"
+                    bordered={true}
+                    bodyStyle={{ backgroundColor: "#262626" }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <h1>{item.title}</h1>
+                    <Divider />
+                    <ReactMarkdown>{item.content}</ReactMarkdown>
+                    <span style={{ float: "right" }}>Posted on <i>{new Date(item.timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })}</i></span>
+                  </Card>
+
+                </List.Item>
+              )
+            }}
+
+          >
+
+          </List>
 
         </Layout>
       </animated.div>

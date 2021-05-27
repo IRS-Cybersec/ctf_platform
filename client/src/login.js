@@ -111,7 +111,7 @@ class Login extends React.Component {
         return (
 
             <Layout style={{ maxWidth: "100vw", maxHeight: "100vh", overflow: "hidden", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.png").default + ")" }}>
+                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")" }}>
                     <div style={{ display: "flex", flexDirection: "column", textAlign: "center", alignItems: "center", justifyContent: "center", height: "100vh", width: "70vw", backgroundSize: "cover", overflow: `hidden` }}>
                         <div style={{ fontSize: "7ch", color: "#595959" }}>
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}>Sieberrsec Training Platform</span>
