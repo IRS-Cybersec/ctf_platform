@@ -20,6 +20,19 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
   - Disable registration, change permissions etc.
 - Juicy React-Spring transitions
 
+## Rough Usage Guide
+- Clone the `/client` and `/api` directories to the places where you want to host the client and API. You can use something like `nginx` to host and serve the files
+
+### Client
+- Run `npm i` inside `/client` to install the dependencies
+- Modify `window.ipAddress` inside `/client/src/app.js` to wherever your API is hosted at
+- Make any other modifications you want in `src` and then `npm run build` to compile the client. 
+- The resulting client files will be located in `/client/build`. Copy them into a place where you can serve them to the web.
+### Server
+- Install MongoDB by following [this](https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-18-04)
+- Run `npm i` inside `/api` to install the dependencies
+- Use `pm2` or anything else to run `api.js` in the background (E.g `pm2 start api.js`)
+
 ## Screenshots
 
 ![image](1.jpg)
