@@ -29,7 +29,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - Make any other modifications you want in `src` and then `npm run build` to compile the client. 
 - The resulting client files will be located in `/client/build`. Copy them into a place where you can serve them to the web.
 ### Server
-- Install MongoDB by following [this](https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-18-04)
+- Install MongoDB by following [this](https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-18-04) and [NodeJS](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
 - Run `npm i` inside `/api` to install the dependencies
 - Use `pm2` or anything else to run `api.js` in the background (E.g `pm2 start api.js`)
 
