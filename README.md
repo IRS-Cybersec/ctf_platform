@@ -3,6 +3,8 @@ Sieberrsec CTF platform. A Jeopardy CTF platform designed with various neat feat
 
 The platform is still currently in **early alpha** and in **active development**. There is unfortunately no easy way to deploy the platform at the moment, but we welcome any contributions to change this :smile:.
 
+You can find a working copy of the platform [here](https://ctfx.irscybersec.tk) used by our club, but we are unfortunately unable to provide a demo account.
+
 Feel free to take a look at the screenshots below for a peek at what the platform can do!
 
 ## Features
