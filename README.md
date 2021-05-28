@@ -7,12 +7,14 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 
 ## Features
 
-- "Categories" for better organization of challenges into different "events"
-- Automatic Tag Sorting
+- "**Categories**" for better organization of challenges into different "events"
+- **Sorting of challenges** by their tags
+- **Announcements** with markdown support
+- **Markdown supported Challenge Descriptions** that allow you to add **code blocks with syntax highlighting, math** and more
+- **Writeup links** per challenge (along with the option to only release writeups after submitting the flag)
+- Links to each challenge so that individual challenges can be shared
 - Easy management of challenges and users
-- JSX supported Challenge Descriptions which allow you to add videos, code blocks and more!
-- Writeup links per challenge
-- ReactJS Goodness
+- ReactJS Modern Design (lol)
 
 ## Screenshots
 
@@ -26,7 +28,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 
 ![](6.jpg)
 
-*Modal for a specific challenge*
+*Modal for a challenge*
 
 ![](2.jpg)
 
@@ -43,3 +45,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 ![](7.jpg)
 
 *Profile page of a user*
+
+![](8.jpg)
+
+*Home page with announcements*
