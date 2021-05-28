@@ -53,3 +53,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 ![](8.jpg)
 
 *Home page with announcements*
+
+![](9.jpg)
+
+*Challenge creation page for challenge authors without access to the admin panel*
