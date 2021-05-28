@@ -178,6 +178,7 @@ const CreateChallengeForm = (props) => {
                 type="inner"
                 bordered={true}
                 bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+                className="challengeModal"
             >
                 <MarkdownRender>{editorValue}</MarkdownRender>
             </Card>
@@ -386,8 +387,9 @@ const CreateChallengeForm = (props) => {
                 <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
                 <Form.Item
                     name="writeupComplete"
+                    valuePropName="checked"
                 >
-                    <Switch defaultChecked />
+                    <Switch />
                 </Form.Item>
             </div>
 
@@ -480,7 +482,7 @@ class AdminChallengeEdit extends React.Component {
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
+            //console.log(data)
             if (data.success === true) {
                 this.setState({ challengeData: data.chall })
             }
@@ -552,6 +554,7 @@ class AdminChallengeEdit extends React.Component {
                     visible={this.state.previewModal}
                     footer={null}
                     bodyStyle={{ textAlign: "center" }}
+                    className="challengeModal"
                     onCancel={() => { this.setState({ previewModal: false }) }}
                 >
                     <Tabs defaultActiveKey="challenge">

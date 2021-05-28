@@ -167,6 +167,7 @@ const CreateChallengeForm = (props) => {
                 type="inner"
                 bordered={true}
                 bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+                className="challengeModal"
             >
                 <MarkdownRender>{editorValue}</MarkdownRender>
             </Card>
@@ -515,6 +516,7 @@ class UserChallengeCreate extends React.Component {
                             visible={this.state.previewModal}
                             footer={null}
                             bodyStyle={{ textAlign: "center" }}
+                            className="challengeModal"
                             onCancel={() => { this.setState({ previewModal: false }) }}
                         >
                             <Tabs defaultActiveKey="challenge">

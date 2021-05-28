@@ -368,6 +368,7 @@ class ChallengesCategory extends React.Component {
           title={null}
           visible={this.state.challengeModal}
           footer={null}
+          className="challengeModal"
           bodyStyle={{ textAlign: "center" }}
           onCancel={() => { this.setState({ challengeModal: false }); this.props.history.push("/Challenges/" + this.props.category); }}
         >

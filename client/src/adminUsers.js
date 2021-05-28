@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input } from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
@@ -103,11 +103,37 @@ class AdminUsers extends React.Component {
             createUserModal: false,
             username: "",
             modalLoading: false,
+            disableRegisterState: false,
+            disableLoading: false
         }
     }
 
     componentDidMount() {
         this.fillTableData()
+        this.getDisableRegister()
+    }
+
+    getDisableRegister = async () => {
+        this.setState({ disableLoading: true })
+        await fetch(window.ipAddress + "/v1/account/disableCreate", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                console.log(data)
+                this.setState({ disableRegisterState: data.state })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ disableLoading: false })
     }
 
     fillTableData = async () => {
@@ -195,7 +221,7 @@ class AdminUsers extends React.Component {
         this.setState({ modalLoading: true })
         fetch(window.ipAddress + "/v1/account/create", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
                 "username": values.username,
                 "password": values.password,
@@ -217,6 +243,9 @@ class AdminUsers extends React.Component {
             else if (data.error === "username-taken") {
                 message.warn({ content: "Oops. Username already taken" })
             }
+            else if (data.error === "email-formatting") {
+                message.error({ content: "Oops. Please check your email format" })
+            }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
@@ -227,6 +256,38 @@ class AdminUsers extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
 
+    }
+
+    disableRegister = async (value) => {
+        this.setState({ disableLoading: true })
+        await fetch(window.ipAddress + "/v1/account/disableCreate", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                disable: value
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                if (value) {
+                    message.success("User registration disabled")
+                }
+                else {
+                    message.success("User registration enabled")
+                }
+                this.setState({disableRegisterState: value})
+                
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ disableLoading: false })
     }
 
 
@@ -332,6 +393,8 @@ class AdminUsers extends React.Component {
                         />
                     </Table>
                 )}
+                <Divider />
+                <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={this.disableRegister} checked={this.state.disableRegisterState} /></h3>
 
             </Layout>
         );

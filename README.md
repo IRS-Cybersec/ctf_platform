@@ -12,9 +12,11 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - **Announcements** with markdown support
 - **Markdown supported Challenge Descriptions** that allow you to add **code blocks with syntax highlighting, math** and more
 - **Writeup links** per challenge (along with the option to only release writeups after submitting the flag)
+- **Challenge Creator Role** so as to allow challenge authors to submit challenges without having full admin access
 - Links to each challenge so that individual challenges can be shared
 - Easy management of challenges and users
-- ReactJS Modern Design (lol)
+  - Disable registration, change permissions etc.
+- Juicy React-Spring transitions
 
 ## Screenshots
 

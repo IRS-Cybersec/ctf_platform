@@ -89,7 +89,7 @@ console.info('Initialization complete');
 MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	useNewUrlParser: true,
 	useUnifiedTopology: true
-}).then(client => {
+}).then(async (client) => {
 	const db = client.db('ctf');
 	const collections = {
 		users: db.collection('users'),
@@ -101,6 +101,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	};
 	console.info('MongoDB connected');
 
+	createCache = async () => {
+		try {
+			await collections.cache.insertOne({ announcements: 0, challenges: 0, registerDisable: false });
+			console.info("Cache created")
+		}
+		catch (err) {
+			errors(err);
+		}
+
+	}
+
+	let cache = await collections.cache.findOne(null, { projection: { _id: 0 } })
+	if (cache === null) await createCache()
+
 	async function checkPermissions(username) {
 		if (permissions.includes(username)) return permissions.username;
 		const type = (await collections.users.findOne({ username: username }, { projection: { type: 1, _id: 0 } }));
@@ -111,14 +125,55 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	}
 
-	createCache = async () => {
-		await collections.cache.insertOne({ announcements: 0, challenges: 0 })
-		console.log('Cache created')
-		return 0;
-	}
+	app.get('/v1/account/disableCreate', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			res.send({
+				success: true,
+				state: (await collections.cache.findOne(null, { projection: { _id: 0, registerDisable: 1 } })).registerDisable
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+
+
+	app.post('/v1/account/disableCreate', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if ((await collections.cache.updateOne({}, { "$set": { registerDisable: req.body.disable } })).matchedCount > 0) {
+				res.send({
+					success: true
+				});
+			}
+			else {
+				throw new Error('Unknown');
+			}
+
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
 
 	app.post('/v1/account/create', async (req, res) => {
+
+		let admin = false
 		try {
+
+			if (req.headers.authorization !== undefined) {
+				const username = signer.unsign(req.headers.authorization);
+				if (await checkPermissions(username) >= 2) admin = true
+			}
+			if (!admin && ((await collections.cache.findOne(null, { projection: { _id: 0, registerDisable: 1 } })).registerDisable)) {
+				return res.send({ success: false, error: 'registration-disabled' })
+			}
+
 			if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
 			await collections.users.insertOne({
 				username: req.body.username.toLowerCase(),
@@ -349,7 +404,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const permissions = await checkPermissions(username);
 			if (permissions === false) throw new Error('BadToken');
 
-			let announcement = await collections.announcements.findOne({_id: MongoDB.ObjectID(req.params.id)}, { projection: { _id: 0} })
+			let announcement = await collections.announcements.findOne({ _id: MongoDB.ObjectID(req.params.id) }, { projection: { _id: 0 } })
 			if (announcement !== null) {
 				res.send({
 					success: true,
@@ -1043,7 +1098,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(signer.unsign(req.headers.authorization)) === false) throw new Error('BadToken');
 			const score = (await collections.users.findOne({ username: req.params.username }, { projection: { score: 1, type: 1, _id: 0 } }));
 			if (score === null) throw new Error('NotFound');
-			if (score.type === 2) return res.send({success: true, score: "hidden" })
+			if (score.type === 2) return res.send({ success: true, score: "hidden" })
 			res.send({
 				success: true,
 				score: score.score

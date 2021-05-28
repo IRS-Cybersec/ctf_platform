@@ -47,8 +47,11 @@ class Login extends React.Component {
             else if (data.error === "username-taken") {
                 message.warn({ content: "Oops. Username already taken" })
             }
+            else if (data.error === "registration-disabled") {
+                message.error("Oops. Registration is currently disabled, please contact an administrator for help.")
+            }
             else if (data.error === "email-formatting") {
-                message.error({ content: "Oops. Your email has not been registered for Sieberrsec CTF yet, please register using the form."})
+                message.error({ content: "Oops. Your email has not been registered for Sieberrsec CTF yet, please register using the form." })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -75,26 +78,22 @@ class Login extends React.Component {
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
+        }).then(async (data) => {
             //console.log(data)
+            if (data.success === true) {
+                await this.props.handleLogin(data.token, data.permissions, values.remember)
+            }
+            else {
 
-            const login = async () => {
-                if (data.success === true) {
-                    await this.props.handleLogin(data.token, data.permissions, values.remember)
+                if (data.error === "wrong-details") {
+                    message.error({ content: "Oops. Your Username/Password was incorrect." })
                 }
                 else {
-
-                    if (data.error === "wrong-details") {
-                        message.error({ content: "Oops. Your Username/Password was incorrect." })
-                    }
-                    else {
-                        message.error({ content: "Oops. Unknown error" })
-                    }
-
+                    message.error({ content: "Oops. Unknown error" })
                 }
-                this.setState({ loading: false })
+
             }
-            login()
+            this.setState({ loading: false })
 
         }).catch((error) => {
             console.log(error)
@@ -167,7 +166,7 @@ class Login extends React.Component {
                         )}
                         {this.state.register && (
                             <div>
-                                <h1 style={{ color: "white", fontSize: "2vw" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
+                                <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="register_form"
                                     className="register-form"

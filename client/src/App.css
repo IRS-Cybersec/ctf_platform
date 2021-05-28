@@ -4,12 +4,17 @@
 }
 
 .buttonHover:hover {
-    background-color: #15395b
+    background-color: #15395b;
 }
 
 .ant-layout-sider {
     width: "10vw"!important;
-    min-width: "5vw"!important
+    min-width: "5vw"!important;
+}
+
+.challengeModal ul {
+    display: inline-block;
+    text-align: left;
 }
 
 @keyframes slideInFromLeft {

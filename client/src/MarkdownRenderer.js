@@ -5,6 +5,8 @@ import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import gfm from 'remark-gfm';
+
 
 function MarkdownRender(props) {
     const components = {
@@ -21,7 +23,7 @@ function MarkdownRender(props) {
     //rehypeRaw is to render HTML to support older challenge descriptions which were written in JSX
     //should be removed in the future
     return (
-        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]} components={components} children={props.children} />
+        <ReactMarkdown remarkPlugins={[remarkMath, gfm]} rehypePlugins={[rehypeKatex, rehypeRaw]} components={components} children={props.children} />
     );
 }
 

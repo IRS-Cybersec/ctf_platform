@@ -264,7 +264,7 @@ class App extends React.Component {
 
                       </Menu>
                       <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
-                        <p>Sieberrsec CTF Platform 0.8 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                        <p>Sieberrsec CTF Platform 0.8.1 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
                       </div>
                     </Sider>
 
