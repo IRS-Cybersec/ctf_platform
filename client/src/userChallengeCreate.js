@@ -13,7 +13,6 @@ import {
 import './App.min.css';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './MarkdownRenderer.js';
-import { animated } from 'react-spring';
 
 
 const { Option } = Select;
@@ -508,7 +507,7 @@ class UserChallengeCreate extends React.Component {
 
     render() {
         return (
-            <animated.div style={{ ...this.props.transition, height: "100vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+            
                 <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
                     <div style={{ padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
                         <Modal
@@ -564,7 +563,6 @@ class UserChallengeCreate extends React.Component {
                         )}
                     </div>
                 </Layout>
-            </animated.div>
 
         );
     }
