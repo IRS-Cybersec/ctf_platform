@@ -84,11 +84,8 @@ class Login extends React.Component {
                 }
                 else {
 
-                    if (data.error === "wrong-username") {
-                        message.error({ content: "Oops. Username does not exist" })
-                    }
-                    else if (data.error === "wrong-password") {
-                        message.error({ content: "Oops. Incorrect password" })
+                    if (data.error === "wrong-details") {
+                        message.error({ content: "Oops. Your Username/Password was incorrect." })
                     }
                     else {
                         message.error({ content: "Oops. Unknown error" })

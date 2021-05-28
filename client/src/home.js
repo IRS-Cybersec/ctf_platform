@@ -5,10 +5,9 @@ import {
   LoadingOutlined,
   NotificationTwoTone
 } from '@ant-design/icons';
-import ReactMarkdown from 'react-markdown'
+import MarkdownRenderer from './MarkdownRenderer.js';
 import { orderBy } from "lodash";
-import './App.css';
-import { animated } from 'react-spring/renderprops'
+import './App.min.css';
 
 
 
@@ -58,52 +57,50 @@ class Home extends React.Component {
   render() {
     return (
 
-      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
-        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-          <h2>Welcome to the Sieberrsec Training Platform!</h2>
-          <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
-          <Divider />
-          <div style={{display: "flex", alignItems: "center"}}>
-            <h1 style={{ fontSize: "150%", marginRight: "1ch" }}>Announcements <NotificationTwoTone /></h1> {this.state.updatingIndicator && (<h4><LoadingOutlined style={{ color: "#177ddc" }} /> Checking for updates...</h4>)}
-          </div>
-          <List
-            grid={{ gutter: 0, column: 1 }}
-            dataSource={this.state.announcements}
-            locale={{
-              emptyText: (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                  <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                  <h1 style={{ fontSize: "200%" }}>There are no announcements.</h1>
-                </div>
-              )
-            }}
-            renderItem={item => {
-              return (
-                <List.Item key={item.title}>
-                  <Card
+      <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+        <h2>Welcome to the Sieberrsec Training Platform!</h2>
+        <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
+        <Divider />
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h1 style={{ fontSize: "150%", marginRight: "1ch" }}>Announcements <NotificationTwoTone /></h1> {this.state.updatingIndicator && (<h4><LoadingOutlined style={{ color: "#177ddc" }} /> Checking for updates...</h4>)}
+        </div>
+        <List
+          grid={{ gutter: 0, column: 1 }}
+          dataSource={this.state.announcements}
+          locale={{
+            emptyText: (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                <h1 style={{ fontSize: "200%" }}>There are no announcements.</h1>
+              </div>
+            )
+          }}
+          renderItem={item => {
+            return (
+              <List.Item key={item.title}>
+                <Card
 
-                    hoverable
-                    type="inner"
-                    bordered={true}
-                    bodyStyle={{ backgroundColor: "#262626" }}
-                    style={{ overflow: "hidden" }}
-                  >
-                    <h1>{item.title}</h1>
-                    <Divider />
-                    <ReactMarkdown>{item.content}</ReactMarkdown>
-                    <span style={{ float: "right" }}>Posted on <i>{new Date(item.timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })}</i></span>
-                  </Card>
+                  hoverable
+                  type="inner"
+                  bordered={true}
+                  bodyStyle={{ backgroundColor: "#262626" }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <h1>{item.title}</h1>
+                  <Divider />
+                  <MarkdownRenderer>{item.content}</MarkdownRenderer>
+                  <span style={{ float: "right" }}>Posted on <i>{new Date(item.timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })}</i></span>
+                </Card>
 
-                </List.Item>
-              )
-            }}
+              </List.Item>
+            )
+          }}
 
-          >
+        >
 
-          </List>
+        </List>
 
-        </Layout>
-      </animated.div>
+      </Layout>
 
 
     );

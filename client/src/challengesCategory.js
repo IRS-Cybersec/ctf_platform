@@ -12,10 +12,8 @@ import {
   SolutionOutlined,
   LinkOutlined
 } from '@ant-design/icons';
-import './App.css';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser';
+import './App.min.css';
+import MarkdownRender from './MarkdownRenderer.js';
 import { orderBy } from 'lodash';
 import { Ellipsis } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
@@ -92,7 +90,7 @@ class ChallengesCategory extends React.Component {
       hintModal: false,
       currentSorting: "points",
       loadingCat: false,
-      challengeWriteup: ""
+      challengeWriteup: "",
 
     };
   }
@@ -101,10 +99,13 @@ class ChallengesCategory extends React.Component {
     const startup = async () => {
       await this.fetchCategories()
 
-      const challenge = this.props.match.params.challenge;
+      let challenge = this.props.match.params.challenge;
+      
       if (typeof challenge !== "undefined") {
-        const solved = this.state.challenges.find(element => element.name === challenge).solved
-        this.loadChallengeDetails(challenge, solved)
+        challenge = decodeURIComponent(challenge)
+        const solved = this.state.challenges.find(element => element.name === challenge)
+        if (typeof solved !== "undefined") this.loadChallengeDetails(challenge, solved.solved)
+        else message.error("Challenge " + challenge + " not found."); this.props.history.push("/Challenges/" + this.props.category);
       }
     }
 
@@ -177,7 +178,7 @@ class ChallengesCategory extends React.Component {
   }
 
   loadChallengeDetails(name, solved) {
-    this.props.history.push("/Challenges/" + this.props.category + "/" + name)
+    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(name))
     this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
@@ -195,34 +196,6 @@ class ChallengesCategory extends React.Component {
       //console.log(data)
 
       if (data.success === true) {
-
-        //Replace <code> with syntax highlighter
-        let description = data.chall.description
-        let position = description.search("<code>")
-
-        if (position !== -1) {
-          let language = ""
-          let offset = 0
-          position += 6
-
-          while (true) {
-            let currentLetter = description.slice(position + offset, position + offset + 1)
-            if (currentLetter === "\n") {
-              language = description.slice(position, position + offset)
-              description = description.slice(0, position) + description.slice(position + offset)
-              description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
-              description = description.replace("</code>", "`}</SyntaxHighlighter>")
-              data.chall.description = description
-              break
-            }
-            else if (offset > 10) {
-              break
-            }
-            offset += 1
-          }
-
-
-        }
 
 
         //Handle unlimited attempts
@@ -364,6 +337,9 @@ class ChallengesCategory extends React.Component {
       if (value === "points") {
         challenges = orderBy(challenges, ["points"], ["asc"])
       }
+      else if (value === "pointsrev") {
+        challenges = orderBy(challenges, ["points"], ["desc"])
+      }
       else if (value === "abc") {
         challenges = orderBy(challenges, ["name"], ["asc"])
       }
@@ -400,7 +376,7 @@ class ChallengesCategory extends React.Component {
               tab={<span><ProfileOutlined /> Challenge</span>}
               key="challenge"
             >
-              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst"(
+              {this.state.challengeWriteup !== "" && this.state.challengeWriteup !== "CompleteFirst" && (
                 <Tooltip title="View writeups for this challenge">
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} onClick={() => { window.open(this.state.challengeWriteup) }} />
                 </Tooltip>
@@ -422,13 +398,7 @@ class ChallengesCategory extends React.Component {
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <JsxParser
-                bindings={{
-                  atomDark: atomDark
-                }}
-                components={{ SyntaxHighlighter }}
-                jsx={this.state.viewingChallengeDetails.description}
-              />
+              <MarkdownRender>{this.state.viewingChallengeDetails.description}</MarkdownRender>
 
 
               <div style={{ marginTop: "2vh", display: "flex", flexDirection: "column" }}>

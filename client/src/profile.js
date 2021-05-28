@@ -1,6 +1,5 @@
 import React from 'react';
 import { Layout, message, Empty, Divider, Avatar, Table, Button, Modal, Form, Input } from 'antd';
-import { animated } from 'react-spring/renderprops';
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis } from 'react-spinners-css';
 import { orderBy } from "lodash";
@@ -9,7 +8,7 @@ import {
     FileUnknownTwoTone,
     LockOutlined
 } from '@ant-design/icons';
-import './App.css';
+import './App.min.css';
 
 const { Column } = Table;
 
@@ -250,10 +249,10 @@ class Profile extends React.Component {
                     return results.json(); //return data in JSON (since its JSON data)
                 }).then((data) => {
 
-                    if (data.success === true) {
+                    if (data.success === true && data.score !== "hidden") {
                         this.setState({ userScore: data.score, scores: challengeDS, graphData: graphData, loading: false })
                     }
-                    else if (data.success === false && data.error === "not-found") {
+                    else if (data.success === true) {
                         this.setState({ userScore: "Hidden", scores: [], graphData: [], loading: false })
                     }
                     else {
@@ -302,7 +301,6 @@ class Profile extends React.Component {
 
     render() {
         return (
-            <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
                 <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
                     <Modal title="Change Password" visible={this.state.passwordChangeModal} onCancel={() => { this.setState({ passwordChangeModal: false }) }} footer={null}>
@@ -391,7 +389,6 @@ class Profile extends React.Component {
                         )
                     }
                 </Layout>
-            </animated.div>
         )
     }
 }

@@ -1,90 +1,137 @@
-import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input } from 'antd';
+import React, {useEffect} from 'react';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Card } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
     DeleteOutlined,
     ClusterOutlined,
-    UserOutlined,
-    MailOutlined,
-    LockOutlined,
     RedoOutlined,
     NotificationOutlined
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
-import './App.css';
+import './App.min.css';
+import MDEditor from '@uiw/react-md-editor';
+import MarkdownRender from './MarkdownRenderer.js';
 
 const { Column } = Table;
-const { Option } = Select;
 const { confirm } = Modal;
 
 
-const RegisterForm = (props) => {
+const CreateAnnouncementsForm = (props) => {
     const [form] = Form.useForm();
+    const [editorValue, setEditorValue] = React.useState("")
+
     return (
         <Form
             form={form}
-            name="register_form"
-            className="register-form"
-            onFinish={(values) => { props.createAccount(values); form.resetFields() }}
+            name="announcements_creation_form"
+            className="announcements_creation_form"
+            onFinish={(values) => {
+                setEditorValue("")
+                form.resetFields()
+                props.createAnnouncement(values)
+
+            }}
         >
+            <h3>Title</h3>
             <Form.Item
-                name="username"
-                rules={[{ required: true, message: 'Please enter a username' }]}
+                name="title"
+                rules={[{ required: true, message: 'Please enter the title' }]}
             >
-                <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
+                <Input allowClear placeholder="Enter the announcement title" />
             </Form.Item>
 
+            <h3>Content <span>(Supports Markdown)</span></h3>
             <Form.Item
-                name="email"
+                name="content"
                 rules={[
-                    { required: true, message: 'Please enter an email' },
-                    {
-                        type: 'email',
-                        message: "Please enter a valid email",
-                    },]}
+                    { required: true, message: 'Please enter the content' },]}
+                valuePropName={editorValue}
             >
-                <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
+                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
+
             </Form.Item>
 
-            <Form.Item
-                name="password"
-                rules={[
-                    {
-                        required: true,
-                        message: 'Please input your password!',
-                    },
-                ]}
-                hasFeedback
-            >
-                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
-            </Form.Item>
+            <h3>Preview</h3>
+            <Card
 
-            <Form.Item
-                name="confirm"
-                dependencies={['password']}
-                hasFeedback
-                rules={[
-                    {
-                        required: true,
-                        message: 'Please confirm your password!',
-                    },
-                    ({ getFieldValue }) => ({
-                        validator(rule, value) {
-                            if (!value || getFieldValue('password') === value) {
-                                return Promise.resolve();
-                            }
-                            return Promise.reject('Oops, the 2 passwords do not match');
-                        },
-                    }),
-                ]}
+                hoverable
+                type="inner"
+                bordered={true}
+                bodyStyle={{ backgroundColor: "#262626" }}
+                style={{ overflow: "hidden", marginBottom: "3ch" }}
             >
-                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
-            </Form.Item>
+                <MarkdownRender>{editorValue}</MarkdownRender>
+                <span style={{ float: "right" }}>Posted on <i>Post Date</i></span>
+            </Card>
+
+
             <Form.Item>
-                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ createUserModal: false }) }}>Cancel</Button>
-                <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Account</Button>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ createAnnouncementsModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.state.modalLoading}>Create Announcement</Button>
+            </Form.Item>
+        </Form>
+    );
+};
+
+const EditAnnouncementsForm = (props) => {
+    const [form] = Form.useForm();
+    const [editorValue, setEditorValue] = React.useState("")
+
+    if (typeof form.getFieldValue("title") === "undefined") {
+        form.setFieldsValue(props.initialData.data)
+        setEditorValue(props.initialData.data.content)
+    }
+    
+
+    return (
+        <Form
+            form={form}
+            name="announcements_edit_form"
+            className="announcements_edit_form"
+            onFinish={(values) => {
+                setEditorValue("")
+                form.resetFields()
+                props.editAnnouncement(values, props.initialData.id)
+            }}
+        >
+            <h3>Title</h3>
+            <Form.Item
+                name="title"
+                rules={[{ required: true, message: 'Please enter the title' }]}
+            >
+                <Input allowClear placeholder="Enter the announcement title" />
+            </Form.Item>
+
+            <h3>Content <span>(Supports Markdown)</span></h3>
+            <Form.Item
+                name="content"
+                rules={[
+                    { required: true, message: 'Please enter the content' },]}
+                valuePropName={editorValue}
+            >
+                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
+
+            </Form.Item>
+
+            <h3>Preview</h3>
+            <Card
+
+                hoverable
+                type="inner"
+                bordered={true}
+                bodyStyle={{ backgroundColor: "#262626" }}
+                style={{ overflow: "hidden", marginBottom: "3ch" }}
+            >
+                <MarkdownRender>{editorValue}</MarkdownRender>
+                <span style={{ float: "right" }}>Posted on <i>{new Date(props.initialData.data.timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })}</i></span>
+            </Card>
+
+
+            <Form.Item>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ editAnnouncementsModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.state.modalLoading}>Edit Announcement</Button>
             </Form.Item>
         </Form>
     );
@@ -98,12 +145,10 @@ class AdminManageAnnouncements extends React.Component {
         this.state = {
             loading: false,
             dataSource: [],
-            permissionModal: false,
-            permissionLevel: 0,
-            permissionChangeTo: 0,
-            createUserModal: false,
-            username: "",
+            createAnnouncementsModal: false,
+            editAnnouncementsModal: false,
             modalLoading: false,
+            initialData: null
         }
     }
 
@@ -120,7 +165,7 @@ class AdminManageAnnouncements extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                this.setState({ dataSource: orderBy(data.data, ['timestamp'],["desc"]), loading: false })
+                this.setState({ dataSource: orderBy(data.data, ['timestamp'], ["desc"]), loading: false })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -132,75 +177,14 @@ class AdminManageAnnouncements extends React.Component {
         })
     }
 
-    changePermissions = () => {
+    createAnnouncement = async (values) => {
         this.setState({ modalLoading: true })
-        fetch(window.ipAddress + "/v1/account/permissions", {
+        await fetch(window.ipAddress + "/v1/announcements/create", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "username": this.state.username,
-                "type": this.state.permissionChangeTo
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            if (data.success === true) {
-                message.success({ content: "Permissions changed successfully" })
-                this.setState({ modalLoading: false, permissionModal: false })
-                this.fillTableData()
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-
-
-        }).catch((error) => {
-            console.log(error)
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-        })
-    }
-
-
-
-    deleteAccount = (close, username) => {
-        fetch(window.ipAddress + "/v1/account/delete", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-            body: JSON.stringify({
-                "username": username,
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            //console.log(data)
-            if (data.success === true) {
-
-                message.success({ content: "User \"" + username + "\" deleted successfully" })
-                this.fillTableData()
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-            close()
-
-
-        }).catch((error) => {
-            console.log(error)
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-            close()
-        })
-
-    }
-
-    createAccount = (values) => {
-        this.setState({ modalLoading: true })
-        fetch(window.ipAddress + "/v1/account/create", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                "username": values.username,
-                "password": values.password,
-                "email": values.email
+                "title": values.title,
+                "content": values.content,
             })
         }).then((results) => {
             //console.log(results)
@@ -208,15 +192,40 @@ class AdminManageAnnouncements extends React.Component {
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Created user " + values.username + " successfully!" })
-                this.setState({ modalLoading: false, createUserModal: false })
+                message.success({ content: "Created announcement successfully!" })
+                this.setState({ createAnnouncementsModal: false })
                 this.fillTableData()
             }
-            else if (data.error === "email-taken") {
-                message.warn({ content: "Oops. Email already taken" })
+            else {
+                message.error({ content: "Oops. Unknown error" })
             }
-            else if (data.error === "username-taken") {
-                message.warn({ content: "Oops. Username already taken" })
+
+
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ modalLoading: false })
+
+    }
+
+    deleteAnnouncement = (close, id) => {
+        fetch(window.ipAddress + "/v1/announcements/delete", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                "id": id
+            })
+        }).then((results) => {
+            //console.log(results)
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "Deleted announcement successfully!" })
+                this.fillTableData()
+                close()
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -229,6 +238,65 @@ class AdminManageAnnouncements extends React.Component {
         })
 
     }
+
+    editAnnouncementOpen = (id) => {
+        fetch(window.ipAddress + "/v1/announcements/get/" + id.toString(), {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            //console.log(results)
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            console.log(data)
+            if (data.success === true) {
+                this.setState({ initialData: { id: id, data: data.data }, editAnnouncementsModal: true })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+    }
+
+    editAnnouncement = async (values, id) => {
+        this.setState({ modalLoading: true })
+        await fetch(window.ipAddress + "/v1/announcements/edit", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                "id": id,
+                "title": values.title,
+                "content": values.content,
+            })
+        }).then((results) => {
+            //console.log(results)
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "Edited announcement successfully!" })
+                this.setState({ editAnnouncementsModal: false, initialData: null })
+                this.fillTableData()
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+
+        this.setState({ modalLoading: false })
+
+    }
+
+
 
 
 
@@ -243,57 +311,44 @@ class AdminManageAnnouncements extends React.Component {
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
                 )}
-                <Modal
-                    title={<span>Change User Permissions <ClusterOutlined /></span>}
-                    visible={this.state.permissionModal}
-                    onOk={this.changePermissions}
-                    onCancel={() => { this.setState({ permissionModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
-                >
-                    <Select size="large" value={this.state.permissionChangeTo} style={{ width: "30ch" }} onSelect={(value) => { this.setState({ permissionChangeTo: value }) }}>
-                        <Option value="0">0 - Normal User</Option>
-                        <Option value="1">1 - Challenge Creator User</Option>
-                        <Option value="2">2 - Admin User</Option>
-                    </Select>
-                    <br />
-                    <br />
 
-                    <ul>
-                        <li><b>0 - Normal User</b>: Has access to the basic functions and nothing else</li>
-                        <li><b>1 - Challenge Creator User</b>: Has the additional power of submitting new challenges, but not modifying existing ones</li>
-                        <li><b>2 - Admin User</b>: Has full access to the platform via the admin panel.</li>
-                    </ul>
+                <Modal
+                    title="Create New Announcement"
+                    visible={this.state.createAnnouncementsModal}
+                    footer={null}
+                    onCancel={() => { this.setState({ createAnnouncementsModal: false }) }}
+                >
+
+                    <CreateAnnouncementsForm createAnnouncement={this.createAnnouncement.bind(this)} setState={this.setState.bind(this)} state={this.state} />
                 </Modal>
 
                 <Modal
-                    title="Create New Account"
-                    visible={this.state.createUserModal}
-                    onOk={this.createAccount}
+                    title="Edit Announcement"
+                    visible={this.state.editAnnouncementsModal}
                     footer={null}
-                    onCancel={() => { this.setState({ createUserModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
+                    onCancel={() => { this.setState({ editAnnouncementsModal: false }) }}
+                    destroyOnClose
                 >
 
-                    <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
+                    <EditAnnouncementsForm editAnnouncement={this.editAnnouncement.bind(this)} setState={this.setState.bind(this)} state={this.state} initialData={this.state.initialData} />
                 </Modal>
 
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Button type="primary" style={{ marginBottom: "2vh" }} icon={<NotificationOutlined/>} onClick={() => { this.setState({ createUserModal: true }) }}>Create New Announcement</Button>
-                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh"}} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Announcements list refreshed.") }} />
+                    <Button type="primary" style={{ marginBottom: "2vh" }} icon={<NotificationOutlined />} onClick={() => { this.setState({ createAnnouncementsModal: true }) }}>Create New Announcement</Button>
+                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Announcements list refreshed.") }} />
                 </div>
                 {!this.state.loading && (
                     <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                         emptyText: (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                                 <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
+                                <h1 style={{ fontSize: "200%" }}>No announcements have been created.</h1>
                             </div>
                         )
                     }}>
-                        <Column title="Title" dataIndex="title" key="title"
-
-                        />
+                        <Column title="Announcement ID" dataIndex="_id" key="_id" />
+                        <Column title="Title" dataIndex="title" key="title" />
                         <Column title="Content" dataIndex="content" key="content"
                             render={(text, row, index) => {
                                 if (text.length > 25) return text.slice(0, 25) + "..."
@@ -310,7 +365,7 @@ class AdminManageAnnouncements extends React.Component {
                                 <Dropdown trigger={['click']} overlay={
                                     <Menu>
                                         <Menu.Item onClick={() => {
-                                            this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
+                                            this.editAnnouncementOpen(record._id)
                                         }}>
                                             <span>
                                                 Edit Announcement <ClusterOutlined />
@@ -321,7 +376,7 @@ class AdminManageAnnouncements extends React.Component {
                                             confirm({
                                                 title: 'Are you sure you want to delete this announcement \"' + record.title + '\"? This action is irreversible.',
                                                 icon: <ExclamationCircleOutlined />,
-                                                onOk: (close) => { this.deleteAccount(close.bind(this), record.title) },
+                                                onOk: (close) => { this.deleteAnnouncement(close.bind(this), record._id) },
                                                 onCancel: () => { },
                                             });
                                         }}>

@@ -9,13 +9,11 @@ import {
   SolutionOutlined,
   LinkOutlined
 } from '@ant-design/icons';
-import './App.css';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser';
+import './App.min.css';
+import MarkdownRender from './MarkdownRenderer.js';
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
-import { orderBy } from 'lodash';
+import { orderBy, sortBy } from 'lodash';
 
 
 const { TabPane } = Tabs;
@@ -91,7 +89,8 @@ class ChallengesTagSort extends React.Component {
       tag: false,
       loadingTag: false,
       challengeWriteup: "",
-      moveTagToFront: ""
+      moveTagToFront: "",
+      sortType: "points"
 
     };
   }
@@ -100,22 +99,30 @@ class ChallengesTagSort extends React.Component {
     const startup = async () => {
 
 
-      const challenge = this.props.match.params.challenge;
+      let challenge = this.props.match.params.challenge;
       if (typeof challenge !== "undefined") {
-        await this.sortByTags(challenge)
-        const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge).solved
-        this.loadChallengeDetails(challenge, solved)
+        challenge = decodeURIComponent(challenge)
+        await this.sortByTags(challenge, "points")
+        const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge)
+        if (typeof solved !== "undefined") this.loadChallengeDetails(challenge, solved.solved)
+        else message.error("Challenge " + challenge + " not found."); this.props.history.push("/Challenges/" + this.props.category);
       }
       else {
-        await this.sortByTags(false)
+        await this.sortByTags(false, "points")
       }
     }
 
     startup()
   }
 
-  sortByTags(findNOpenTag) {
-    console.log(findNOpenTag)
+  sortCats(sortType) {
+    if (sortType !== this.state.sortType) {
+      this.setState({sortType: sortType})
+      this.sortByTags(false, sortType)
+    }
+  }
+
+  sortByTags(findNOpenTag, sortType) {
     let originalData = this.props.tagData
     let tag = {}
     this.setState({ loadingTag: true })
@@ -183,10 +190,31 @@ class ChallengesTagSort extends React.Component {
     }
 
 
-    for (const [key, value] of Object.entries(tag)) { //loop through each tag and sort the challenges in each tag by points
-      tag[key] = orderBy(tag[key], ['points'], ['asc'])
-
+    switch (sortType) {
+      case 'points':
+        for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
+          tag[key] = orderBy(tag[key], ['points'], ['asc'])
+    
+        }
+        break
+      case 'pointsrev':
+          for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
+            tag[key] = orderBy(tag[key], ['points'], ['desc'])
+      
+          }
+          break
+      case 'abc':
+        for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
+          tag[key] = orderBy(tag[key], ['name'], ['asc'])
+    
+        }
+        break
+      case 'abcrev':
+        for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
+          tag[key] = orderBy(tag[key], ['name'], ['desc'])
+        }
     }
+
     //console.log(tag)
     this.setState({ tag: tag, loadingTag: false, moveTagToFront: moveTagToFront })
 
@@ -254,7 +282,7 @@ class ChallengesTagSort extends React.Component {
   }
 
   loadChallengeDetails = async (name, solved) => {
-    this.props.history.push("/Challenges/" + this.props.category + "/" + name);
+    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(name));
     await this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved, tagList: this.state.tagLists })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
@@ -271,34 +299,6 @@ class ChallengesTagSort extends React.Component {
     }).then((data) => {
       //console.log(data)
       if (data.success === true) {
-        //Replace <code> with syntax highlighter
-        let description = data.chall.description
-        let position = description.search("<code>")
-
-        if (position !== -1) {
-          let language = ""
-          let offset = 0
-          position += 6
-
-          while (true) {
-            let currentLetter = description.slice(position + offset, position + offset + 1)
-            if (currentLetter === "\n") {
-              language = description.slice(position, position + offset)
-              description = description.slice(0, position) + description.slice(position + offset)
-              description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
-              description = description.replace("</code>", "`}</SyntaxHighlighter>")
-              data.chall.description = description
-              break
-            }
-            else if (offset > 10) {
-              break
-            }
-            offset += 1
-          }
-
-
-        }
-
 
         //Handle unlimited attempts
         if (data.chall.max_attempts === 0) {
@@ -398,7 +398,7 @@ class ChallengesTagSort extends React.Component {
             await this.setState({ challengeModal: false })
             this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(true)
-            await this.sortByTags()
+            await this.sortByTags(false, this.state.sortType)
 
 
           }
@@ -483,13 +483,7 @@ class ChallengesTagSort extends React.Component {
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <JsxParser
-                bindings={{
-                  atomDark: atomDark
-                }}
-                components={{ SyntaxHighlighter }}
-                jsx={this.state.viewingChallengeDetails.description}
-              />
+              <MarkdownRender>{this.state.viewingChallengeDetails.description}</MarkdownRender>
 
 
               <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>

@@ -5,7 +5,7 @@ import {
   LoadingOutlined,
   EyeInvisibleOutlined
 } from '@ant-design/icons';
-import './App.css';
+import './App.min.css';
 
 const { Meta } = Card;
 const { Panel } = Collapse;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Layout, Menu, Avatar, message, Dropdown } from 'antd';
 import {
   FlagTwoTone,
@@ -10,25 +10,25 @@ import {
   PlusSquareTwoTone,
   GithubOutlined
 } from '@ant-design/icons';
-import './App.css';
-import { NavLink, Switch, Route, withRouter, Redirect } from 'react-router-dom';
-import Home from "./home.js";
-import Challenges from "./challenges.js";
-import Profile from "./profile.js";
-import Scoreboard from "./Scoreboard.js";
-import Login from "./login.js";
-import Admin from "./admin.js";
-import Oops from "./oops.js";
+import './App.min.css';
+import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
 import UserChallengeCreate from "./userChallengeCreate.js";
-import { Transition, animated } from 'react-spring/renderprops';
+import { Transition, animated } from 'react-spring';
+import { Ellipsis } from 'react-spinners-css';
 
 
 const { Content, Sider } = Layout;
-var previousPage = ""
 
-const useirsCyber = true
-//window.ipAddress = useirsCyber ? "https://api.irscybersec.tk" : "https://api.sieberrsec.tech"
-window.ipAddress = "http://localhost:20001";
+const production = true
+window.ipAddress = production ? "https://api.irscybersec.tk" : "http://localhost:20001"
+
+const Home = lazy(() => import("./home.js"));
+const Challenges = lazy(() => import("./challenges.js"));
+const Profile = lazy(() => import("./profile.js"));
+const Scoreboard = lazy(() => import("./Scoreboard.js"));
+const Login = lazy(() => import("./login.js"));
+const Admin = lazy(() => import("./admin.js"));
+const Oops = lazy(() => import("./oops.js"));
 
 
 class App extends React.Component {
@@ -42,9 +42,11 @@ class App extends React.Component {
       logined: false,
       username: "",
       permissions: 0,
-      userScore: "Loading..."
+      userScore: "Loading...",
+      loading: true
     };
   }
+
 
   // sider handler (for opening and closing sider)
   onCollapse = collapsed => {
@@ -59,17 +61,10 @@ class App extends React.Component {
   }
 
 
-  componentDidMount() {
-
-    const page = this.props.location.pathname.split("/")[1]
-    if (page !== previousPage) {
-      this.setState({ current: page })
-      previousPage = page
-    }
-
-    message.config({maxCount: 2})
-
+  componentDidMount = async () => {
+    message.config({ maxCount: 2 })
     // Handles "remember me" logins
+    this.setState({ current: this.props.location.pathname.split("/")[1] })
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
       const key = "login"
@@ -77,29 +72,35 @@ class App extends React.Component {
       if (token !== null) {
         message.loading({ content: "Attempting to restore session...", key, duration: 0 })
         // Get permissions from server
-        fetch(window.ipAddress + "/v1/account/type", {
+        await fetch(window.ipAddress + "/v1/account/type", {
           method: 'get',
           headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
           return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
+        }).then(async (data) => {
           if (data.success === true) {
             const username = token.split(".")[0]
-            this.setState({ permissions: data.type, token: token, username: username, logined: true })
+            this.setState({ permissions: data.type, token: token, username: username, logined: true }, this.setState({ loading: false }))
             message.success({ content: "Session restored. Welcome back " + username, key, duration: 2.5 })
 
             this.obtainScore()
           }
           else {
             //Might be a fake token since server does not have it, exit
-            this.setState({ token: false })
+            this.setState({ token: false }, this.setState({ loading: false }))
             message.error({ content: "Oops. Failed to restore session, please login again", key, duration: 2.5 })
           }
         }).catch((error) => {
           message.error({ content: "Oops. There was an issue connecting to the server, please try again", key, duration: 2.5 });
+          this.setState({ loading: false })
         })
       }
+      else {
+        this.setState({ loading: false })
+      }
     }
+
+
   }
 
   // Callback function for Login component to set token and perms
@@ -139,10 +140,10 @@ class App extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
 
-      if (data.success === true) {
+      if (data.success === true && data.score !== "hidden") {
         this.setState({ userScore: data.score })
       }
-      else if (data.success === false && data.error === "not-found") {
+      else if (data.success === true) {
         this.setState({ userScore: "Hidden" })
       }
       else {
@@ -160,58 +161,56 @@ class App extends React.Component {
   render() {
     return (
       <div style={{ position: "fixed" }}>
-
         <Transition
           items={this.state.logined}
           native
-          from={{ opacity: 0, transform: 'translate3d(100%,0,0)', position: "fixed" }}
+          from={{ opacity: 0, transform: 'translate3d(50%,0,0)', position: "fixed" }}
           enter={{ opacity: 1, transform: 'translate3d(0%,0,0)', position: "static" }}
-          leave={{ opacity: 0, transform: 'translate3d(50%,0,0)', position: "fixed" }}
+          leave={{ opacity: 0, position: "fixed" }}
         >
-          {toggle => (
-            props => {
-              if (toggle === true) {
-                return (
-                  <animated.div style={{ ...props, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")", backgroundSize: "cover" }}>
-                    <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                      <Sider style={{ height: "100vh" }}>
-                        <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                          <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
-                        </div>
-                        <Dropdown overlay={
-                          <Menu>
-                            <Menu.Item key="Profile">
-                              <NavLink to="/Profile">
-                                <span>Profile </span>
-                                <UserOutlined />
-                              </NavLink>
-                            </Menu.Item>
-                            <Menu.Divider />
-                            <Menu.Item key="logout" onClick={this.handleLogout.bind(this)}>
-                              <span style={{ color: "#d32029" }}>Logout <LogoutOutlined /></span>
-                            </Menu.Item>
-                          </Menu>}
-                          trigger={['click']}>
-                          <div className="buttonHover"
-                            style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
-                            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
-                              <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                              <Avatar size="large" src={require("./assets/profile.webp").default} />
-                            </div>
-                            <div>
-                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
-                            </div>
+          {(styles, item) => {
+            if (item && !this.state.loading) {
+              return (
+                <animated.div style={{ ...styles, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")", backgroundSize: "cover" }}>
+                  <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
+                    <Sider style={{ height: "100vh" }}>
+                      <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
+                        <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
+                      </div>
+                      <Dropdown overlay={
+                        <Menu>
+                          <Menu.Item key="Profile">
+                            <NavLink to="/Profile">
+                              <span>Profile </span>
+                              <UserOutlined />
+                            </NavLink>
+                          </Menu.Item>
+                          <Menu.Divider />
+                          <Menu.Item key="logout" onClick={this.handleLogout.bind(this)}>
+                            <span style={{ color: "#d32029" }}>Logout <LogoutOutlined /></span>
+                          </Menu.Item>
+                        </Menu>}
+                        trigger={['click']}>
+                        <div className="buttonHover"
+                          style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
+                          <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
+                            <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
+                            <Avatar size="large" src={require("./assets/profile.webp").default} />
                           </div>
-                        </Dropdown>
+                          <div>
+                            <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
+                          </div>
+                        </div>
+                      </Dropdown>
 
-                        <Menu
-                          selectedKeys={[this.state.current]}
-                          onSelect={(selection) => { this.setState({ current: selection.key }); this.obtainScore() }}
-                          //defaultOpenKeys={['']}
-                          mode="inline"
-                          theme="dark"
+                      <Menu
+                        selectedKeys={[this.state.current]}
+                        onSelect={(selection) => { this.setState({ current: selection.key }); this.obtainScore() }}
+                        //defaultOpenKeys={['']}
+                        mode="inline"
+                        theme="dark"
 
-                        > {/*
+                      > {/*
         defaultSelectedKeys - default selected menu items
         defaultOpenKeys - default opened sub menus
         inline - Sidebar Menu
@@ -220,115 +219,132 @@ class App extends React.Component {
 
 
 
-                          <Menu.Item key="" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center", marginTop: 0 }}>
-                            <NavLink to="/">
-                              <HomeTwoTone style={{ fontSize: "110%" }} />
-                              <span>Home</span>
+                        <Menu.Item key="" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center", marginTop: 0 }}>
+                          <NavLink to="/">
+                            <HomeTwoTone style={{ fontSize: "110%" }} />
+                            <span>Home</span>
+                          </NavLink>
+                        </Menu.Item>
+
+                        <Menu.Item key="Challenges" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center" }}>
+                          <NavLink to="/Challenges">
+                            <FlagTwoTone style={{ fontSize: "110%" }} />
+                            <span>Challenges</span>
+                          </NavLink>
+                        </Menu.Item>
+
+                        <Menu.Item key="Scoreboard" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center" }}>
+                          <NavLink to="/Scoreboard">
+                            <FundTwoTone style={{ fontSize: "110%" }} />
+                            <span>Scoreboard</span>
+                          </NavLink>
+                        </Menu.Item>
+
+                        <Menu.Divider />
+
+                        {this.state.permissions === 1 && (
+                          <Menu.Item key="CreateChallenge" style={{ fontSize: "115%", display: "flex", height: "6ch", alignItems: "center", color: "#d32029" }}>
+                            <NavLink to="/CreateChallenge">
+                              <PlusSquareTwoTone style={{ fontSize: "110%" }} twoToneColor="#d89614" />
+                              <span>Create Challenge</span>
                             </NavLink>
                           </Menu.Item>
+                        )}
 
-                          <Menu.Item key="Challenges" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center" }}>
-                            <NavLink to="/Challenges">
-                              <FlagTwoTone style={{ fontSize: "110%" }} />
-                              <span>Challenges</span>
+                        {this.state.permissions === 2 && (
+
+                          <Menu.Item key="Admin" style={{ fontSize: "115%", display: "flex", height: "6ch", alignItems: "center", color: "#d32029" }}>
+                            <NavLink to="/Admin">
+                              <CodeTwoTone style={{ fontSize: "110%" }} twoToneColor="#d32029" />
+                              <span>Admin Panel</span>
                             </NavLink>
                           </Menu.Item>
-
-                          <Menu.Item key="Scoreboard" style={{ fontSize: "115%", height: "6ch", display: "flex", alignItems: "center" }}>
-                            <NavLink to="/Scoreboard">
-                              <FundTwoTone style={{ fontSize: "110%" }} />
-                              <span>Scoreboard</span>
-                            </NavLink>
-                          </Menu.Item>
-
-                          <Menu.Divider />
-
-                          {this.state.permissions === 1 && (
-                            <Menu.Item key="CreateChallenge" style={{ fontSize: "115%", display: "flex", height: "6ch", alignItems: "center", color: "#d32029" }}>
-                              <NavLink to="/CreateChallenge">
-                                <PlusSquareTwoTone style={{ fontSize: "110%" }} twoToneColor="#d89614" />
-                                <span>Create Challenge</span>
-                              </NavLink>
-                            </Menu.Item>
-                          )}
-
-                          {this.state.permissions === 2 && (
-
-                            <Menu.Item key="Admin" style={{ fontSize: "115%", display: "flex", height: "6ch", alignItems: "center", color: "#d32029" }}>
-                              <NavLink to="/Admin">
-                                <CodeTwoTone style={{ fontSize: "110%" }} twoToneColor="#d32029" />
-                                <span>Admin Panel</span>
-                              </NavLink>
-                            </Menu.Item>
-                          )}
+                        )}
 
 
-                        </Menu>
-                        <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
-                          <p>Sieberrsec CTF Platform 0.6.5 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
-                        </div>
-                      </Sider>
+                      </Menu>
+                      <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
+                        <p>Sieberrsec CTF Platform 0.8 <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                      </div>
+                    </Sider>
 
-                      <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
-                        <Route
-                          render={({ location, ...rest }) => (
-                            <div className="fill">
-                              <Route exact path="/" render={() => <Redirect to="/" />} />
-                              <div className="content">
-                                <Transition
-                                  native
-                                  items={location}
-                                  trail={5}
-                                  keys={location.pathname.split('/')[1]}
-                                  from={{ opacity: 0 }}
-                                  enter={{ opacity: 1 }}
-                                  leave={{ opacity: 0, display: "none" }}>
-                                  {(loc, state) => style => (
-                                    <Switch location={state === 'update' ? location : loc}>
-                                      <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
-                                      <Route path='/Challenges/:category?/:challenge?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
-                                      <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
+                    <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
+                      <Route
+                        render={({ location, ...rest }) => (
+                          <Transition
+                            native
+                            items={location.pathname.split("/")[1]}
+                            trail={5}
+                            key={location.pathname.split("/")[1]}
+                            from={{ opacity: 0 }}
+                            enter={{ opacity: 1 }}
+                            leave={{ opacity: 0, display: "none" }}>
+                            {(style, loc) => (
+                              <animated.div style={{ ...style, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
+                                <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                                </div>}>
+                                  <Switch>
+                                    <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
+                                    <Route path='/Challenges/:category?/:challenge?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
+                                    <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
 
-                                      <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
-                                      <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
+                                    <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
+                                    <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} token={this.state.token} username={this.state.username} key={window.location.pathname} />} />
 
 
-                                      {this.state.permissions >= 1 ? (
-                                        <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />
-                                      ) : (
-                                        <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
-                                      )}
+                                    {this.state.permissions >= 1 ? (
+                                      <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />
+                                    ) : (
+                                      <Route path='/Oops' render={(props) => { <Oops {...props} transition={style} /> }} />
+                                    )}
 
-                                      {this.state.permissions === 2 ? (
-                                        <Route path={['/Admin/:tabPane?']} render={(props) => <Admin {...props} transition={style} />} />
-                                      ) : (
-                                        <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
-                                      )}
-                                      <Route path='/*' render={(props) => <Oops {...props} transition={style} />} />
+                                    {this.state.permissions === 2 ? (
+                                      <Route path={['/Admin/:tabPane?']} render={(props) => <Admin {...props} transition={style} />} />
+                                    ) : (
+                                      <Route path='/Oops' render={(props) => <Oops {...props} transition={style} />} />
+                                    )}
+                                    <Route path='/*' render={(props) => <Oops {...props} transition={style} />} />
 
-                                    </Switch>
-                                  )}
-                                </Transition>
-                              </div>
-                            </div>
-                          )}
-                        />
+                                  </Switch>
+                                </Suspense>
+                              </animated.div>
 
-                      </Content>
-                    </Layout>
-                  </animated.div>
-                )
+                            )}
+                          </Transition>
+                        )}
+                      />
+
+                    </Content>
+                  </Layout>
+                </animated.div>
+              )
+            }
+            else {
+
+              if (!this.state.loading && !item && !this.state.token) {
+                return (
+                  <animated.div style={{ ...styles, position: "absolute" }}>
+                    <Suspense fallback={<div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
+                      <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                    </div>}>
+                      <Login handleLogin={this.handleLogin.bind(this)}></Login>
+                    </Suspense>
+                  </animated.div>)
               }
               else {
                 return (
-                  <animated.div style={{ ...props, position: "absolute" }}>
-                    <Login handleLogin={this.handleLogin.bind(this)}></Login>
-                  </animated.div>)
+                  <animated.div style={{ ...styles, position: "absolute", height: "100vh", width: "100vw", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.95)" }}>
+                    <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                  </animated.div>
+                )
               }
+
             }
-          )}
+          }
+          }
         </Transition>
-      </div>
+      </div >
     );
   }
 }

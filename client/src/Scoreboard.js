@@ -3,11 +3,10 @@ import { Layout, message, Table } from 'antd';
 import {
   FileUnknownTwoTone
 } from '@ant-design/icons';
-import './App.css';
+import './App.min.css';
 import { orderBy } from "lodash";
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis } from 'react-spinners-css';
-import { animated } from 'react-spring/renderprops';
 import { Link } from 'react-router-dom';
 
 const { Column } = Table;
@@ -226,8 +225,6 @@ class Scoreboard extends React.Component {
 
   render() {
     return (
-
-      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)", display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center" }}>
           <div>
             <h1 style={{ fontSize: "5ch" }}>Scoreboard</h1>
@@ -334,7 +331,6 @@ class Scoreboard extends React.Component {
             </div>
           )}
         </Layout>
-      </animated.div >
     );
   }
 }

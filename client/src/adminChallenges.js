@@ -11,7 +11,7 @@ import {
     EyeInvisibleOutlined,
     RedoOutlined
 } from '@ant-design/icons';
-import './App.css';
+import './App.min.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
 import { difference } from "lodash";

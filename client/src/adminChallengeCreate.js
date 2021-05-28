@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch } from 'antd';
+import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -11,20 +11,19 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
-import './App.css';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JsxParser from 'react-jsx-parser';
+import './App.min.css';
 import { Prompt } from 'react-router';
+import MDEditor from '@uiw/react-md-editor';
+import MarkdownRender from './MarkdownRenderer.js';
 
 
 const { Option } = Select;
-const { TextArea } = Input;
 const { TabPane } = Tabs;
 
 
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
+    const [editorValue, setEditorValue] = React.useState("")
 
     if (typeof form.getFieldValue("flags") === "undefined") {
         var currentValues = form.getFieldsValue()
@@ -121,6 +120,7 @@ const CreateChallengeForm = (props) => {
                 <Input allowClear placeholder="Challenge name" />
             </Form.Item>
 
+            <Divider/>
             <h1>Challenge Category:</h1>
             <h4>Select an Existing Category: </h4>
             <Form.Item
@@ -157,14 +157,27 @@ const CreateChallengeForm = (props) => {
                 }} disabled={props.state.inputCatDisabled} allowClear placeholder="Enter a new challenge category" />
             </Form.Item>
 
-            <h1>Challenge Description (Supports <a href="https://reactjs.org/docs/introducing-jsx.html" target="_blank" rel="noreferrer">JSX</a>):</h1>
+            <Divider />
+
+            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://katex.org/" target="_blank" rel="noreferrer">Math Using KaTeX</a>):</h1>
             <Form.Item
                 name="description"
                 rules={[{ required: true, message: 'Please enter a description' }]}
+                valuePropName={editorValue}
             >
-
-                <TextArea rows={7} allowClear placeholder="Enter a challenge description. JSX is very similiar to HTML, only difference being that there MUST be closing tags for everything." />
+                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
             </Form.Item>
+            <h3>Challenge Description Preview</h3>
+            <Card
+                type="inner"
+                bordered={true}
+                bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+            >
+                <MarkdownRender>{editorValue}</MarkdownRender>
+            </Card>
+            
+
+            <Divider />
 
             <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
 
@@ -295,6 +308,8 @@ const CreateChallengeForm = (props) => {
                 </div>
             </div>
 
+            <Divider/>
+
             <h1>Hints</h1>
             <Form.List name="hints" >
                 {(fields, { add, remove }) => {
@@ -349,26 +364,26 @@ const CreateChallengeForm = (props) => {
                 }}
             </Form.List>
 
-                    <h1>Writeup Link (Optional)</h1>
-                    <Form.Item
-                        name="writeup"
-                        rules={[
-                            {
-                                type: 'url',
-                                message: "Please enter a valid link",
-                            }]}
-                    >
+            <h1>Writeup Link (Optional)</h1>
+            <Form.Item
+                name="writeup"
+                rules={[
+                    {
+                        type: 'url',
+                        message: "Please enter a valid link",
+                    }]}
+            >
 
-                        <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
-                    </Form.Item>
-                <div style={{ display: "flex", alignContent: "center" }}>
-                    <h4 style={{marginRight: "2ch"}}>Release Writeup Only After Completion: </h4>
-                    <Form.Item
-                        name="writeupComplete"
-                    >
-                        <Switch defaultChecked />
-                    </Form.Item>
-                </div>
+                <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
+            </Form.Item>
+            <div style={{ display: "flex", alignContent: "center" }}>
+                <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                <Form.Item
+                    name="writeupComplete"
+                >
+                    <Switch defaultChecked />
+                </Form.Item>
+            </div>
 
             <h1>Visibility</h1>
             <Form.Item
@@ -443,38 +458,6 @@ class AdminChallengeCreate extends React.Component {
             values.max_attempts = String(values.max_attempts) + "/" + String(values.max_attempts)
         }
 
-        //Replace <code> with syntax highlighter
-        if (typeof values.description !== "undefined") {
-            let description = values.description
-            let position = description.search("<code>")
-
-
-            if (position !== -1) {
-
-                let language = ""
-                let offset = 0
-                position += 6
-
-                while (true) {
-                    let currentLetter = description.slice(position + offset, position + offset + 1)
-                    if (currentLetter === "\n") {
-                        language = description.slice(position, position + offset)
-                        description = description.slice(0, position) + description.slice(position + offset)
-                        description = description.replace("<code>", "<SyntaxHighlighter language='" + language + "' style={atomDark}>{`")
-                        description = description.replace("</code>", "`}</SyntaxHighlighter>")
-                        values.description = description
-                        break
-                    }
-                    else if (offset > 10) {
-                        break
-                    }
-                    offset += 1
-                }
-
-
-            }
-        }
-
         //Render writeup link
         let writeupLink = ""
         if (typeof values.writeup !== "undefined") {
@@ -545,13 +528,7 @@ class AdminChallengeCreate extends React.Component {
                             </div>
                             <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
 
-                            <JsxParser
-                                bindings={{
-                                    atomDark: atomDark
-                                }}
-                                components={{ SyntaxHighlighter }}
-                                jsx={this.state.previewChallenge.description}
-                            />
+                            <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}

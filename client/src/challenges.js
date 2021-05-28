@@ -6,12 +6,12 @@ import {
   AppstoreOutlined,
   TagsOutlined
 } from '@ant-design/icons';
-import './App.css';
+import './App.min.css';
 import { Link } from 'react-router-dom';
 import ChallengesCategory from "./challengesCategory.js";
 import ChallengesTagSort from "./challengesTagSort.js";
 import { Ellipsis } from 'react-spinners-css';
-import { Transition, animated } from 'react-spring/renderprops';
+import { Transition, animated } from 'react-spring';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -26,6 +26,7 @@ class Challenges extends React.Component {
   constructor(props) {
     super(props);
     this.child = React.createRef();
+    this.tagSortRef = React.createRef();
 
     this.state = {
       categories: [],
@@ -110,7 +111,10 @@ class Challenges extends React.Component {
   }
 
   sortCats(value) {
-    this.child.current.sortCats(value)
+
+    if (this.state.sortByTags) this.tagSortRef.current.sortCats(value)
+    else this.child.current.sortCats(value)
+    
   }
 
   sortDifferent(value) {
@@ -153,8 +157,6 @@ class Challenges extends React.Component {
 
   render() {
     return (
-
-      <animated.div style={{ ...this.props.transition, height: "95vh", overflowY: "auto", backgroundColor: "rgba(0, 0, 0, 0.7)", border: "5px solid transparent", borderRadius: "20px" }}>
         <Layout style={{ minHeight: "95vh", margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
           <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
             <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.webp").default} />
@@ -194,8 +196,9 @@ class Challenges extends React.Component {
 
             <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: false, sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
             <div>
-              <Select disabled={!(this.state.currentCategory && !this.state.sortByTags)} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
-                <Option value="points">Sort by Points</Option>
+              <Select disabled={!this.state.currentCategory && !this.state.sortByTags} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
+                <Option value="points">Sort by ↑Points</Option>
+                <Option value="pointsrev">Sort by ↓Points</Option>
                 <Option value="abc">Sort A→Z</Option>
                 <Option value="abcrev">Sort Z→A</Option>
               </Select>
@@ -214,15 +217,14 @@ class Challenges extends React.Component {
               from={{ opacity: 0 }}
               enter={{ opacity: 1 }}
               leave={{ opacity: 0 }}>
-              {toggle => (
-                props => {
+              {(props,toggle) => {
                   if (toggle === true) {
-                    return (<div style={{ ...props, position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
+                    return (<animated.div style={{ ...props, position: "absolute", left: "55%",transform: "translate(-55%, 0%)", zIndex: 10 }}>
                       <Ellipsis color="#177ddc" size={120} ></Ellipsis>
-                    </div>)
+                    </animated.div>)
                   }
                   else {
-                    return (<div style={{ ...props }}>
+                    return (<animated.div style={{ ...props }}>
                       {!this.state.challengeCategory && !this.state.sortByTags && (
                         <List
                           grid={{
@@ -291,19 +293,15 @@ class Challenges extends React.Component {
                       )}
 
                       {this.state.sortByTags && (
-                        <ChallengesTagSort match={this.props.match} history={this.props.history} tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                        <ChallengesTagSort match={this.props.match} history={this.props.history} tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                       )}
-                    </div>)
+                    </animated.div>)
                   }
-
-
                 }
-              )
               }
             </Transition>
           </div>
         </Layout>
-      </animated.div>
 
     );
   }
