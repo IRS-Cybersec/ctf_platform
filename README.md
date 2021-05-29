@@ -1,4 +1,7 @@
 # Sieberrsec CTF Platform
+
+![](demo.gif)
+
 Sieberrsec CTF platform. A Jeopardy CTF platform designed with various neat features to aid in training and learning. Written in ReactJS and NodeJS
 
 The platform is still currently in **early alpha** and in **active development**. There is unfortunately no easy way to deploy the platform at the moment, but we welcome any contributions to change this :smile:.
