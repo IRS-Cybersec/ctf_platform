@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover } from 'antd';
 import {
   UnlockOutlined,
@@ -117,7 +117,7 @@ class ChallengesTagSort extends React.Component {
 
   sortCats(sortType) {
     if (sortType !== this.state.sortType) {
-      this.setState({sortType: sortType})
+      this.setState({ sortType: sortType })
       this.sortByTags(false, sortType)
     }
   }
@@ -194,19 +194,19 @@ class ChallengesTagSort extends React.Component {
       case 'points':
         for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
           tag[key] = orderBy(tag[key], ['points'], ['asc'])
-    
+
         }
         break
       case 'pointsrev':
-          for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
-            tag[key] = orderBy(tag[key], ['points'], ['desc'])
-      
-          }
-          break
+        for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
+          tag[key] = orderBy(tag[key], ['points'], ['desc'])
+
+        }
+        break
       case 'abc':
         for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
           tag[key] = orderBy(tag[key], ['name'], ['asc'])
-    
+
         }
         break
       case 'abcrev':
@@ -451,7 +451,6 @@ class ChallengesTagSort extends React.Component {
           title={null}
           visible={this.state.challengeModal}
           footer={null}
-          className="challengeModal"
           bodyStyle={{ textAlign: "center" }}
           onCancel={() => { this.setState({ challengeModal: false }); this.props.history.push("/Challenges/" + this.props.category); }}
         >
@@ -478,13 +477,15 @@ class ChallengesTagSort extends React.Component {
               )}
 
               <div style={{ display: "flex", justifyContent: "center" }}>
-                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput/>} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
+                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput />} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
               </div>
               <div>
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <MarkdownRender>{this.state.viewingChallengeDetails.description}</MarkdownRender>
+              <div className="challengeModal">
+                <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
+              </div>
 
 
               <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>

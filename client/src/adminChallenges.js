@@ -1,7 +1,6 @@
 import React from 'react';
 import { Layout, Menu, Table, message, Dropdown, Button, Modal, Transfer, Divider } from 'antd';
 import {
-    LoadingOutlined,
     ExclamationCircleOutlined,
     DeleteOutlined,
     FlagOutlined,
@@ -276,7 +275,7 @@ class AdminChallenges extends React.Component {
                         </div>
                         {this.state.loading && (
                             <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                                <Ellipsis color="#177ddc" size={120} />
                             </div>
                         )}
                         {!this.state.loading && (
@@ -331,7 +330,9 @@ class AdminChallenges extends React.Component {
                             </div>
                         )}
                         <Divider />
-                        <h1 style={{ fontSize: "150%" }}>Category Management {this.state.transferDisabled && (<LoadingOutlined style={{ color: "#177ddc" }} />)}</h1>
+                        <div style={{display: "flex", alignItems: "center"}}>
+                            <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
+                        </div>
 
                         <Transfer
                             dataSource={this.state.allCat}

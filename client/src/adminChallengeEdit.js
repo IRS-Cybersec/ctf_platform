@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card} from 'antd';
+import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -125,7 +125,7 @@ const CreateChallengeForm = (props) => {
                 <Input allowClear placeholder="Challenge name" />
             </Form.Item>
 
-            <Divider/>
+            <Divider />
             <h1>Challenge Category:</h1>
             <h4>Select an Existing Category: </h4>
             <Form.Item
@@ -182,7 +182,7 @@ const CreateChallengeForm = (props) => {
             >
                 <MarkdownRender>{editorValue}</MarkdownRender>
             </Card>
-            
+
 
             <Divider />
 
@@ -315,7 +315,7 @@ const CreateChallengeForm = (props) => {
                 </div>
             </div>
 
-            <Divider/>
+            <Divider />
 
             <h1>Hints</h1>
             <Form.List name="hints" >
@@ -554,7 +554,6 @@ class AdminChallengeEdit extends React.Component {
                     visible={this.state.previewModal}
                     footer={null}
                     bodyStyle={{ textAlign: "center" }}
-                    className="challengeModal"
                     onCancel={() => { this.setState({ previewModal: false }) }}
                 >
                     <Tabs defaultActiveKey="challenge">
@@ -577,7 +576,10 @@ class AdminChallengeEdit extends React.Component {
                                 {this.state.challengeTags}
                             </div>
                             <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.previewData.points}</h2>
-                            <MarkdownRender>{this.state.previewData.description}</MarkdownRender>
+
+                            <div className="challengeModal">
+                                <MarkdownRender>{this.state.previewData.description}</MarkdownRender>
+                            </div>
 
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>

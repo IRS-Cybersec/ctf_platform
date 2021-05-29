@@ -120,7 +120,7 @@ const CreateChallengeForm = (props) => {
                 <Input allowClear placeholder="Challenge name" />
             </Form.Item>
 
-            <Divider/>
+            <Divider />
             <h1>Challenge Category:</h1>
             <h4>Select an Existing Category: </h4>
             <Form.Item
@@ -176,7 +176,7 @@ const CreateChallengeForm = (props) => {
             >
                 <MarkdownRender>{editorValue}</MarkdownRender>
             </Card>
-            
+
 
             <Divider />
 
@@ -309,7 +309,7 @@ const CreateChallengeForm = (props) => {
                 </div>
             </div>
 
-            <Divider/>
+            <Divider />
 
             <h1>Hints</h1>
             <Form.List name="hints" >
@@ -506,7 +506,6 @@ class AdminChallengeCreate extends React.Component {
                     visible={this.state.previewModal}
                     footer={null}
                     bodyStyle={{ textAlign: "center" }}
-                    className="challengeModal"
                     onCancel={() => { this.setState({ previewModal: false }) }}
                 >
                     <Tabs defaultActiveKey="challenge">
@@ -530,7 +529,9 @@ class AdminChallengeCreate extends React.Component {
                             </div>
                             <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
 
-                            <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
+                            <div className="challengeModal">
+                                <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
+                            </div>
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}

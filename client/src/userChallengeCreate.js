@@ -170,7 +170,7 @@ const CreateChallengeForm = (props) => {
             >
                 <MarkdownRender>{editorValue}</MarkdownRender>
             </Card>
-            
+
 
             <Divider />
 
@@ -507,62 +507,63 @@ class UserChallengeCreate extends React.Component {
 
     render() {
         return (
-            
-                <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                    <div style={{ padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
-                        <Modal
-                            title={null}
-                            visible={this.state.previewModal}
-                            footer={null}
-                            bodyStyle={{ textAlign: "center" }}
-                            className="challengeModal"
-                            onCancel={() => { this.setState({ previewModal: false }) }}
-                        >
-                            <Tabs defaultActiveKey="challenge">
-                                <TabPane
-                                    tab={<span><ProfileOutlined /> Challenge</span>}
-                                    key="challenge"
-                                >
-                                    <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
-                                    <div>
-                                        {this.state.challengeTags}
-                                    </div>
-                                    <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
 
-                                    <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
-
-                                    <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
-                                        {this.state.challengeHints}
-                                    </div>
-                                    <div style={{ display: "flex", justifyContent: "center" }}>
-                                        <Input style={{ width: "45ch" }} defaultValue="" placeholder={"Enter a flag"} />
-                                        <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
-                                    </div>
-                                    <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
-                                        <p>Challenge Author: <em>You</em></p>
-                                        <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewChallenge.max_attempts}</p>
-                                    </div>
-                                </TabPane>
-                            </Tabs>
-
-
-                        </Modal>
-                        <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
-                            <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
-
-                        </div>
-                        {!this.state.mainLoading && this.state.allCat !== [] && (
-                            <CreateChallengeForm allCat={this.state.allCat} state={this.state} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
-                        )}
-                        {this.state.mainLoading && (
-                            <div>
-                                <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                    <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
+            <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+                <div style={{ padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
+                    <Modal
+                        title={null}
+                        visible={this.state.previewModal}
+                        footer={null}
+                        bodyStyle={{ textAlign: "center" }}
+                        onCancel={() => { this.setState({ previewModal: false }) }}
+                    >
+                        <Tabs defaultActiveKey="challenge">
+                            <TabPane
+                                tab={<span><ProfileOutlined /> Challenge</span>}
+                                key="challenge"
+                            >
+                                <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
+                                <div>
+                                    {this.state.challengeTags}
                                 </div>
-                            </div>
-                        )}
+                                <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
+
+                                <div className="challengeModal">
+                                    <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
+                                </div>
+
+                                <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+                                    {this.state.challengeHints}
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "center" }}>
+                                    <Input style={{ width: "45ch" }} defaultValue="" placeholder={"Enter a flag"} />
+                                    <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
+                                    <p>Challenge Author: <em>You</em></p>
+                                    <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewChallenge.max_attempts}</p>
+                                </div>
+                            </TabPane>
+                        </Tabs>
+
+
+                    </Modal>
+                    <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
+                        <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
+
                     </div>
-                </Layout>
+                    {!this.state.mainLoading && this.state.allCat !== [] && (
+                        <CreateChallengeForm allCat={this.state.allCat} state={this.state} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} loadingStatus={this.state.loading}></CreateChallengeForm>
+                    )}
+                    {this.state.mainLoading && (
+                        <div>
+                            <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Layout>
 
         );
     }

@@ -100,7 +100,7 @@ class ChallengesCategory extends React.Component {
       await this.fetchCategories()
 
       let challenge = this.props.match.params.challenge;
-      
+
       if (typeof challenge !== "undefined") {
         challenge = decodeURIComponent(challenge)
         const solved = this.state.challenges.find(element => element.name === challenge)
@@ -368,7 +368,6 @@ class ChallengesCategory extends React.Component {
           title={null}
           visible={this.state.challengeModal}
           footer={null}
-          className="challengeModal"
           bodyStyle={{ textAlign: "center" }}
           onCancel={() => { this.setState({ challengeModal: false }); this.props.history.push("/Challenges/" + this.props.category); }}
         >
@@ -399,7 +398,9 @@ class ChallengesCategory extends React.Component {
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <MarkdownRender>{this.state.viewingChallengeDetails.description}</MarkdownRender>
+              <div className="challengeModal">
+                <MarkdownRender>{this.state.viewingChallengeDetails.description}</MarkdownRender>
+              </div>
 
 
               <div style={{ marginTop: "2vh", display: "flex", flexDirection: "column" }}>

@@ -2,10 +2,10 @@ import React from 'react';
 import { Layout, Divider, List, Card, message } from 'antd';
 import {
   FileUnknownTwoTone,
-  LoadingOutlined,
   NotificationTwoTone
 } from '@ant-design/icons';
 import MarkdownRenderer from './MarkdownRenderer.js';
+import { Ellipsis } from 'react-spinners-css';
 import { orderBy } from "lodash";
 import './App.min.css';
 
@@ -62,7 +62,7 @@ class Home extends React.Component {
         <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
         <Divider />
         <div style={{ display: "flex", alignItems: "center" }}>
-          <h1 style={{ fontSize: "150%", marginRight: "1ch" }}>Announcements <NotificationTwoTone /></h1> {this.state.updatingIndicator && (<h4><LoadingOutlined style={{ color: "#177ddc" }} /> Checking for updates...</h4>)}
+          <h1 style={{ fontSize: "150%", marginRight: "1ch" }}>Announcements <NotificationTwoTone /></h1> {this.state.updatingIndicator && (<div style={{ display: "flex", alignItems: "center" }}><Ellipsis color="#177ddc" size={50} /> <h4> Checking for updates...</h4></div>)}
         </div>
         <List
           grid={{ gutter: 0, column: 1 }}
