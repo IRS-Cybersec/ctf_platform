@@ -178,7 +178,7 @@ class ChallengesCategory extends React.Component {
   }
 
   loadChallengeDetails(name, solved) {
-    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(name))
+    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(btoa(name)))
     this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Card } from 'antd';
 import {
     FileUnknownTwoTone,
@@ -83,7 +83,7 @@ const EditAnnouncementsForm = (props) => {
         form.setFieldsValue(props.initialData.data)
         setEditorValue(props.initialData.data.content)
     }
-    
+
 
     return (
         <Form
@@ -148,7 +148,9 @@ class AdminManageAnnouncements extends React.Component {
             createAnnouncementsModal: false,
             editAnnouncementsModal: false,
             modalLoading: false,
-            initialData: null
+            initialData: null,
+            disableEditButtons: true,
+            selectedTableKeys: []
         }
     }
 
@@ -165,6 +167,9 @@ class AdminManageAnnouncements extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
+                for (let i = 0; i < data.data.length; i++) {
+                    data.data[i].key = data.data[i]._id
+                }
                 this.setState({ dataSource: orderBy(data.data, ['timestamp'], ["desc"]), loading: false })
             }
             else {
@@ -210,12 +215,13 @@ class AdminManageAnnouncements extends React.Component {
 
     }
 
-    deleteAnnouncement = (close, id) => {
-        fetch(window.ipAddress + "/v1/announcements/delete", {
+    deleteAnnouncement = async (close, ids) => {
+        this.setState({disableEditButtons: true})
+        await fetch(window.ipAddress + "/v1/announcements/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "id": id
+                "ids": ids
             })
         }).then((results) => {
             //console.log(results)
@@ -223,9 +229,9 @@ class AdminManageAnnouncements extends React.Component {
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Deleted announcement successfully!" })
+                message.success({ content: "Deleted announcements [" + ids.join(', ') +"] successfully!" })
                 this.fillTableData()
-                close()
+                
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -236,6 +242,8 @@ class AdminManageAnnouncements extends React.Component {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
+        close()
+        this.setState({selectedTableKeys: []})
 
     }
 
@@ -296,6 +304,13 @@ class AdminManageAnnouncements extends React.Component {
 
     }
 
+    handleTableSelect = (selectedRowKeys) => {
+        this.setState({ selectedTableKeys: selectedRowKeys })
+        if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
+        else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
+
+    }
+
 
 
 
@@ -306,11 +321,6 @@ class AdminManageAnnouncements extends React.Component {
         return (
 
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                {this.state.loading && (
-                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
-                        <Ellipsis color="#177ddc" size={120} ></Ellipsis>
-                    </div>
-                )}
 
                 <Modal
                     title="Create New Announcement"
@@ -335,63 +345,67 @@ class AdminManageAnnouncements extends React.Component {
 
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Button type="primary" style={{ marginBottom: "2vh" }} icon={<NotificationOutlined />} onClick={() => { this.setState({ createAnnouncementsModal: true }) }}>Create New Announcement</Button>
+                    <div style={{ display: "flex", alignItems: "center", height: "2ch" }}>
+                        <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<NotificationOutlined />} onClick={() => { this.setState({ createAnnouncementsModal: true }) }}>Create New Announcement</Button>
+                        {this.state.loading && (
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <Ellipsis color="#177ddc" size={60} />
+                                <h1>Loading Announcements</h1>
+                            </div>
+                        )}
+                    </div>
                     <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Announcements list refreshed.") }} />
                 </div>
-                {!this.state.loading && (
-                    <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
-                        emptyText: (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>No announcements have been created.</h1>
-                            </div>
-                        )
-                    }}>
-                        <Column title="Announcement ID" dataIndex="_id" key="_id" />
-                        <Column title="Title" dataIndex="title" key="title" />
-                        <Column title="Content" dataIndex="content" key="content"
-                            render={(text, row, index) => {
-                                if (text.length > 25) return text.slice(0, 25) + "..."
-                                else return text
-                            }} />
-                        <Column title="Time" dataIndex="timestamp" key="timestamp"
-                            render={(text, row, index) => {
-                                return new Date(text).toLocaleString("en-US", { timeZone: "Asia/Singapore" });
-                            }} />
-                        <Column
-                            title=""
-                            key="action"
-                            render={(text, record) => (
-                                <Dropdown trigger={['click']} overlay={
-                                    <Menu>
-                                        <Menu.Item onClick={() => {
-                                            this.editAnnouncementOpen(record._id)
-                                        }}>
-                                            <span>
-                                                Edit Announcement <ClusterOutlined />
-                                            </span>
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item onClick={() => {
-                                            confirm({
-                                                title: 'Are you sure you want to delete this announcement \"' + record.title + '\"? This action is irreversible.',
-                                                icon: <ExclamationCircleOutlined />,
-                                                onOk: (close) => { this.deleteAnnouncement(close.bind(this), record._id) },
-                                                onCancel: () => { },
-                                            });
-                                        }}>
-                                            <span style={{ color: "#d32029" }} >
-                                                Delete Announcement <DeleteOutlined />
-                                            </span>
-                                        </Menu.Item>
-                                    </Menu>
-                                } placement="bottomCenter">
-                                    <Button>Actions</Button>
-                                </Dropdown>
-                            )}
-                        />
-                    </Table>
-                )}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
+                        confirm({
+                            confirmLoading: this.state.disableEditButtons,
+                            title: 'Are you sure you want to delete the announcement(s) [' + this.state.selectedTableKeys.join(", ") + ']? This action is irreversible.',
+                            icon: <ExclamationCircleOutlined />,
+                            onOk: (close) => { this.deleteAnnouncement(close.bind(this), this.state.selectedTableKeys) },
+                            onCancel: () => { },
+                        });
+                    }}>Delete Announcements</Button>
+                </div>
+                <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
+                    emptyText: (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                            <h1 style={{ fontSize: "200%" }}>No announcements have been created.</h1>
+                        </div>
+                    )
+                }}>
+                    <Column title="Announcement ID" dataIndex="_id" key="_id" />
+                    <Column title="Title" dataIndex="title" key="title" />
+                    <Column title="Content" dataIndex="content" key="content"
+                        render={(text, row, index) => {
+                            if (text.length > 25) return text.slice(0, 25) + "..."
+                            else return text
+                        }} />
+                    <Column title="Time" dataIndex="timestamp" key="timestamp"
+                        render={(text, row, index) => {
+                            return new Date(text).toLocaleString("en-US", { timeZone: "Asia/Singapore" });
+                        }} />
+                    <Column
+                        title=""
+                        key="action"
+                        render={(text, record) => (
+                            <Dropdown trigger={['click']} overlay={
+                                <Menu>
+                                    <Menu.Item onClick={() => {
+                                        this.editAnnouncementOpen(record._id)
+                                    }}>
+                                        <span>
+                                            Edit Announcement <ClusterOutlined />
+                                        </span>
+                                    </Menu.Item>
+                                </Menu>
+                            } placement="bottomCenter">
+                                <Button>Actions</Button>
+                            </Dropdown>
+                        )}
+                    />
+                </Table>
 
             </Layout>
         );

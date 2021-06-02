@@ -104,7 +104,9 @@ class AdminUsers extends React.Component {
             username: "",
             modalLoading: false,
             disableRegisterState: false,
-            disableLoading: false
+            disableLoading: false,
+            selectedTableKeys: [],
+            disableEditButtons: true
         }
     }
 
@@ -122,7 +124,7 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                console.log(data)
+                //console.log(data)
                 this.setState({ disableRegisterState: data.state })
             }
             else {
@@ -145,6 +147,9 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
+                for (let i = 0; i < data.list.length; i++) {
+                    data.list[i].key = data.list[i].username
+                }
                 this.setState({ dataSource: data.list, loading: false })
             }
             else {
@@ -187,12 +192,13 @@ class AdminUsers extends React.Component {
 
 
 
-    deleteAccount = (close, username) => {
-        fetch(window.ipAddress + "/v1/account/delete", {
+    deleteAccounts = async (close, users) => {
+        this.setState({disableEditButtons: true})
+        await fetch(window.ipAddress + "/v1/account/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "username": username,
+                "users": users,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
@@ -200,20 +206,25 @@ class AdminUsers extends React.Component {
             //console.log(data)
             if (data.success === true) {
 
-                message.success({ content: "User \"" + username + "\" deleted successfully" })
+                message.success({ content: "User(s) [" + users.join(', ') + "] deleted successfully" })
                 this.fillTableData()
+            }
+            else if (data.error === "delete_self") {
+                message.error("You cannot delete your own account here")
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            close()
+            
 
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
-            close()
+            
         })
+        close()
+        this.setState({selectedTableKeys: []})
 
     }
 
@@ -276,8 +287,8 @@ class AdminUsers extends React.Component {
                 else {
                     message.success("User registration enabled")
                 }
-                this.setState({disableRegisterState: value})
-                
+                this.setState({ disableRegisterState: value })
+
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -291,6 +302,14 @@ class AdminUsers extends React.Component {
     }
 
 
+    handleTableSelect = (selectedRowKeys) => {
+        this.setState({ selectedTableKeys: selectedRowKeys })
+        if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
+        else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
+
+    }
+
+
 
 
 
@@ -298,11 +317,7 @@ class AdminUsers extends React.Component {
         return (
 
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                {this.state.loading && (
-                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
-                        <Ellipsis color="#177ddc" size={120} ></Ellipsis>
-                    </div>
-                )}
+
                 <Modal
                     title={<span>Change User Permissions <ClusterOutlined /></span>}
                     visible={this.state.permissionModal}
@@ -339,60 +354,64 @@ class AdminUsers extends React.Component {
 
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
+                    <div style={{ display: "flex", alignItems: "center", height: "2ch" }}>
+                        <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<UserOutlined />} onClick={() => { this.setState({ createUserModal: true }) }}>Create New User</Button>
+                        {this.state.loading && (
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <Ellipsis color="#177ddc" size={60} ></Ellipsis>
+                                <h1>Loading Users</h1>
+                            </div>
+                        )}
+                    </div>
                     <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Users list refreshed.") }} />
                 </div>
-                {!this.state.loading && (
-                    <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
-                        emptyText: (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
-                            </div>
-                        )
-                    }}>
-                        <Column title="Username" dataIndex="username" key="username"
-                            render={(text, row, index) => {
-                                return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                            }}
-                        />
-                        <Column title="Email" dataIndex="email" key="email" />
-                        <Column title="Score" dataIndex="score" key="score" />
-                        <Column title="Permissions" dataIndex="type" key="type" />
-                        <Column
-                            title=""
-                            key="action"
-                            render={(text, record) => (
-                                <Dropdown trigger={['click']} overlay={
-                                    <Menu>
-                                        <Menu.Item onClick={() => {
-                                            this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
-                                        }}>
-                                            <span>
-                                                Change Permissions <ClusterOutlined />
-                                            </span>
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item onClick={() => {
-                                            confirm({
-                                                title: 'Are you sure you want to delete the user \"' + record.username + '\"? This action is irreversible.',
-                                                icon: <ExclamationCircleOutlined />,
-                                                onOk: (close) => { this.deleteAccount(close.bind(this), record.username) },
-                                                onCancel: () => { },
-                                            });
-                                        }}>
-                                            <span style={{ color: "#d32029" }} >
-                                                Delete Account <DeleteOutlined />
-                                            </span>
-                                        </Menu.Item>
-                                    </Menu>
-                                } placement="bottomCenter">
-                                    <Button>Actions</Button>
-                                </Dropdown>
-                            )}
-                        />
-                    </Table>
-                )}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
+                        confirm({
+                            confirmLoading: this.state.disableEditButtons,
+                            title: 'Are you sure you want to delete the user(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
+                            icon: <ExclamationCircleOutlined />,
+                            onOk: (close) => { this.deleteAccounts(close.bind(this), this.state.selectedTableKeys) },
+                            onCancel: () => { },
+                        });
+                    }}>Delete Users</Button>
+                </div>
+                <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
+                    emptyText: (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                            <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
+                        </div>
+                    )
+                }}>
+                    <Column title="Username" dataIndex="username" key="username"
+                        render={(text, row, index) => {
+                            return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                        }}
+                    />
+                    <Column title="Email" dataIndex="email" key="email" />
+                    <Column title="Score" dataIndex="score" key="score" />
+                    <Column title="Permissions" dataIndex="type" key="type" />
+                    <Column
+                        title=""
+                        key="action"
+                        render={(text, record) => (
+                            <Dropdown trigger={['click']} overlay={
+                                <Menu>
+                                    <Menu.Item onClick={() => {
+                                        this.setState({ permissionModal: true, username: record.username, permissionChangeTo: record.type.toString() })
+                                    }}>
+                                        <span>
+                                            Change Permissions <ClusterOutlined />
+                                        </span>
+                                    </Menu.Item>
+                                </Menu>
+                            } placement="bottomCenter">
+                                <Button>Actions</Button>
+                            </Dropdown>
+                        )}
+                    />
+                </Table>
                 <Divider />
                 <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={this.disableRegister} checked={this.state.disableRegisterState} /></h3>
 

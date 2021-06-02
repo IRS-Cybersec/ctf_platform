@@ -15,7 +15,7 @@ function MarkdownRender(props) {
             return !inline && match ? (
                 <SyntaxHighlighter style={{ ...atomDark }} language={match[1]} PreTag="div" children={String(children).replace(/\n$/, '')} {...props} />
             ) : (
-                <code className={className} {...props} />
+                <code className={className} {...props} children={String(children)} />
             )
         }
     }

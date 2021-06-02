@@ -34,6 +34,8 @@ class AdminChallenges extends React.Component {
             challengeCreate: false,
             editChallenge: false,
             selectedKeys: [],
+            selectedTableKeys: [],
+            disableEditButtons: true,
             targetKeys: [],
             allCat: [],
             transferDisabled: false,
@@ -138,7 +140,7 @@ class AdminChallenges extends React.Component {
     }
 
     editCategoryVisibility(visbility, categories) {
-
+        
         fetch(window.ipAddress + "/v1/challenge/edit/category", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -166,6 +168,35 @@ class AdminChallenges extends React.Component {
         })
     }
 
+    editChallengeVisibility(visibility, challenges) {
+        this.setState({disableEditButtons: true})
+        fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                "visibility": visibility,
+                "challenges": challenges,
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success("The visibility of (" + challenges.join(", ") + ") challenge(s) have been updated")
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+            this.setState({disableEditButtons: false})
+            this.fillTableData()
+
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+    }
+
     fillTableData = async () => {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/challenge/list_all", {
@@ -177,6 +208,7 @@ class AdminChallenges extends React.Component {
 
             if (data.success === true) {
                 for (var i = 0; i < data.challenges.length; i++) {
+                    data.challenges[i].key = data.challenges[i].name
                     if (data.challenges[i].visibility === false) {
                         data.challenges[i].visibility = <span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span>
                     }
@@ -199,34 +231,34 @@ class AdminChallenges extends React.Component {
 
 
 
-    deleteChallenge = (close, challengeName) => {
-        fetch(window.ipAddress + "/v1/challenge/delete", {
+    deleteChallenge = async (close, challenges) => {
+        this.setState({disableEditButtons: true})
+        await fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "chall": challengeName,
+                "chall": challenges,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Deleted challenge \"" + challengeName + "\" successfully" })
+                message.success({ content: "Deleted challenges (" + challenges.join(", ") + ") successfully" })
                 this.handleRefresh()
 
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            close()
-
-
+            
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
-            close()
         })
+        this.setState({selectedTableKeys: []})
+        close()
 
     }
 
@@ -256,6 +288,13 @@ class AdminChallenges extends React.Component {
         await Promise.all([this.fillTableData(), this.handleCategoryData()])
     }
 
+    handleTableSelect = (selectedRowKeys) => {
+        this.setState({ selectedTableKeys: selectedRowKeys })
+        if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({disableEditButtons: false})
+        else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({disableEditButtons: true})
+        
+    }
+
 
 
 
@@ -267,91 +306,79 @@ class AdminChallenges extends React.Component {
 
 
 
-                {!this.state.challengeCreate && !this.state.editChallenge && (
-                    <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <Button type="primary" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }, this.props.history.push("/Admin/Challenges/Create")) }}>Create New Challenge</Button>
-                            <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.handleRefresh(); message.success("Challenge list refreshed.") }} />
+                <div style={{ display: (!this.state.challengeCreate && !this.state.editChallenge) ? "initial" : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", height: "2ch" }}>
+                            <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }, this.props.history.push("/Admin/Challenges/Create")) }}>Create New Challenge</Button>
+                            {this.state.loading && (
+                                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                    <Ellipsis color="#177ddc" size={60} />
+                                    <h1>Loading Challenges</h1>
+                                </div>
+                            )}
                         </div>
-                        {this.state.loading && (
-                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                <Ellipsis color="#177ddc" size={120} />
-                            </div>
-                        )}
-                        {!this.state.loading && (
-                            <div>
-                                <Table style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
-                                    emptyText: (
-                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                            <h1 style={{ fontSize: "200%" }}>No Challenges Have Been Created.</h1>
-                                        </div>
-                                    )
-                                }}>
-                                    <Column title="Name" dataIndex="name" key="name" render={(text, row, index) => {
-                                        return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                                    }} />
-                                    <Column title="Category" dataIndex="category" key="category" render={(text, row, index) => {
-                                        return <Link to={"/Challenges/" + row.category}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                                    }} />
-                                    <Column title="Points" dataIndex="points" key="points" />
-                                    <Column title="Visbility" dataIndex="visibility" key="visibility" />
-                                    <Column
-                                        title=""
-                                        key="edit"
-                                        render={(text, record) => (
-                                            <Dropdown trigger={['click']} overlay={
-                                                <Menu>
-                                                    <Menu.Item onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>
-                                                        <span>
-                                                            Edit Challenge <EditOutlined />
-                                                        </span>
-                                                    </Menu.Item>
-                                                    <Menu.Divider />
-                                                    <Menu.Item onClick={() => {
-                                                        confirm({
-                                                            title: 'Are you sure you want to delete the challenge \"' + record.name + '\"? This action is irreversible.',
-                                                            icon: <ExclamationCircleOutlined />,
-                                                            onOk: (close) => { this.deleteChallenge(close.bind(this), record.name) },
-                                                            onCancel: () => { },
-                                                        });
-                                                    }}>
-                                                        <span style={{ color: "#d32029" }} >
-                                                            Delete Challenge <DeleteOutlined />
-                                                        </span>
-                                                    </Menu.Item>
-                                                </Menu>
-                                            } placement="bottomCenter">
-                                                <Button>Actions</Button>
-                                            </Dropdown>
-                                        )}
-                                    />
-                                </Table>
-                            </div>
-                        )}
-                        <Divider />
-                        <div style={{display: "flex", alignItems: "center"}}>
-                            <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
-                        </div>
-
-                        <Transfer
-                            dataSource={this.state.allCat}
-                            titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}
-                            targetKeys={this.state.targetKeys}
-                            selectedKeys={this.state.selectedKeys}
-                            onChange={this.handleChange}
-                            onSelectChange={this.handleSelectChange}
-                            render={item => item.key}
-                            pagination
-                            disabled={this.state.transferDisabled}
-                        />
-
-                        <Divider />
-
-
-
+                        <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.handleRefresh(); message.success("Challenge list refreshed.") }} />
                     </div>
-                )}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true, this.state.selectedTableKeys) }}>Show</Button>
+                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys) }}>Hide</Button>
+                        <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
+                            confirm({
+                                confirmLoading: this.state.disableEditButtons,
+                                title: 'Are you sure you want to delete the challenge(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
+                                icon: <ExclamationCircleOutlined />,
+                                onOk: (close) => { this.deleteChallenge(close.bind(this), this.state.selectedTableKeys) },
+                                onCancel: () => { },
+                            });
+                        }}>Delete Challenges</Button>
+                    </div>
+                    <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
+                        emptyText: (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                <h1 style={{ fontSize: "200%" }}>No Challenges Have Been Created.</h1>
+                            </div>
+                        )
+                    }}>
+                        <Column title="Name" dataIndex="name" key="name" render={(text, row, index) => {
+                            return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                        }} />
+                        <Column title="Category" dataIndex="category" key="category" render={(text, row, index) => {
+                            return <Link to={"/Challenges/" + row.category}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                        }} />
+                        <Column title="Points" dataIndex="points" key="points" />
+                        <Column title="Visbility" dataIndex="visibility" key="visibility" />
+                        <Column
+                            title=""
+                            key="edit"
+                            render={(text, record) => (
+                                <Button onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>Edit</Button>
+                            )}
+                        />
+                    </Table>
+
+                    <Divider />
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
+                    </div>
+
+                    <Transfer
+                        dataSource={this.state.allCat}
+                        titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}
+                        targetKeys={this.state.targetKeys}
+                        selectedKeys={this.state.selectedKeys}
+                        onChange={this.handleChange}
+                        onSelectChange={this.handleSelectChange}
+                        render={item => item.key}
+                        pagination
+                        disabled={this.state.transferDisabled}
+                    />
+
+                    <Divider />
+
+
+
+                </div>
 
 
                 <Switch>

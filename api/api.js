@@ -248,7 +248,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 			let userToDelete = username;
-			if (req.body.username) {
+			if (req.body.users) {
+				if (!Array.isArray(req.body.users)) throw new Error('Validation');
+				const usersToDelete = req.body.users;
+				if (usersToDelete.includes(username)) return res.send({ success: false, error: 'delete_self'})
 				if (checkPermissions(username) < 2) {
 					res.status(403);
 					res.send({
@@ -257,34 +260,64 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					});
 					return;
 				}
-				userToDelete = req.body.username;
-			}
-			if ((await collections.users.deleteOne({ username: userToDelete.toLowerCase() })).deletedCount == 0) {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'not_found'
+				
+				if ((await collections.users.deleteMany({ username: {$in: usersToDelete} })).deletedCount == 0) {
+					res.status(400);
+					res.send({
+						success: false,
+						error: 'not_found'
+					});
+					return;
+				}
+				await collections.challs.updateMany({}, {
+					$pull: {
+						solves: {$in: usersToDelete}
+					}
 				});
-				return;
+				await collections.challs.updateMany({
+					hints: {
+						$exists: true
+					}
+				}, {
+					$pull: {
+						'hints.$[].purchased': {$in: usersToDelete}
+					}
+				});
+				await collections.challs.deleteMany({ author: {$in: usersToDelete} });
+				await collections.transactions.deleteMany({ author: {$in: usersToDelete} });
+				usersToDelete.forEach(username => {if (permissions.includes(username)) delete permissions[username]})
+		
+				res.send({ success: true });
 			}
-			await collections.challs.updateMany({}, {
-				$pull: {
-					solves: userToDelete
+			else {
+				if ((await collections.users.deleteOne({ username: userToDelete.toLowerCase() })).deletedCount == 0) {
+					res.status(400);
+					res.send({
+						success: false,
+						error: 'not_found'
+					});
+					return;
 				}
-			});
-			await collections.challs.updateMany({
-				hints: {
-					$exists: true
-				}
-			}, {
-				$pull: {
-					'hints.$[].purchased': userToDelete
-				}
-			});
-			await collections.challs.deleteMany({ author: userToDelete });
-			await collections.transactions.deleteMany({ author: userToDelete });
-			if (permissions.includes(username)) delete permissions[username];
-			res.send({ success: true });
+				await collections.challs.updateMany({}, {
+					$pull: {
+						solves: userToDelete
+					}
+				});
+				await collections.challs.updateMany({
+					hints: {
+						$exists: true
+					}
+				}, {
+					$pull: {
+						'hints.$[].purchased': userToDelete
+					}
+				});
+				await collections.challs.deleteMany({ author: userToDelete });
+				await collections.transactions.deleteMany({ author: userToDelete });
+				if (permissions.includes(username)) delete permissions[username];
+				res.send({ success: true });
+			}
+
 		}
 		catch (err) {
 			errors(err, res);
@@ -468,7 +501,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			const delReq = await collections.announcements.deleteOne({ _id: MongoDB.ObjectID(req.body.id) });
+			if (!Array.isArray(req.body.ids)) throw new Error('Validation');
+			let ids = req.body.ids.map((id) => {return MongoDB.ObjectID(id)})
+			const delReq = await collections.announcements.deleteMany({ _id: {$in: ids}});
 			if (!delReq.result.ok) throw new Error('Unknown');
 			if (delReq.deletedCount === 0) throw new Error('NotFound');
 			res.send({
@@ -973,6 +1008,32 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
+	app.post('/v1/challenge/edit/visibility', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
+			if ((await collections.challs.updateMany({
+				name: {
+					$in: req.body.challenges
+				}
+			}, {
+				$set: { visibility: req.body.visibility }
+			})).matchedCount > 0) res.send({ success: true });
+			else throw new Error('NotFound');
+		}
+		catch (err) {
+			if (err.message == 'MissingHintCost') {
+				res.status(400);
+				res.send({
+					success: false,
+					error: 'validation'
+				});
+			}
+			errors(err, res);
+		}
+	});
 	app.post('/v1/challenge/edit/category', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
@@ -1005,32 +1066,35 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			const delReq = await collections.challs.findOneAndDelete({
-				name: req.body.chall
-			}, {
-				solves: 1,
-				points: 1,
-				hints: 1,
-				_id: 0
-			});
-			if (!delReq.ok) throw new Error('Unknown');
-			if (delReq.value === null) throw new Error('NotFound');
-			const timestamp = new Date();
-			await collections.transactions.deleteMany({ challenge: req.body.chall });
-			await collections.users.updateMany({
-				username: { $in: delReq.value.solves }
-			}, {
-				$inc: { score: -delReq.value.points }
-			});
-			if (delReq.value.hints) {
-				for (hint of delReq.value.hints) {
-					await collections.users.updateMany({
-						username: { $in: hint.purchased }
-					}, {
-						$inc: { score: hint.cost }
-					});
+			for (let i = 0; i < req.body.chall.length; i++) {
+				const delReq = await collections.challs.findOneAndDelete({
+					name: req.body.chall[i]
+				}, {
+					solves: 1,
+					points: 1,
+					hints: 1,
+					_id: 0
+				});
+				if (!delReq.ok) throw new Error('Unknown');
+				if (delReq.value === null) throw new Error('NotFound');
+				const timestamp = new Date();
+				await collections.transactions.deleteMany({ challenge: req.body.chall });
+				await collections.users.updateMany({
+					username: { $in: delReq.value.solves }
+				}, {
+					$inc: { score: -delReq.value.points }
+				});
+				if (delReq.value.hints) {
+					for (hint of delReq.value.hints) {
+						await collections.users.updateMany({
+							username: { $in: hint.purchased }
+						}, {
+							$inc: { score: hint.cost }
+						});
+					}
 				}
 			}
+
 			res.send({
 				success: true
 			});
