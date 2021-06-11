@@ -6,7 +6,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^7.1.2",
-    "@uiw/react-md-editor": "^3.3.0",
+    "@uiw/react-md-editor": "^3.3.6",
     "antd": "^4.15.5",
     "less": "^3.12.2",
     "lodash": "^4.17.21",
