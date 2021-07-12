@@ -2,9 +2,10 @@
   "name": "ctf_platform",
   "version": "1.0.0",
   "description": "A rewriting of a perfectly fine platform and a waste of time in general",
-  "main": "api/api.js",
+  "main": "api.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+"dev": "nodemon api.js"
   },
   "repository": {
     "type": "git",
