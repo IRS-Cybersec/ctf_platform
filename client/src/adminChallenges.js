@@ -352,7 +352,7 @@ class AdminChallenges extends React.Component {
                             title=""
                             key="edit"
                             render={(text, record) => (
-                                <Button onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>Edit</Button>
+                                <Button prefix={<EditOutlined/>} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>Edit</Button>
                             )}
                         />
                     </Table>

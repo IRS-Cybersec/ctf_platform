@@ -121,3 +121,22 @@
 .w-md-editor-text-pre .title, .w-md-editor-text-pre .bold {
     color: rgba(255, 255, 255, 0.85) !important;
 }
+
+.menu-item {
+    font-size: 115%;
+    height: 6ch !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.menu-item-icon {
+    font-size: 110% !important;
+}
+
+.loading-style {
+    position: absolute;
+    left: 55%;
+    transform: translate(-55%, 0%);
+    z-index: 10;
+}
+

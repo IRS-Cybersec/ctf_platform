@@ -95,24 +95,22 @@ class ChallengesTagSort extends React.Component {
     };
   }
 
-  componentDidMount() {
-    const startup = async () => {
-
-
-      let challenge = this.props.match.params.challenge;
-      if (typeof challenge !== "undefined") {
-        challenge = decodeURIComponent(challenge)
-        await this.sortByTags(challenge, "points")
-        const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge)
-        if (typeof solved !== "undefined") this.loadChallengeDetails(challenge, solved.solved)
-        else message.error("Challenge " + challenge + " not found."); this.props.history.push("/Challenges/" + this.props.category);
-      }
+  componentDidMount = async () => {
+    let challenge = this.props.match.params.challenge;
+    if (typeof challenge !== "undefined") {
+      challenge = decodeURIComponent(challenge)
+      await this.sortByTags(challenge, "points")
+      const solved = this.props.currentCategoryChallenges.find(element => element.name === challenge)
+      if (typeof solved !== "undefined") this.loadChallengeDetails(challenge, solved.solved)
       else {
-        await this.sortByTags(false, "points")
+        message.error("Challenge " + challenge + " not found.")
+        this.props.history.push("/Challenges/" + this.props.category)
       }
     }
+    else {
+      await this.sortByTags(false, "points")
+    }
 
-    startup()
   }
 
   sortCats(sortType) {

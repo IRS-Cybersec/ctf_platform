@@ -94,18 +94,15 @@ class Profile extends React.Component {
     }
 
     componentDidMount() {
-        const startup = async () => {
-            await this.setState({ loading: true })
-            const username = this.props.match.params.user;
-            if (typeof username !== "undefined") {
-                await this.setState({ targetUser: username })
-            }
-            else {
-                await this.setState({ targetUser: this.props.username })
-            }
-            await this.unpackChallengesData();
-        };
-        startup();
+        this.setState({ loading: true })
+        const username = this.props.match.params.user;
+        if (typeof username !== "undefined") {
+            this.setState({ targetUser: username })
+        }
+        else {
+            this.setState({ targetUser: this.props.username })
+        }
+        this.unpackChallengesData();
     }
 
     resetPassword(values) {
@@ -301,94 +298,94 @@ class Profile extends React.Component {
 
     render() {
         return (
-                <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+            <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
-                    <Modal title="Change Password" visible={this.state.passwordChangeModal} onCancel={() => { this.setState({ passwordChangeModal: false }) }} footer={null}>
-                        <ChangePasswordForm resetPassword={this.resetPassword.bind(this)} />
-                    </Modal>
+                <Modal title="Change Password" visible={this.state.passwordChangeModal} onCancel={() => { this.setState({ passwordChangeModal: false }) }} footer={null}>
+                    <ChangePasswordForm resetPassword={this.resetPassword.bind(this)} />
+                </Modal>
 
-                    {this.state.loading && (
-                        <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
-                            <Ellipsis color="#177ddc" size={120} ></Ellipsis>
-                        </div>
-                    )}
-                    {
-                        !this.state.targetUser && !this.state.loading && (
-                            <Layout style={{ height: "100%", width: "100%" }}>
-                                <br /><br /><br />
-                                <Empty>Unable to find this user</Empty>
-                            </Layout>
-                        )
-                    }
-                    {
-                        this.state.targetUser && !this.state.loading && (
-                            <Layout style={{ height: "100%", width: "100%", padding: "3%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div style={{ display: "flex" }}>
-                                        <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                                            <Avatar style={{ backgroundColor: "Red", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.webp").default} />
-                                            <h1 style={{ fontSize: "5ch" }}>{this.state.targetUser}</h1>
-                                        </div>
-                                        <div>
-                                            <h1 style={{ fontSize: "5ch", color: "#faad14" }}><span style={{ color: "#d48806", fontSize: "1.5ch" }}><u>Score:</u> </span>{this.state.userScore}</h1>
-                                        </div>
+                {this.state.loading && (
+                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
+                        <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                    </div>
+                )}
+                {
+                    !this.state.targetUser && !this.state.loading && (
+                        <Layout style={{ height: "100%", width: "100%" }}>
+                            <br /><br /><br />
+                            <Empty>Unable to find this user</Empty>
+                        </Layout>
+                    )
+                }
+                {
+                    this.state.targetUser && !this.state.loading && (
+                        <Layout style={{ height: "100%", width: "100%", padding: "3%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div style={{ display: "flex" }}>
+                                    <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
+                                        <Avatar style={{ backgroundColor: "Red", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.webp").default} />
+                                        <h1 style={{ fontSize: "5ch" }}>{this.state.targetUser}</h1>
                                     </div>
-                                    {this.state.targetUser === this.props.username && (
-                                        <div>
-                                            <Button size="large" style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.setState({ passwordChangeModal: true }) }}>Change Password</Button>
+                                    <div>
+                                        <h1 style={{ fontSize: "5ch", color: "#faad14" }}><span style={{ color: "#d48806", fontSize: "1.5ch" }}><u>Score:</u> </span>{this.state.userScore}</h1>
+                                    </div>
+                                </div>
+                                {this.state.targetUser === this.props.username && (
+                                    <div>
+                                        <Button size="large" style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.setState({ passwordChangeModal: true }) }}>Change Password</Button>
+                                    </div>
+                                )}
+                            </div>
+                            <Divider />
+                            <h1 style={{ fontSize: "3ch" }}>Score History</h1>
+                            <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
+                                <ResponsiveContainer width="90%" height={350}>
+                                    <AreaChart height={350} data={this.state.graphData}
+                                        margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
+
+                                        <defs>
+                                            <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#791a1f" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.1} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="Time">
+                                            <Label offset={-5} position="insideBottom" style={{ fill: 'rgba(207, 207, 207, 1)' }}>
+                                                Time
+                                            </Label>
+                                        </XAxis>
+                                        <YAxis >
+                                            <Label offset={-10} position='insideLeft' style={{ fill: 'rgba(207, 207, 207, 1)' }}>
+                                                Score
+                                            </Label>
+                                        </YAxis>
+                                        <CartesianGrid strokeDasharray="3 3" />
+
+                                        <Tooltip labelStyle={{ backgroundColor: "#1c2b3e" }} contentStyle={{ backgroundColor: "#1c2b3e" }} wrapperStyle={{ backgroundColor: "#1c2b3e" }} />
+                                        <Area isAnimationActive={false} type="monotone" dataKey="Score" stroke="#d32029" fillOpacity={1} fill="url(#color1)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+
+                            </div>
+                            <div style={{ height: "70%", width: "100%" }}>
+                                <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
+                                    emptyText: (
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                            <h1 style={{ fontSize: "200%" }}>{this.state.targetUser} has not completed any challenges/bought any hints</h1>
                                         </div>
-                                    )}
-                                </div>
-                                <Divider />
-                                <h1 style={{ fontSize: "3ch" }}>Score History</h1>
-                                <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
-                                    <ResponsiveContainer width="90%" height={350}>
-                                        <AreaChart height={350} data={this.state.graphData}
-                                            margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
+                                    )
+                                }}>
+                                    <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge" />
+                                    <Column width={30} title="Score Change" dataIndex="score" key="score" />
+                                    <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
+                                </Table>
+                            </div>
+                        </Layout>
 
-                                            <defs>
-                                                <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#791a1f" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.1} />
-                                                </linearGradient>
-                                            </defs>
-                                            <XAxis dataKey="Time">
-                                                <Label offset={-5} position="insideBottom" style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                                                    Time
-                                                    </Label>
-                                            </XAxis>
-                                            <YAxis >
-                                                <Label offset={-10} position='insideLeft' style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                                                    Score
-                                                </Label>
-                                            </YAxis>
-                                            <CartesianGrid strokeDasharray="3 3" />
-
-                                            <Tooltip labelStyle={{ backgroundColor: "#1c2b3e" }} contentStyle={{ backgroundColor: "#1c2b3e" }} wrapperStyle={{ backgroundColor: "#1c2b3e" }} />
-                                            <Area isAnimationActive={false} type="monotone" dataKey="Score" stroke="#d32029" fillOpacity={1} fill="url(#color1)" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-
-                                </div>
-                                <div style={{ height: "70%", width: "100%" }}>
-                                    <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
-                                        emptyText: (
-                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                                <h1 style={{ fontSize: "200%" }}>{this.state.targetUser} has not completed any challenges/bought any hints</h1>
-                                            </div>
-                                        )
-                                    }}>
-                                        <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge" />
-                                        <Column width={30} title="Score Change" dataIndex="score" key="score" />
-                                        <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
-                                    </Table>
-                                </div>
-                            </Layout>
-
-                        )
-                    }
-                </Layout>
+                    )
+                }
+            </Layout>
         )
     }
 }
