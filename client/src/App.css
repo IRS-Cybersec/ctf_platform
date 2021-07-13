@@ -133,10 +133,26 @@
     font-size: 110% !important;
 }
 
+.layout-style {
+    margin: 20px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
 .loading-style {
     position: absolute;
     left: 55%;
     transform: translate(-55%, 0%);
     z-index: 10;
+}
+
+.form-style {
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 5px solid transparent; 
+    border-radius: 20px;
+}
+
+.settings-header {
+    font-size: 180%;
 }
 

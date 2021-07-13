@@ -1,95 +1,27 @@
 import React from 'react';
-import { Layout, message, Empty, Divider, Avatar, Table, Button, Modal, Form, Input } from 'antd';
+import { Layout, message, Empty, Divider, Avatar, Table } from 'antd';
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis } from 'react-spinners-css';
 import { orderBy } from "lodash";
 import {
-    KeyOutlined,
     FileUnknownTwoTone,
-    LockOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 
 const { Column } = Table;
 
-const ChangePasswordForm = (props) => {
-    const [form] = Form.useForm();
-
-    return (
-        <Form
-            form={form}
-            name="changePassword"
-            className="change-password-form"
-            onFinish={(values) => { props.resetPassword(values) }}
-            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
-        >
-            <h3>Old Password:</h3>
-            <Form.Item
-                name="oldPass"
-                rules={[{ required: true, message: 'Please input your old password', }]}>
-
-                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter your old password." />
-            </Form.Item>
-            <h3>New Password:</h3>
-            <Form.Item
-                name="newPassword"
-                rules={[
-                    {
-                        required: true,
-                        message: 'Please input your new password',
-                    },
-                ]}
-                hasFeedback
-            >
-
-                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
-            </Form.Item>
-
-            <h3>Confirm New Password:</h3>
-            <Form.Item
-                name="confirm"
-                dependencies={['newPassword']}
-                hasFeedback
-                rules={[
-                    {
-                        required: true,
-                        message: 'Please retype your new password to confirm',
-                    },
-                    ({ getFieldValue }) => ({
-                        validator(rule, value) {
-                            if (!value || getFieldValue('newPassword') === value) {
-                                return Promise.resolve();
-                            }
-                            return Promise.reject('Oops, the 2 passwords do not match');
-                        },
-                    }),
-                ]}
-            >
-
-                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
-            </Form.Item>
-            <Form.Item>
-                <Button type="primary" htmlType="submit" icon={<KeyOutlined />}>Change Password</Button>
-            </Form.Item>
-        </Form>
-    );
-}
 
 class Profile extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            solved: [],
             score: 0,
-            width: 0,
-            height: 0,
             challenges: [],
             targetUser: "",
             loading: true,
             userScore: "Loading...",
             graphData: [],
-            passwordChangeModal: false
         }
     }
 
@@ -103,34 +35,6 @@ class Profile extends React.Component {
             this.setState({ targetUser: this.props.username })
         }
         this.unpackChallengesData();
-    }
-
-    resetPassword(values) {
-        fetch(window.ipAddress + "/v1/account/password", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-            body: JSON.stringify({
-                "password": values.oldPass,
-                "new_password": values.newPassword,
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            if (data.success === true) {
-                message.success({ content: "Password changed successfully." })
-                this.setState({ passwordChangeModal: false })
-            }
-            else if (data.error === "wrong-password") {
-                message.error({ content: "Old password is incorrect. Please try again." })
-            }
-            else {
-                message.error({ content: "Oops. Unknown error." })
-            }
-
-        }).catch((error) => {
-            console.log(error)
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-        })
     }
 
     //Marvel in glory at the hideous mess of tangled backend handling.
@@ -298,11 +202,8 @@ class Profile extends React.Component {
 
     render() {
         return (
-            <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+            <Layout className="layout-style">
 
-                <Modal title="Change Password" visible={this.state.passwordChangeModal} onCancel={() => { this.setState({ passwordChangeModal: false }) }} footer={null}>
-                    <ChangePasswordForm resetPassword={this.resetPassword.bind(this)} />
-                </Modal>
 
                 {this.state.loading && (
                     <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
@@ -330,11 +231,6 @@ class Profile extends React.Component {
                                         <h1 style={{ fontSize: "5ch", color: "#faad14" }}><span style={{ color: "#d48806", fontSize: "1.5ch" }}><u>Score:</u> </span>{this.state.userScore}</h1>
                                     </div>
                                 </div>
-                                {this.state.targetUser === this.props.username && (
-                                    <div>
-                                        <Button size="large" style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.setState({ passwordChangeModal: true }) }}>Change Password</Button>
-                                    </div>
-                                )}
                             </div>
                             <Divider />
                             <h1 style={{ fontSize: "3ch" }}>Score History</h1>

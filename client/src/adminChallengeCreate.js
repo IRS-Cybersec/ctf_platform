@@ -499,7 +499,7 @@ class AdminChallengeCreate extends React.Component {
     render() {
         return (
 
-            <Layout style={{ minHeight: "100vh", height: "100%", width: "100%", padding: "10px", backgroundColor: "rgba(0, 0, 0, 0.5)", border: "5px solid transparent", borderRadius: "20px" }}>
+            <Layout className="form-style">
 
                 <Modal
                     title={null}

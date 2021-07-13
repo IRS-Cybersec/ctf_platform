@@ -225,10 +225,7 @@ class Scoreboard extends React.Component {
 
   render() {
     return (
-        <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)", display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "5ch" }}>Scoreboard</h1>
-          </div>
+        <Layout className="layout-style">
           <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
             <ResponsiveContainer width="90%" height={350} debounce={200}>
               <AreaChart height={350} data={this.state.graphData}

@@ -157,7 +157,7 @@ class Challenges extends React.Component {
 
   render() {
     return (
-        <Layout style={{ minHeight: "95vh", margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+        <Layout className="layout-style">
           <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
             <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.webp").default} />
 

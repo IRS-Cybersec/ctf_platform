@@ -57,7 +57,7 @@ class Home extends React.Component {
   render() {
     return (
 
-      <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+      <Layout className="layout-style">
         <h2>Welcome to the Sieberrsec Training Platform!</h2>
         <h3>This platform is in early alpha. Do report any bugs you find :D!</h3>
         <Divider />

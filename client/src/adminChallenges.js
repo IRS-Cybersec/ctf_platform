@@ -8,7 +8,7 @@ import {
     FileUnknownTwoTone,
     EyeOutlined,
     EyeInvisibleOutlined,
-    RedoOutlined
+    RedoOutlined,
 } from '@ant-design/icons';
 import './App.min.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
@@ -352,7 +352,7 @@ class AdminChallenges extends React.Component {
                             title=""
                             key="edit"
                             render={(text, record) => (
-                                <Button prefix={<EditOutlined/>} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}>Edit</Button>
+                                <Button icon={<EditOutlined/>} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
                             )}
                         />
                     </Table>

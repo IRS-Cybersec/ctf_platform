@@ -16,7 +16,7 @@ class Oops extends React.Component {
 
   render() {
     return (
-      <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)", textAlign: "center" }}>
+      <Layout className="layout-style">
         <FileUnknownOutlined style={{ fontSize: "400%", marginBottom: "2vh" }} />
         <h2>Welcome to Limbo.</h2>
         <h3>There is nothing here. Really.</h3>

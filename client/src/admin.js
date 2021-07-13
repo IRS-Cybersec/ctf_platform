@@ -33,7 +33,7 @@ class Admin extends React.Component {
   render() {
     return (
 
-      <Layout style={{ margin: "20px", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+      <Layout className="layout-style">
         <Tabs activeKey={this.state.key} onTabClick={async (key) => {
           await this.props.history.push("/Admin/" + key)
           if (this.props.location.pathname === "/Admin/" + key) this.setState({ key: key })
