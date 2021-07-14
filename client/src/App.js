@@ -22,7 +22,7 @@ import { Ellipsis } from 'react-spinners-css';
 const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
-const production = false
+const production = true
 window.ipAddress = production ? "https://api.irscybersec.tk" : "http://localhost:20001"
 
 const Home = lazy(() => import("./home.js"));

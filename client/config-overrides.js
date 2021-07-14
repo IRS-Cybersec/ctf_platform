@@ -4,7 +4,7 @@ const { getThemeVariables } = require('antd/dist/theme');
 
 /*
 const Terser = config => {
-	config.plugins.push(new TerserPlugin({
+  config.plugins.push(new TerserPlugin({
     parallel: true,
     terserOptions: {
       ecma: 6,
@@ -16,19 +16,17 @@ const Terser = config => {
 */
 
 module.exports = override(
-//customise-cra plugins
+  //customise-cra plugins
   fixBabelImports('antd', {
     libraryDirectory: 'es',
     style: true,
   }),
   addLessLoader({
-	lessOptions: {
-		javascriptEnabled: true,
-		modifyVars: getThemeVariables({
-			dark: true,
-			compact: false,
-		}),
-	}
+    javascriptEnabled: true,
+    modifyVars: getThemeVariables({
+      dark: true,
+      compact: false,
+    })
   })
   //Terser
 );
