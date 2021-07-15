@@ -30,13 +30,10 @@ class Challenges extends React.Component {
 
     this.state = {
       categories: [],
-      challengeCategory: false,
       currentCategory: false,
       originalData: [],
       tagData: [],
-      sortByTags: false,
       loadingChall: false,
-      RadioValue: "Category",
       currentCategoryChallenges: []
     };
   }
@@ -94,7 +91,6 @@ class Challenges extends React.Component {
         const category = this.props.match.params.category;
         if (typeof category !== "undefined") {
           await this.setState({ currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
-          this.sortDifferent({ target: { value: "Type" } })
         }
 
 
@@ -112,46 +108,14 @@ class Challenges extends React.Component {
 
   sortCats(value) {
 
-    if (this.state.sortByTags) this.tagSortRef.current.sortCats(value)
-    else this.child.current.sortCats(value)
+    this.tagSortRef.current.sortCats(value)
     
-  }
-
-  sortDifferent(value) {
-    this.setState({ RadioValue: value.target.value })
-    if (value.target.value === "Type") {
-
-      if (this.state.currentCategory) { //currentCategory is whether a category has been set, challengeCategory is for the visibility of the component
-        let originalData = this.state.originalData
-        //Since the category is not the key, we will need to loop through the list to find the category
-        this.setState({ tagData: [originalData[this.state.currentCategory]], sortByTags: true, challengeCategory: false })
-
-      }
-      else {
-        this.setState({ sortByTags: true, tagData: this.state.originalData })
-      }
-
-    }
-    else if (value.target.value === "Category") {
-
-      if (this.state.currentCategory) {
-        this.setState({ sortByTags: false, challengeCategory: true })
-      }
-      else {
-        this.setState({ sortByTags: false })
-      }
-
-    }
   }
 
   handleRefresh = async (tagSorting) => {
 
     await this.fetchCategories()
-    if (!tagSorting) {
-      await this.sortDifferent({ target: { value: "Category" } })
       await this.setState({ currentCategoryChallenges: this.state.originalData[this.state.currentCategory]})
-    }
-
     await this.props.obtainScore()
   }
 
@@ -194,18 +158,14 @@ class Challenges extends React.Component {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh" }}>
 
-            <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ challengeCategory: false, currentCategory: false, sortByTags: false, RadioValue: "Category" }) }} size="large">Back</Button>
+            <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({  currentCategory: false }) }} size="large">Back</Button>
             <div>
-              <Select disabled={!this.state.currentCategory && !this.state.sortByTags} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
+              <Select disabled={!this.state.currentCategory} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
                 <Option value="points">Sort by ↑Points</Option>
                 <Option value="pointsrev">Sort by ↓Points</Option>
                 <Option value="abc">Sort A→Z</Option>
                 <Option value="abcrev">Sort Z→A</Option>
               </Select>
-              <Radio.Group buttonStyle="solid" size="large" onChange={this.sortDifferent.bind(this)} value={this.state.RadioValue} style={{ backgroundColor: "#1f1f1f" }}>
-                <Radio.Button value="Category">Sort By Category <AppstoreOutlined /> </Radio.Button>
-                <Radio.Button value="Type">Sort By Tag <TagsOutlined /> </Radio.Button>
-              </Radio.Group>
 
             </div>
           </div>
@@ -225,7 +185,7 @@ class Challenges extends React.Component {
                   }
                   else {
                     return (<animated.div style={{ ...props }}>
-                      {!this.state.challengeCategory && !this.state.sortByTags && (
+                      {!this.state.currentCategory && (
                         <List
                           grid={{
                             xs: 1,
@@ -251,9 +211,9 @@ class Challenges extends React.Component {
                             return (
                               <List.Item key={item._id}>
                                 <Link to={"/Challenges/" + item._id}>
-                                  <div onClick={async () => {
-                                    await this.setState({ currentCategory: item._id, currentSolvedStatus: item.challenges, currentCategoryChallenges: this.state.originalData[item._id] });
-                                    this.sortDifferent({ target: { value: "Type" } })
+                                  <div onClick={() => {
+                                    this.setState({ currentCategory: item._id, currentSolvedStatus: item.challenges, currentCategoryChallenges: [this.state.originalData[item._id]] });
+    
                                   }}>
                                     <Card
                                       hoverable
@@ -288,12 +248,8 @@ class Challenges extends React.Component {
                         />
                       )}
 
-                      {this.state.challengeCategory && (
-                        <ChallengesCategory match={this.props.match} history={this.props.history} handleRefresh={this.handleRefresh.bind(this)} ref={this.child} currentCategoryChallenges={this.state.currentCategoryChallenges} category={this.state.currentCategory}></ChallengesCategory>
-                      )}
-
-                      {this.state.sortByTags && (
-                        <ChallengesTagSort match={this.props.match} history={this.props.history} tagData={this.state.tagData} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                      {this.state.currentCategory && (
+                        <ChallengesTagSort match={this.props.match} history={this.props.history} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                       )}
                     </animated.div>)
                   }

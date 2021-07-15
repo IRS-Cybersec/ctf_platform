@@ -121,7 +121,8 @@ class ChallengesTagSort extends React.Component {
   }
 
   sortByTags(findNOpenTag, sortType) {
-    let originalData = this.props.tagData
+    console.log(this.props.currentCategoryChallenges)
+    let originalData = this.props.currentCategoryChallenges
     let tag = {}
     this.setState({ loadingTag: true })
     let moveTagToFront = ""
@@ -434,7 +435,7 @@ class ChallengesTagSort extends React.Component {
   render() {
     return (
       <Layout className="pageTransition" style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-
+        
         <Modal
           title="Hint"
           visible={this.state.hintModal}
