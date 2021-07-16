@@ -583,7 +583,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 								solved: { $in: [username.toLowerCase(), '$solves'] },
 								firstBlood: { $arrayElemAt: ['$solves', 0] },
 								tags: '$tags',
-								visibility: '$visibility'
+								visibility: '$visibility',
+								requires: '$requires'
 							}
 						}
 					}
@@ -615,7 +616,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					points: '$points',
 					solved: { $in: [username.toLowerCase(), '$solves'] },
 					firstBlood: { $arrayElemAt: ['$solves', 0] },
-					tags: '$tags'
+					tags: '$tags',
+					requires: '$requires'
 				}
 			}]).toArray();
 			if (challenges.length == 0) throw new Error('NotFound')
@@ -649,7 +651,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0 } }).toArray())
+				challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0, requires: 1 } }).toArray())
 			});
 		}
 		catch (err) {
@@ -678,6 +680,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (permissions === false) throw new Error('BadToken');
 			const filter = permissions == 2 ? { name: req.params.chall } : { visibility: true, name: req.params.chall };
 			let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
+
+			if ("requires" in chall && permissions < 2) {
+				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
+				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+			}
+
 			if (!chall) {
 				res.status(400);
 				res.send({
@@ -753,9 +761,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}, {
 				projection: {
 					hints: { $slice: [req.body.id, 1] },
+					requires: 1,
 					_id: 1
 				}
 			}));
+			if ("requires" in hints) {
+				const solved = await collections.challs.findOne({ name: hints.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
+				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+			}
 			if (!hints) throw new Error('NotFound');
 			if (!hints.hints[0]) throw new Error('OutOfRange');
 			if (!hints.hints[0].purchased.includes(username)) {
@@ -797,6 +810,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0 } });
 			if (!chall) throw new Error('NotFound');
 			if (chall.solves.includes(username)) throw new Error('Submitted');
+
+			//Check if the required challenge has been solved (if any)
+			if ("requires" in chall) {
+				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
+				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+			}
 			async function insertTransaction(correct = false, blocked = false) {
 				await collections.transactions.insertOne({
 					author: username,
