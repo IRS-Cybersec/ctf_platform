@@ -90,7 +90,7 @@ class Challenges extends React.Component {
 
         const category = this.props.match.params.category;
         if (typeof category !== "undefined") {
-          await this.setState({ currentCategory: decodeURIComponent(category), currentCategoryChallenges: this.state.originalData[decodeURIComponent(category)] })
+          await this.setState({ currentCategory: decodeURIComponent(category), currentCategoryChallenges: [this.state.originalData[decodeURIComponent(category)]] })
         }
 
 
@@ -156,7 +156,7 @@ class Challenges extends React.Component {
 
 
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "3vh" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "10px" }}>
 
             <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({  currentCategory: false }) }} size="large">Back</Button>
             <div>

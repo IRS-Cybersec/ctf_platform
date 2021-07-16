@@ -22,11 +22,12 @@ class ChallengesTagSortList extends React.Component {
   }
   render() {
     return (
-      <Collapse bordered={false} defaultActiveKey={[this.props.moveTagToFront]}>
+      <Collapse bordered={false} defaultActiveKey={this.props.selectedTags}>
         {
-          Object.entries(this.props.tag).map((currentCat, index) => {
-            const key = currentCat[0]
-            const value = currentCat[1]
+
+          this.props.selectedTags.map((category) => {
+            const key = category
+            const value = this.props.tag[category]
             return (
               <Panel header={<span style={{ color: "#177ddc", fontSize: "120%", textTransform: "capitalize", textAlign: "center", fontWeight: 700 }}>{key} - <span style={{ color: "#d89614" }}>{"(" + String(value.length) + ")"}</span> </span>} key={key}>
                 <List
@@ -58,7 +59,7 @@ class ChallengesTagSortList extends React.Component {
                     if (item.solved === false) {
                       return (
                         <List.Item key={item.name}>
-                          <div id={item.name} onClick={() => { this.props.loadChallengeDetails(item.name, item.solved);  }}>
+                          <div id={item.name} onClick={() => { this.props.loadChallengeDetails(item.name, item.solved); }}>
                             <Card
                               hoverable
                               type="inner"
