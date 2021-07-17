@@ -682,8 +682,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
 
 			if ("requires" in chall && permissions < 2) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
-				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
+				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
+				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
 			}
 
 			if (!chall) {
@@ -765,9 +766,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					_id: 1
 				}
 			}));
-			if ("requires" in hints) {
-				const solved = await collections.challs.findOne({ name: hints.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
-				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+			if ("requires" in chall) {
+				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
+				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
+				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
 			}
 			if (!hints) throw new Error('NotFound');
 			if (!hints.hints[0]) throw new Error('OutOfRange');
@@ -807,14 +809,15 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, _id: 0 } });
+			const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
 			if (!chall) throw new Error('NotFound');
 			if (chall.solves.includes(username)) throw new Error('Submitted');
 
 			//Check if the required challenge has been solved (if any)
 			if ("requires" in chall) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}}).solves.includes(username)
-				if (!solved) return res.send({success: false, error: "required-challenge-not-completed"})
+				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
+				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
+				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
 			}
 			async function insertTransaction(correct = false, blocked = false) {
 				await collections.transactions.insertOne({
@@ -909,7 +912,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				solves: [],
 				max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
 				visibility: req.body.visibility ? true : false,
-				requires: req.body.requires
 			};
 			if (req.body.tags) doc.tags = req.body.tags;
 			if (req.body.hints) {
@@ -923,6 +925,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.body.writeup) {
 				doc.writeup = req.body.writeup
 				doc.writeupComplete = req.body.writeupComplete
+			}
+			if (req.body.requires) {
+				doc.requires = req.body.requires
 			}
 			// if (req.body.files) {
 			// 	for (file of req.body.files) {

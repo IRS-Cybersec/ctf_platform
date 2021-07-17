@@ -104,55 +104,42 @@ class Challenges extends React.Component {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
+    return true
   }
 
   sortCats(value) {
-
     this.tagSortRef.current.sortCats(value)
-    
   }
 
-  handleRefresh = async (tagSorting) => {
+  setStateAsync(state) {
+    return new Promise((resolve) => {
+      this.setState(state, resolve)
+    });
+  }
+
+  handleRefresh = async () => {
 
     await this.fetchCategories()
-      await this.setState({ currentCategoryChallenges: this.state.originalData[this.state.currentCategory]})
+    await this.setStateAsync({ currentCategoryChallenges: [this.state.originalData[this.state.currentCategory]]})
     await this.props.obtainScore()
+    return true
   }
 
   render() {
     return (
         <Layout className="layout-style">
-          <div id="Header" style={{ positon: "relative", width: "100%", height: "40vh", textAlign: "center", borderStyle: "solid", borderWidth: "0px 0px 3px 0px", borderColor: "#1890ff", lineHeight: "1.1", marginBottom: "1.5vh", backgroundColor: "rgba(0, 0, 0, 1)" }}>
-            <img alt="Banner" style={{ width: "100%", height: "100%", opacity: 0.6 }} src={require("./assets/challenges_bg.webp").default} />
+          <div id="Header" className="challenge-header-style">
 
-            {!this.state.currentCategory && (
               <h1 style={{
                 color: "white",
-                position: "relative",
-                bottom: "60%",
-                fontSize: "250%",
+                fontSize: "280%",
                 letterSpacing: ".3rem",
-                backgroundColor: "#164c7e",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-                fontWeight: 300
+                fontWeight: 300,
+                marginBottom: "10px"
               }}> CHALLENGES
+              
               </h1>
-            )}
-
-            {this.state.currentCategory && (
-              <h1 style={{
-                color: "white",
-                position: "relative",
-                bottom: "70%",
-                fontSize: "140%",
-                letterSpacing: ".3rem",
-                backgroundColor: "#164c7e",
-                paddingTop: "10px",
-                fontWeight: 300
-              }}> CHALLENGES <p style={{ fontSize: "210%", letterSpacing: "normal", paddingBottom: "10px", fontWeight: 400 }}>{this.state.currentCategory}</p></h1>
-
-            )}
+              {this.state.currentCategory && (<h4 className="category-header">{this.state.currentCategory}</h4>)}
 
 
           </div>

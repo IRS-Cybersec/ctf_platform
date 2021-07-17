@@ -36,6 +36,11 @@ const CreateChallengeForm = (props) => {
     for (let i = 0; i < props.allCat.length; i++) {
         existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
     }
+    //Render existing challenges select options
+    let existingChalls = []
+    for (let i = 0; i < props.challenges.length; i++) {
+        existingChalls.push(<Option key={props.challenges[i].name} value={props.challenges[i].name}>{props.challenges[i].name}</Option>)
+    }
 
     return (
         <Form
@@ -78,7 +83,8 @@ const CreateChallengeForm = (props) => {
                             "max_attempts": values.max_attempts,
                             "visibility": values.visibility,
                             "writeup": values.writeup,
-                            "writeupComplete": values.writeupComplete
+                            "writeupComplete": values.writeupComplete,
+                            "requires": values.requires
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -180,9 +186,9 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "35vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "40%" }}>
                     <h1>Challenge Points:</h1>
                     <Form.Item
                         name="points"
@@ -211,9 +217,9 @@ const CreateChallengeForm = (props) => {
                     </Form.Item>
                 </div>
 
-                <Divider type="vertical" style={{ height: "inherit" }}></Divider>
+                <Divider type="vertical" style={{ height: "inherit" }} />
 
-                <div style={{ display: "flex", flexDirection: "column", width: "35vw", marginLeft: "2vw" }}>
+                <div style={{ display: "flex", flexDirection: "column", width: "40%", marginLeft: "3%" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
                             return (
@@ -300,7 +306,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Tag
-                </Button>
+                                        </Button>
                                     </Form.Item>
                                 </div>
                             );
@@ -311,96 +317,124 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <h1>Hints</h1>
-            <Form.List name="hints" >
-                {(fields, { add, remove }) => {
-                    return (
-                        <div>
-                            {fields.map(field => (
-                                <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
-                                    <Form.Item
-                                        {...field}
-                                        name={[field.name, "hint"]}
-                                        fieldKey={[field.fieldKey, "hint"]}
-                                        rules={[{ required: true, message: 'Missing hint' }]}
-                                    >
-                                        <Input placeholder="Hint" style={{ width: "50ch" }} />
+
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
+
+                <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
+                    <h1>Hints</h1>
+                    <Form.List name="hints" >
+                        {(fields, { add, remove }) => {
+                            return (
+                                <div>
+                                    {fields.map(field => (
+                                        <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
+                                            <Form.Item
+                                                {...field}
+                                                name={[field.name, "hint"]}
+                                                fieldKey={[field.fieldKey, "hint"]}
+                                                rules={[{ required: true, message: 'Missing hint' }]}
+                                            >
+                                                <Input placeholder="Hint" style={{ width: "50ch" }} />
+                                            </Form.Item>
+
+                                            <Form.Item
+                                                {...field}
+                                                name={[field.name, "cost"]}
+                                                fieldKey={[field.fieldKey, "cost"]}
+                                                rules={[{ required: true, message: 'Missing cost for hint' }, {
+                                                    type: 'integer',
+                                                    message: "Please enter a valid integer between 0-10000",
+                                                },]}
+                                            >
+                                                <InputNumber min={0} max={10000} style={{ width: "40ch" }} placeholder="Cost"></InputNumber>
+                                            </Form.Item>
+
+                                            <MinusCircleOutlined
+                                                style={{ color: "red" }}
+                                                onClick={() => {
+                                                    remove(field.name);
+                                                }}
+                                            />
+                                        </Space>
+                                    ))}
+
+                                    <Form.Item>
+                                        <Button
+                                            type="dashed"
+                                            onClick={() => {
+                                                add();
+                                            }}
+                                            block
+                                            style={{ width: "50ch" }}
+                                        >
+                                            <PlusOutlined /> Add Hint
+                                        </Button>
                                     </Form.Item>
+                                </div>
+                            );
+                        }}
+                    </Form.List>
 
-                                    <Form.Item
-                                        {...field}
-                                        name={[field.name, "cost"]}
-                                        fieldKey={[field.fieldKey, "cost"]}
-                                        rules={[{ required: true, message: 'Missing cost for hint' }, {
-                                            type: 'integer',
-                                            message: "Please enter a valid integer between 0-10000",
-                                        },]}
-                                    >
-                                        <InputNumber min={0} max={10000} style={{ width: "40ch" }} placeholder="Cost"></InputNumber>
-                                    </Form.Item>
+                    <h1>Writeup Link (Optional)</h1>
+                    <Form.Item
+                        name="writeup"
+                        rules={[
+                            {
+                                type: 'url',
+                                message: "Please enter a valid link",
+                            }]}
+                    >
 
-                                    <MinusCircleOutlined
-                                        style={{ color: "red" }}
-                                        onClick={() => {
-                                            remove(field.name);
-                                        }}
-                                    />
-                                </Space>
-                            ))}
+                        <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
+                    </Form.Item>
+                    <div style={{ display: "flex", alignContent: "center" }}>
+                        <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                        <Form.Item
+                            name="writeupComplete"
+                        >
+                            <Switch defaultChecked />
+                        </Form.Item>
+                    </div>
 
-                            <Form.Item>
-                                <Button
-                                    type="dashed"
-                                    onClick={() => {
-                                        add();
-                                    }}
-                                    block
-                                    style={{ width: "50ch" }}
-                                >
-                                    <PlusOutlined /> Add Hint
-                </Button>
-                            </Form.Item>
-                        </div>
-                    );
-                }}
-            </Form.List>
+                    <h1>Visibility</h1>
+                    <Form.Item
+                        name="visibility"
+                        rules={[{ required: true, message: 'Please set the challenge visibility' }]}
+                        initialValue="false"
+                    >
+                        <Select style={{ width: "10vw" }}>
+                            <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                            <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
+                        </Select>
 
-            <h1>Writeup Link (Optional)</h1>
-            <Form.Item
-                name="writeup"
-                rules={[
-                    {
-                        type: 'url',
-                        message: "Please enter a valid link",
-                    }]}
-            >
+                    </Form.Item>
 
-                <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
-            </Form.Item>
-            <div style={{ display: "flex", alignContent: "center" }}>
-                <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
-                <Form.Item
-                    name="writeupComplete"
-                >
-                    <Switch defaultChecked />
-                </Form.Item>
+                </div>
+
+                <Divider type="vertical" style={{ height: "inherit" }} />
+
+                <div style={{ width: "40%",display: "flex", flexDirection: "column", marginLeft: "3%" }}>
+                    <h1>Challenge Required: </h1>
+                    <Form.Item
+                        name="requires"
+                        rules={[{ message: 'Please enter a challenge' }]}
+                    >
+
+                        <Select
+                            allowClear
+                            showSearch
+                            placeholder="Select an existing challenge"
+                        >
+                            {existingChalls}
+                        </Select>
+                    
+                    </Form.Item>
+                    <p>Locks this challenge until the provided challenge above has been solved.</p>
+                </div>
             </div>
 
-            <h1>Visibility</h1>
-            <Form.Item
-                name="visibility"
-                rules={[{ required: true, message: 'Please set the challenge visibility' }]}
-                initialValue="false"
-            >
-                <Select style={{ width: "10vw" }}>
-                    <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
-                    <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
-                </Select>
-
-            </Form.Item>
-
             <Form.Item>
-                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row", marginTop: "2vh" }}>
                     <div>
                         <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
                         <Button loading={props.loadingStatus} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
@@ -554,7 +588,7 @@ class AdminChallengeCreate extends React.Component {
                     <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
 
                 </div>
-                <CreateChallengeForm allCat={this.props.allCat} handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} state={this.state} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
+                <CreateChallengeForm allCat={this.props.allCat} challenges={this.props.challenges} handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} state={this.state} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
             </Layout>
         );
     }

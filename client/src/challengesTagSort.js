@@ -10,13 +10,15 @@ import {
   LinkOutlined,
   FileUnknownTwoTone,
   LoadingOutlined,
-  EyeInvisibleOutlined
+  EyeInvisibleOutlined,
+  LockOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 import MarkdownRender from './MarkdownRenderer.js';
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
-import { orderBy} from 'lodash';
+import { orderBy } from 'lodash';
 
 
 const { TabPane } = Tabs;
@@ -101,64 +103,60 @@ class ChallengesTagSort extends React.Component {
 
   componentDidMount() {
     let challenge = this.props.match.params.challenge;
-    let challenges = this.props.currentCategoryChallenges[0]
     if (typeof challenge !== "undefined") {
       challenge = decodeURIComponent(challenge)
-      this.sortByTags(challenge, "points")
       const solved = this.props.currentCategoryChallenges[0].find(element => element.name === challenge)
-      if (typeof solved !== "undefined") this.loadChallengeDetails(challenge, solved.solved)
+      if (typeof solved !== "undefined") {
+        this.sortByTags(challenge)
+        this.loadChallengeDetails(challenge, solved.solved)
+      }
       else {
         message.error("Challenge '" + challenge + "' not found.")
         this.props.history.push("/Challenges/" + this.props.category)
+        this.sortByTags()
       }
     }
-    else {
-      challenges = orderBy(challenges, ["points"], ["asc"])
-      this.sortByTags(false, "points")
-    }
-    this.setState({challenges: challenges})
+    else this.sortByTags()
 
   }
 
-  sortCats(sortType, force=false) {
+  sortCats(sortType, force = false) {
     if (sortType !== this.state.sortType || force) {
 
       if (this.state.selectedTags.length > 0) {
         this.setState({ sortType: sortType })
-        this.sortByTags(false, sortType)
+        this.sortDifferent(sortType)
       }
       else {
-        
-        let challenges = this.state.challenges
-        if (sortType === "points") {
-          
-          challenges = orderBy(challenges, ["points"], ["asc"])
-        }
-        else if (sortType === "pointsrev") {
-          challenges = orderBy(challenges, ["points"], ["desc"])
-        }
-        else if (sortType === "abc") {
-          challenges = orderBy(challenges, ["name"], ["asc"])
-        }
-        else if (sortType === "abcrev") {
-          challenges = orderBy(challenges, ["name"], ["desc"])
-        }
 
-        this.setState({challenges: challenges})
+        let challenges = this.state.challenges
+        if (sortType === "points") challenges = orderBy(challenges, ["points"], ["asc"])
+        else if (sortType === "pointsrev") challenges = orderBy(challenges, ["points"], ["desc"])
+        else if (sortType === "abc") challenges = orderBy(challenges, ["name"], ["asc"])
+        else if (sortType === "abcrev") challenges = orderBy(challenges, ["name"], ["desc"])
+
+        this.setState({ challenges: challenges })
       }
 
     }
   }
 
-  sortByTags(findNOpenTag, sortType) {
+  sortByTags(findNOpenTag = false) {
     let originalData = this.props.currentCategoryChallenges
     let tag = {}
+    console.log(originalData)
     this.setState({ loadingTag: true })
 
     if (!findNOpenTag) {
       for (const [key, value] of Object.entries(originalData)) {
         let currentCat = originalData[key]
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
+
+          if ("requires" in currentCat[x]) {
+            const requires = currentCat.find((value) => value.name === currentCat[x].requires)
+            if (requires && requires.solved) currentCat[x].requiresSolved = true
+            else currentCat[x].requiresSolved = false
+          }
 
           if ("tags" in currentCat[x]) {
             const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
@@ -189,9 +187,14 @@ class ChallengesTagSort extends React.Component {
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
 
           if (!found && currentCat[x].name === findNOpenTag) {
-            if ("tags" in currentCat[x]) this.setState({selectedTags: [currentCat[x].tags[0].toLowerCase()]})
-            else this.setState({selectedTags:"Uncategorised"})
+            if ("tags" in currentCat[x]) this.setState({ selectedTags: [currentCat[x].tags[0].toLowerCase()] })
+            else this.setState({ selectedTags: ["Uncategorised"] })
             found = true
+          }
+          if ("requires" in currentCat[x]) {
+            const requires = currentCat.find((value) => value.name === currentCat[x].requires)
+            if (requires && requires.solved) currentCat[x].requiresSolved = true
+            else currentCat[x].requiresSolved = false
           }
           if ("tags" in currentCat[x]) {
             const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
@@ -214,8 +217,13 @@ class ChallengesTagSort extends React.Component {
         }
       }
     }
+    //console.log(tag)
+    this.setState({ tag: tag, loadingTag: false, challenges: this.props.currentCategoryChallenges[0] })
+  }
 
-
+  sortDifferent(sortType) {
+    this.setState({ loadingTag: true })
+    let tag = this.state.tag
     switch (sortType) {
       case 'points':
         for (const [key, value] of Object.entries(tag)) { //loop through each tag category and sort the challenges in each tag by points
@@ -240,10 +248,7 @@ class ChallengesTagSort extends React.Component {
           tag[key] = orderBy(tag[key], ['name'], ['desc'])
         }
     }
-
-    //console.log(tag)
-    this.setState({ tag: tag, loadingTag: false})
-
+    this.setState({ tag: tag, loadingTag: false })
   }
 
   handleBuyHint(close, id, chall) {
@@ -317,7 +322,7 @@ class ChallengesTagSort extends React.Component {
       this.setState({ currentChallengeStatus: "Enter the flag (case-sensitive)" })
     }
     //document.getElementById(name).style.pointerEvents = "none"
-    fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
+    await fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
@@ -384,12 +389,18 @@ class ChallengesTagSort extends React.Component {
         }
 
 
-        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, challengeWriteup: writeupLink, loadingChallenge: false, challengeHints: renderHints })
+        this.setState({ viewingChallengeDetails: data.chall, challengeModal: true, challengeTags: renderTags, challengeWriteup: writeupLink, challengeHints: renderHints })
 
       }
       else {
-        message.error({ content: "Oops. Unknown error" })
+        if (data.error === "required-challenge-not-completed") message.warn("You need to complete the required challenge first.")
+        else if (data.error === "required-challenge-not-found") message.error("The required challenge was not found. This is likely an error in the challenge settings. Please contact an admin")
+        else {
+          message.error({ content: "Oops. Unknown error" })
+        }
+        this.props.history.push("/Challenges/" + this.props.category);
       }
+
       //document.getElementById(name).style.pointerEvents = "auto"
 
 
@@ -397,6 +408,8 @@ class ChallengesTagSort extends React.Component {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
+
+    this.setState({ loadingChallenge: false })
   }
 
   submitFlag(values) {
@@ -424,9 +437,8 @@ class ChallengesTagSort extends React.Component {
             await this.setState({ challengeModal: false })
             this.props.history.push("/Challenges/" + this.props.category)
             await this.props.handleRefresh(true)
-            await this.sortByTags(false, this.state.sortType)
-
-
+            console.log(this.props.currentCategoryChallenges)
+            this.sortByTags()
           }
           refresh()
 
@@ -449,7 +461,24 @@ class ChallengesTagSort extends React.Component {
             duration: 0
           });
         }
+        else if (data.error === "required-challenge-not-completed") {
+          notification["error"]({
+            message: 'Oops. Required challenge not completed',
+            description:
+              'It seems like you have not completed the required challenge before doing this challenge.',
+            duration: 0
+          });
+        }
+        else if (data.error === "required-challenge-not-found") {
+          notification["error"]({
+            message: 'Oops. Required challenge was not found',
+            description:
+              'This is likely an error in the challenge settings. Please contact an admin',
+            duration: 0
+          });
+        }
         else {
+          console.log(data.error)
           message.error({ content: "Oops. Unknown error" })
         }
       }
@@ -560,7 +589,7 @@ class ChallengesTagSort extends React.Component {
 
 
         </Modal>
-        <Divider>Select Tags</Divider>
+        <Divider style={{ marginTop: "0px" }}>Select Tags</Divider>
 
         <span className="tag-holder" >
           {Object.keys(this.state.tag).map((tag) => {
@@ -575,14 +604,14 @@ class ChallengesTagSort extends React.Component {
                   if (selectedTags.length === 0) this.sortCats(this.state.sortType, true)
 
                   this.setState({ selectedTags: selectedTags })
-                }}>{tag}</CheckableTag>
+                }}>{tag} <span style={{ color: "#d89614" }}>({this.state.tag[tag].length})</span></CheckableTag>
             )
           })}
         </span>
 
         <Divider />
         {this.state.tag && this.state.selectedTags.length > 0 && (
-          <ChallengesTagSortList tag={this.state.tag} selectedTags={this.state.selectedTags}  loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
+          <ChallengesTagSortList tag={this.state.tag} selectedTags={this.state.selectedTags} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
         )}
         {this.state.selectedTags.length === 0 && (
           <List
@@ -609,8 +638,46 @@ class ChallengesTagSort extends React.Component {
                 item.firstBlood = "No Solves Yet!"
               }
 
+              if (item.requires && !item.requiresSolved) {
 
-              if (!item.solved) {
+                return (
+                  <List.Item key={item.name}>
+                    <Tooltip title={<span>Please solve "<b><u>{item.requires}</u></b>" to unlock this challenge.</span>}>
+                      <div id={item.name}>
+                        <Card
+                          type="inner"
+                          bordered={true}
+                          className="card-design"
+                        >
+
+                          <Meta
+                            description={
+                              <div className="card-design-body" >
+                                <LockOutlined className="disabled-style"/>
+                                <h1 className="card-design-name" >{item.name}</h1>
+                                <h1 className="card-design-points">{item.points}</h1>
+                                <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
+                                {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
+                                  <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
+                                    <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
+                                  </div>
+                                )}
+                                {item.visibility === false && (
+                                  <h1 style={{ color: "#d9d9d9" }}>Hidden Challenge <EyeInvisibleOutlined /></h1>
+                                )}
+                              </div>
+
+
+                            }
+                          />
+                        </Card> {/*Pass entire datasource as prop*/}
+                      </div>
+                    </Tooltip>
+                  </List.Item>
+                )
+
+              }
+              else if (!item.solved) {
                 return (
                   <List.Item key={item.name}>
                     <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood) }}>
@@ -618,16 +685,14 @@ class ChallengesTagSort extends React.Component {
                         hoverable
                         type="inner"
                         bordered={true}
-                        bodyStyle={{ backgroundColor: "#262626" }}
-                        className="card-design"
-                        style={{ overflow: "hidden" }}
+                        className="card-design hover"
                       >
                         <Meta
                           description={
-                            <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
-                              <h1 style={{ textOverflow: "ellipsis", width: "13vw", fontSize: "2.3ch", overflow: "hidden", whiteSpace: "nowrap" }}>{item.name}</h1>
-                              <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
-                              <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
+                            <div className="card-design-body">
+                              <h1 className="card-design-name">{item.name}</h1>
+                              <h1 className="card-design-points">{item.points}</h1>
+                              <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
@@ -654,16 +719,15 @@ class ChallengesTagSort extends React.Component {
                         hoverable
                         type="inner"
                         bordered={true}
-                        bodyStyle={{ backgroundColor: "#3c8618" }}
-                        className="card-design"
-                        style={{ overflow: "hidden" }}
+                        className="card-design solved hover"
                       >
                         <Meta
                           description={
-                            <div style={{ display: "flex", justifyItems: "center", flexDirection: "column", textAlign: "center", alignItems: "center" }}>
-                              <h1 style={{ textOverflow: "ellipsis", width: "13vw", fontSize: "2.3ch", overflow: "hidden", whiteSpace: "nowrap" }}>{item.name}</h1>
-                              <h1 style={{ fontSize: "185%", color: "#1765ad", fontWeight: 700 }}>{item.points}</h1>
-                              <h1 style={{ color: "#d32029" }}><svg t="1591275807515" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2225" width="16" height="16"><path d="M512 0C430.3872 123.8016 153.6 458.4448 153.6 656.384 153.6 859.4432 314.0608 1024 512 1024S870.4 859.4432 870.4 656.384C870.4 458.4448 593.6128 123.8016 512 0zM224.3584 656.384c0-22.4256 17.2032-40.448 38.4-40.448s38.4 18.0224 38.4 40.448c0 59.392 23.4496 113.0496 61.3376 151.8592 38.0928 39.1168 90.9312 63.2832 149.504 63.2832 21.1968 0 38.4 18.1248 38.4 40.448A39.424 39.424 0 0 1 512 952.32a282.624 282.624 0 0 1-202.9568-86.4256A299.52 299.52 0 0 1 224.3584 656.384z" p-id="2226" fill="#d81e06"></path></svg> {item.firstBlood}</h1>
+                            <div className="card-design-body">
+                              <CheckOutlined className="correct-style"/>
+                              <h1 className="card-design-name">{item.name}</h1>
+                              <h1 className="card-design-points">{item.points}</h1>
+                              <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
                               {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />

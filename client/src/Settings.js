@@ -1,8 +1,9 @@
 import React from 'react';
-import { Layout, message, Avatar, Button, Form, Input, Divider } from 'antd';
+import { Layout, message, Avatar, Button, Form, Input, Divider, Upload } from 'antd';
 import {
     KeyOutlined,
     LockOutlined,
+    UploadOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 
@@ -116,14 +117,26 @@ class Settings extends React.Component {
             <Layout className="layout-style">
                 <Divider />
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                    <Avatar style={{ backgroundColor: "Red", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.webp").default} />
-                    <h1 style={{ fontSize: "5ch" }}>{this.props.username}</h1>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                        <Avatar style={{ backgroundColor: "Red", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.webp").default} />
+                        <div style={{ marginTop: "2ch" }}>
+                            <Upload beforeUpload={file => {
+                                if (file.type !== 'image/png') {
+                                    message.error(`${file.name} is not a png file`);
+                                }
+                                return file.type === 'image/png' ? true : Upload.LIST_IGNORE;
+                            }}>
+                                <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
+                            </Upload>
+                        </div>
+                    </div>
+                    <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
                 </div>
 
                 <Divider />
                 <h1 className="settings-header"><KeyOutlined /> Change Password</h1>
                 <div className="form-style">
-                    <ChangePasswordForm/>
+                    <ChangePasswordForm />
                 </div>
 
                 <Divider />

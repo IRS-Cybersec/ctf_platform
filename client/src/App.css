@@ -34,33 +34,106 @@
     animation-name: fadeIn
 }
 
-@keyframes slideInFromTop {
-    0% {
-        transform: translateY(50%);
-        opacity: 1
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1
-    }
+.card-design {
+    border-color: #1890ff!important;
+    background: #262626 !important;
+    border-radius: 5px!important;
+    box-shadow: 5px 5px 6px 3px rgba(0, 0, 0, .5);
+    transition: .3s!important;
+    overflow: hidden !important;
 }
 
-.pageSwitch {
-    animation-duration: .38s;
+.card-design.solved {
+    opacity: 0.5;
+}
+
+.card-design-body {
+    display: flex;
+    justify-items: center;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+}
+
+.card-design.hover:hover {
+    transform: translate(-6px, -6px);
+    box-shadow: 6px 6px 6px 6px rgba(0, 0, 0, 0.6) !important;
+    opacity: .7;
+}
+
+.card-design-name {
+    text-overflow: ellipsis;
+    width: 13vw;
+    font-size: 2.3ch;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.card-design-points {
+    font-size: 3.5ch;
+    color: #1765ad;
+    font-weight: 700
+}
+
+.card-design-firstblood {
+    color: #d32029;
+    display: flex;
+}
+
+.disabled-style {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    z-index: 1;
+    font-size: 150%;
+}
+
+.correct-style {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    z-index: 1;
+    font-size: 150%;
+    color: #49aa19;
+}
+
+.challenge-header-style {
+    width: 100%;
+    height: 20vh;
+    text-align: center;
+    border-style: solid;
+    border-width: 0px 0px 3px 0px;
+    border-color: #1890ff;
+    line-height: 1.1;
+    margin-bottom: 1.5vh;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to right, #8360c3, #2ebf91);
+}
+
+.category-header {
+    font-size: 250%;
+    font-weight: 400;
+    animation-duration: .25s;
     animation-timing-function: ease-out;
     animation-delay: 0s;
     animation-iteration-count: 1;
-    animation-name: slideInFromTop
+    animation-name: expandIn;
+    margin-bottom: 5px !important;
 }
 
-.card-design {
-    border-color: #1890ff!important;
-    border-radius: 5px!important;
-    transition: .35s!important
-}
-
-.card-design:hover {
-    opacity: .5
+@keyframes expandIn {
+    0% {
+        font-size: 85%;
+        opacity: 0
+    }
+    100% {
+        font-size: 250%;
+        opacity: 1
+    }
 }
 
 ::-webkit-scrollbar-track {
@@ -132,7 +205,7 @@
 }
 
 .layout-style {
-    margin: 20px;
+    margin: 15px;
     background-color: rgba(0, 0, 0, 0);
 }
 
@@ -146,7 +219,7 @@
 .form-style {
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.5);
-    border: 5px solid transparent; 
+    border: 5px solid transparent;
     border-radius: 20px;
 }
 
@@ -157,18 +230,19 @@
 .tag-holder {
     text-align: center;
 }
+
 .ant-tag-checkable.tag-select-style {
     text-transform: capitalize;
     font-size: 140% !important;
     font-weight: 500;
     padding: 13px;
-    border:solid 1px transparent;
-    background-color: rgba(255, 255, 255, 0.1);;
+    border: solid 1px transparent;
+    background-color: rgba(255, 255, 255, 0.1);
+    ;
     margin-left: 2px;
     margin-bottom: 5px;
     border-radius: 10px;
     user-select: none;
-
 }
 
 .ant-tag-checkable-checked.tag-select-style {

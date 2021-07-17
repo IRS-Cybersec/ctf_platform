@@ -22,7 +22,7 @@ import { Ellipsis } from 'react-spinners-css';
 const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
-const production = true
+const production = false
 window.ipAddress = production ? "https://api.irscybersec.tk" : "http://localhost:20001"
 
 const Home = lazy(() => import("./home.js"));
@@ -34,7 +34,7 @@ const Login = lazy(() => import("./login.js"));
 const Admin = lazy(() => import("./admin.js"));
 const Oops = lazy(() => import("./oops.js"));
 
-var ctfxVersion = "0.8.5"
+var ctfxVersion = "0.9"
 
 
 class App extends React.Component {
@@ -131,10 +131,11 @@ class App extends React.Component {
 
   }
 
-  handleLogout(close) {
+  handleLogout = async (close) => {
     sessionStorage.removeItem("IRSCTF-token")
     localStorage.removeItem("IRSCTF-token")
     this.setState({ token: false, logined: false })
+    
     message.info({ content: "Logged out. See you next time :D!" })
   }
 
@@ -287,7 +288,7 @@ class App extends React.Component {
                       </div>
                     </Sider>
 
-                    <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "30px" }}>
+                    <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "20px" }}>
                       <Route
                         render={({ location, ...rest }) => (
                           <Transition
