@@ -4,7 +4,8 @@ import {
   FileUnknownTwoTone,
   LoadingOutlined,
   EyeInvisibleOutlined,
-  LockOutlined
+  LockOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 
@@ -141,6 +142,7 @@ class ChallengesTagSortList extends React.Component {
                               <Meta
                                 description={
                                   <div  className="card-design-body">
+                                    <CheckOutlined className="correct-style"/>
                                     <h1 className="card-design-name">{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
                                     <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
