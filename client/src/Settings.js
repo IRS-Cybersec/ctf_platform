@@ -147,7 +147,7 @@ class Settings extends React.Component {
                                         return Upload.LIST_IGNORE
                                     }
                                     if (file.size > 512000) {
-                                        message.error(`${file.name} is larger than 100KB.`);
+                                        message.error(`${file.name} is larger than 500KB.`);
                                         message.info('Please upload a smaller file')
                                         return Upload.LIST_IGNORE
                                     }
