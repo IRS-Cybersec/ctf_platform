@@ -146,7 +146,7 @@ class Settings extends React.Component {
                                         message.error(`${file.name} is not an image file.`);
                                         return Upload.LIST_IGNORE
                                     }
-                                    if (file.size > 102400) {
+                                    if (file.size > 512000) {
                                         message.error(`${file.name} is larger than 100KB.`);
                                         message.info('Please upload a smaller file')
                                         return Upload.LIST_IGNORE
