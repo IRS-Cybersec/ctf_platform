@@ -119,7 +119,7 @@ class Settings extends React.Component {
                 <Divider />
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "15ch", overflow: "hidden" }}>
-                        <Avatar style={{ backgroundColor: "Red", width: "12ch", height: "12ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.props.username}/>
+                        <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.props.username + ".webp"}/>
                         <div style={{ marginTop: "2ch" }}>
                             <Upload
                                 fileList={this.state.fileList}

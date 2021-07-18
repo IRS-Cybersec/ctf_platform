@@ -23,7 +23,7 @@ class ChallengesTagSortList extends React.Component {
   
   render() {
     return (
-      <Collapse bordered={false} defaultActiveKey={this.props.selectedTags}>
+      <Collapse bordered={false} defaultActiveKey={Object.keys(this.props.tag)}>
         {
 
           this.props.selectedTags.map((category) => {

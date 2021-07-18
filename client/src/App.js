@@ -22,7 +22,7 @@ import { Ellipsis } from 'react-spinners-css';
 const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
-const production = false
+const production = true
 window.ipAddress = production ? "https://api.irscybersec.tk" : "http://localhost:20001"
 
 const Home = lazy(() => import("./home.js"));
@@ -215,7 +215,7 @@ class App extends React.Component {
                           style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                           <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                             <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                            <Avatar size="large" src={"https://api.irscybersec.tk/uploads/profile/" + this.state.username} />
+                            <Avatar size="large" src={"https://api.irscybersec.tk/uploads/profile/" + this.state.username + ".webp"} />
                           </div>
                           <div>
                             <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>

@@ -5,7 +5,8 @@ const fileUpload = require('express-fileupload')
 const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
-const sanitizeFile = require('sanitize-filename')
+const sanitizeFile = require('sanitize-filename');
+const sharp = require('sharp');
 const MongoDB = require('mongodb');
 
 require('dotenv').config()
@@ -152,6 +153,42 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			if ((await collections.cache.updateOne({}, { "$set": { registerDisable: req.body.disable } })).matchedCount > 0) {
+				res.send({
+					success: true
+				});
+			}
+			else {
+				throw new Error('Unknown');
+			}
+
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+
+	app.get('/v1/account/disableAdminShow', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			res.send({
+				success: true,
+				state: (await collections.cache.findOne(null, { projection: { _id: 0, adminShowDisable: 1 } })).registerDisable
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+
+
+	app.post('/v1/account/disableAdminShow', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if ((await collections.cache.updateOne({}, { "$set": { adminShowDisable: req.body.disable } })).matchedCount > 0) {
 				res.send({
 					success: true
 				});
@@ -1164,6 +1201,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
+			
 			res.send({
 				success: true,
 				scores: await collections.users.find({ type: { $ne: 2 } }, { projection: { username: 1, score: 1, _id: 0 } }).toArray()
@@ -1321,11 +1359,16 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		if (targetFile.size > 102400) res.send({ success: false, error: "too-large" })
 		let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
 		if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
-
-		targetFile.mv(path.join(__dirname, 'uploads', 'profile', sanitizeFile(username)), (err) => {
-			if (err) return res.send({ success: false, error: "file-upload" })
-			else res.send({ success: true })
-		})
+		
+		await sharp(targetFile.data)
+			.toFormat('webp')
+			.webp({ quality: 30 })
+			.toFile(path.join('/var', 'www', 'ctf_platform', 'static', 'uploads', 'profile', sanitizeFile(username)) + ".webp")
+			.catch((err) => {
+				console.error(err)
+				return res.send({ success: false, error: "file-upload" })
+			})
+		res.send({ success: true })
 	})
 	app.listen(20001, () => console.info('Web server started'));
 }).catch(err => {

@@ -216,7 +216,6 @@ class AdminChallenges extends React.Component {
                         data.challenges[i].visibility = <span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
                     }
                 }
-                console.log(data.challenges)
                 this.setState({ dataSource: data.challenges, loading: false })
 
             }

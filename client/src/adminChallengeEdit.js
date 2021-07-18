@@ -339,7 +339,7 @@ const CreateChallengeForm = (props) => {
                                                 fieldKey={[field.fieldKey, "hint"]}
                                                 rules={[{ required: true, message: 'Missing hint' }]}
                                             >
-                                                <Input placeholder="Hint" style={{ width: "50ch" }} />
+                                                <Input placeholder="Hint" style={{width: "20vw"}}  />
                                             </Form.Item>
 
                                             <Form.Item
@@ -351,7 +351,7 @@ const CreateChallengeForm = (props) => {
                                                     message: "Please enter a valid integer between 0-10000",
                                                 },]}
                                             >
-                                                <InputNumber min={0} max={10000} style={{ width: "40ch" }} placeholder="Cost"></InputNumber>
+                                                <InputNumber min={0} max={10000} placeholder="Cost"></InputNumber>
                                             </Form.Item>
 
                                             <MinusCircleOutlined

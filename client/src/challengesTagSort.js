@@ -134,7 +134,7 @@ class ChallengesTagSort extends React.Component {
         else if (sortType === "pointsrev") challenges = orderBy(challenges, ["points"], ["desc"])
         else if (sortType === "abc") challenges = orderBy(challenges, ["name"], ["asc"])
         else if (sortType === "abcrev") challenges = orderBy(challenges, ["name"], ["desc"])
-
+        console.log(challenges)
         this.setState({ challenges: challenges })
       }
 
@@ -144,7 +144,6 @@ class ChallengesTagSort extends React.Component {
   sortByTags(findNOpenTag = false) {
     let originalData = this.props.currentCategoryChallenges
     let tag = {}
-    console.log(originalData)
     this.setState({ loadingTag: true })
 
     if (!findNOpenTag) {
@@ -217,8 +216,10 @@ class ChallengesTagSort extends React.Component {
         }
       }
     }
+    let challenges = orderBy(this.props.currentCategoryChallenges[0], ["points"], ["asc"])
     //console.log(tag)
-    this.setState({ tag: tag, loadingTag: false, challenges: this.props.currentCategoryChallenges[0] })
+    this.setState({ tag: tag, loadingTag: false, challenges: challenges })
+    
   }
 
   sortDifferent(sortType) {
@@ -577,7 +578,7 @@ class ChallengesTagSort extends React.Component {
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
-                        avatar={<Avatar src={"https://api.irscybersec.tk/uploads/profile/" + item} />}
+                        avatar={<Avatar src={"https://api.irscybersec.tk/uploads/profile/" + item + ".webp"} />}
                         title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>
