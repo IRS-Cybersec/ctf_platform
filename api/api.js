@@ -1,14 +1,19 @@
 const argon2 = require('argon2');
 const express = require('express');
 const mongoSanitize = require('express-mongo-sanitize');
+const fileUpload = require('express-fileupload')
 const RD = require('reallydangerous');
+const path = require('path');
 const cors = require('cors');
+const sanitizeFile = require('sanitize-filename')
 const MongoDB = require('mongodb');
 
+require('dotenv').config()
 let permissions = [];
-const signer = new RD.Signer('supermassivepowerfulsecretuwu', 'supermassivepowerfulsaltuwu');
+const signer = new RD.Signer(process.env.SECRET, process.env.SALT);
 const app = express();
 app.use(express.json());
+app.use(fileUpload());
 app.use(mongoSanitize());
 // app.use(cors({
 // 	credentials: true,
@@ -251,7 +256,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.body.users) {
 				if (!Array.isArray(req.body.users)) throw new Error('Validation');
 				const usersToDelete = req.body.users;
-				if (usersToDelete.includes(username)) return res.send({ success: false, error: 'delete_self'})
+				if (usersToDelete.includes(username)) return res.send({ success: false, error: 'delete_self' })
 				if (checkPermissions(username) < 2) {
 					res.status(403);
 					res.send({
@@ -260,8 +265,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					});
 					return;
 				}
-				
-				if ((await collections.users.deleteMany({ username: {$in: usersToDelete} })).deletedCount == 0) {
+
+				if ((await collections.users.deleteMany({ username: { $in: usersToDelete } })).deletedCount == 0) {
 					res.status(400);
 					res.send({
 						success: false,
@@ -271,7 +276,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				}
 				await collections.challs.updateMany({}, {
 					$pull: {
-						solves: {$in: usersToDelete}
+						solves: { $in: usersToDelete }
 					}
 				});
 				await collections.challs.updateMany({
@@ -280,13 +285,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					}
 				}, {
 					$pull: {
-						'hints.$[].purchased': {$in: usersToDelete}
+						'hints.$[].purchased': { $in: usersToDelete }
 					}
 				});
-				await collections.challs.deleteMany({ author: {$in: usersToDelete} });
-				await collections.transactions.deleteMany({ author: {$in: usersToDelete} });
-				usersToDelete.forEach(username => {if (permissions.includes(username)) delete permissions[username]})
-		
+				await collections.challs.deleteMany({ author: { $in: usersToDelete } });
+				await collections.transactions.deleteMany({ author: { $in: usersToDelete } });
+				usersToDelete.forEach(username => { if (permissions.includes(username)) delete permissions[username] })
+
 				res.send({ success: true });
 			}
 			else {
@@ -502,8 +507,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			if (!Array.isArray(req.body.ids)) throw new Error('Validation');
-			let ids = req.body.ids.map((id) => {return MongoDB.ObjectID(id)})
-			const delReq = await collections.announcements.deleteMany({ _id: {$in: ids}});
+			let ids = req.body.ids.map((id) => { return MongoDB.ObjectID(id) })
+			const delReq = await collections.announcements.deleteMany({ _id: { $in: ids } });
 			if (!delReq.result.ok) throw new Error('Unknown');
 			if (delReq.deletedCount === 0) throw new Error('NotFound');
 			res.send({
@@ -682,9 +687,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
 
 			if ("requires" in chall && permissions < 2) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
-				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
-				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
+				const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+				if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
+				if (!(solved.solves.includes(username))) return res.send({ success: false, error: "required-challenge-not-completed" })
 			}
 
 			if (!chall) {
@@ -767,9 +772,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				}
 			}));
 			if ("requires" in chall) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
-				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
-				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
+				const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+				if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
+				if (!(solved.solves.includes(username))) return res.send({ success: false, error: "required-challenge-not-completed" })
 			}
 			if (!hints) throw new Error('NotFound');
 			if (!hints.hints[0]) throw new Error('OutOfRange');
@@ -815,9 +820,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 			//Check if the required challenge has been solved (if any)
 			if ("requires" in chall) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, {projection: {_id: 0, solves: 1}})
-				if (!solved) return res.send({success: false, error: "required-challenge-not-found"})
-				if (!(solved.solves.includes(username))) return res.send({success: false, error: "required-challenge-not-completed"})
+				const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+				if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
+				if (!(solved.solves.includes(username))) return res.send({ success: false, error: "required-challenge-not-completed" })
 			}
 			async function insertTransaction(correct = false, blocked = false) {
 				await collections.transactions.insertOne({
@@ -1008,7 +1013,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 
 			let updateObj = {};
-			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete'];
+			const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete', 'requires'];
 			for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
 			if (updateObj.hints) {
 				updateObj.hints.forEach(hint => {
@@ -1305,6 +1310,23 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			version: 'dev'
 		});
 	});
+	app.post('/v1/profile/upload', async (req, res) => {
+		if (req.headers.authorization == undefined) throw new Error('MissingToken');
+		const username = signer.unsign(req.headers.authorization);
+		if (await checkPermissions(username) === false) throw new Error('BadToken');
+
+		if (!req.files || !("profile_pic" in req.files)) res.send({ success: false, error: "no-file" })
+		if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
+		let targetFile = req.files.profile_pic
+		if (targetFile.size > 102400) res.send({ success: false, error: "too-large" })
+		let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
+		if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
+
+		targetFile.mv(path.join(__dirname, 'uploads', 'profile', sanitizeFile(username)), (err) => {
+			if (err) return res.send({ success: false, error: "file-upload" })
+			else res.send({ success: true })
+		})
+	})
 	app.listen(20001, () => console.info('Web server started'));
 }).catch(err => {
 	errors(err, res);
