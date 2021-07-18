@@ -215,7 +215,7 @@ class App extends React.Component {
                           style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                           <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                             <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                            <Avatar size="large" src={require("./assets/profile.webp").default} />
+                            <Avatar size="large" src={"https://api.irscybersec.tk/uploads/profile/" + this.state.username} />
                           </div>
                           <div>
                             <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>

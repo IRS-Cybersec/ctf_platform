@@ -104,7 +104,8 @@ class Settings extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            passwordChangeModal: false
+            fileList: [],
+            disableUpload: false
         }
     }
 
@@ -117,15 +118,41 @@ class Settings extends React.Component {
             <Layout className="layout-style">
                 <Divider />
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                        <Avatar style={{ backgroundColor: "Red", width: "10ch", height: "10ch" }} size='large' src={require("./assets/profile.webp").default} />
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "15ch", overflow: "hidden" }}>
+                        <Avatar style={{ backgroundColor: "Red", width: "12ch", height: "12ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.props.username}/>
                         <div style={{ marginTop: "2ch" }}>
-                            <Upload beforeUpload={file => {
-                                if (file.type !== 'image/png') {
-                                    message.error(`${file.name} is not a png file`);
-                                }
-                                return file.type === 'image/png' ? true : Upload.LIST_IGNORE;
-                            }}>
+                            <Upload
+                                fileList={this.state.fileList}
+                                disabled={this.state.disableUpload}
+                                accept=".png, .jpg, .jpeg, .webp"
+                                action={window.ipAddress + "/v1/profile/upload"}
+                                maxCount={1}
+                                onChange={(file) => {
+                                    this.setState({fileList: file.fileList})
+                                    if (file.file.status === "uploading") {
+                                        this.setState({disableUpload: true})
+                                    }
+                                    else if ("response" in file.file) {
+                                        if (file.file.response.success) message.success("Uploaded profile picture")
+                                        else message.error("Failed to upload profile picture")
+                                        this.setState({fileList: [], disableUpload: false})
+                                    }
+                                }}
+                                headers={{ "Authorization": localStorage.getItem("IRSCTF-token") }}
+                                name="profile_pic"
+                                beforeUpload={file => {
+                                    const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
+                                    if (!exts.includes(file.type)) {
+                                        message.error(`${file.name} is not an image file.`);
+                                        return Upload.LIST_IGNORE
+                                    }
+                                    if (file.size > 102400) {
+                                        message.error(`${file.name} is larger than 100KB.`);
+                                        message.info('Please upload a smaller file')
+                                        return Upload.LIST_IGNORE
+                                    }
+                                    return true
+                                }}>
                                 <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
                             </Upload>
                         </div>

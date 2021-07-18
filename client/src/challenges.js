@@ -1,14 +1,11 @@
 import React from 'react';
-import { Layout, Card, List, Progress, message, Button, Radio, Select } from 'antd';
+import { Layout, Card, List, Progress, message, Button, Select } from 'antd';
 import {
   FileUnknownTwoTone,
   LeftCircleOutlined,
-  AppstoreOutlined,
-  TagsOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 import { Link } from 'react-router-dom';
-import ChallengesCategory from "./challengesCategory.js";
 import ChallengesTagSort from "./challengesTagSort.js";
 import { Ellipsis } from 'react-spinners-css';
 import { Transition, animated } from 'react-spring';

@@ -26,6 +26,17 @@ const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
     const [editorValue, setEditorValue] = React.useState("")
 
+    //Render existing categories select options
+    let existingCats = []
+    for (let i = 0; i < props.allCat.length; i++) {
+        existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
+    }
+    //Render existing challenges select options
+    let existingChalls = []
+    for (let i = 0; i < props.challenges.length; i++) {
+        if (props.challenges[i].name !== props.initialData.name) existingChalls.push(<Option key={props.challenges[i].name} value={props.challenges[i].name}>{props.challenges[i].name}</Option>)
+    }
+
     if (typeof form.getFieldValue("name") === "undefined") {
         if (props.initialData.visibility === false) {
             props.initialData.visibility = "false"
@@ -36,16 +47,6 @@ const CreateChallengeForm = (props) => {
         props.initialData.category1 = props.initialData.category
         form.setFieldsValue(props.initialData)
         setEditorValue(props.initialData.description)
-    }
-    //Render existing categories select options
-    let existingCats = []
-    for (let i = 0; i < props.allCat.length; i++) {
-        existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
-    }
-    //Render existing challenges select options
-    let existingChalls = []
-    for (let i = 0; i < props.challenges.length; i++) {
-        existingChalls.push(<Option key={props.challenges[i].name} value={props.challenges[i].name}>{props.challenges[i].name}</Option>)
     }
 
     return (

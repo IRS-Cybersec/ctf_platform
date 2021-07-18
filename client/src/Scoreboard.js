@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, message, Table } from 'antd';
+import { Layout, message, Table, Avatar } from 'antd';
 import {
   FileUnknownTwoTone
 } from '@ant-design/icons';
@@ -319,7 +319,7 @@ class Scoreboard extends React.Component {
                 <Column title="Position" dataIndex="position" key="position" />
                 <Column title="Username" dataIndex="username" key="username"
                   render={(text, row, index) => {
-                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}>{text}</a></Link>;
+                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"https://api.irscybersec.tk/uploads/profile/" + text} style={{marginRight: "1ch"}} /><span>{text}</span></a></Link>;
                   }}
                 />
                 <Column title="Score" dataIndex="score" key="score" />
