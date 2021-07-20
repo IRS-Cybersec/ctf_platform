@@ -92,6 +92,8 @@ function errors(err, res) {
 }
 console.info('Initialization complete');
 
+
+
 MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	useNewUrlParser: true,
 	useUnifiedTopology: true
@@ -105,11 +107,17 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		announcements: db.collection('announcements'),
 		cache: db.collection('cache')
 	};
+	let cache = {
+		announcements: 0,
+		challenges: 0,
+		registerDisable: false,
+		adminShowDisable: false
+	}
 	console.info('MongoDB connected');
 
 	createCache = async () => {
 		try {
-			await collections.cache.insertOne({ announcements: 0, challenges: 0, registerDisable: false });
+			await collections.cache.insertOne(cache);
 			console.info("Cache created")
 		}
 		catch (err) {
@@ -118,8 +126,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	}
 
-	let cache = await collections.cache.findOne(null, { projection: { _id: 0 } })
-	if (cache === null) await createCache()
+
+	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
+	if (checkCache === null) await createCache()
+	else cache = checkCache
 
 	async function checkPermissions(username) {
 		if (permissions.includes(username)) return permissions.username;
@@ -138,7 +148,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				state: (await collections.cache.findOne(null, { projection: { _id: 0, registerDisable: 1 } })).registerDisable
+				state: cache.registerDisable
 			});
 		}
 		catch (err) {
@@ -152,6 +162,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			cache.registerDisable = req.body.disable
 			if ((await collections.cache.updateOne({}, { "$set": { registerDisable: req.body.disable } })).matchedCount > 0) {
 				res.send({
 					success: true
@@ -167,14 +178,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
-	app.get('/v1/account/disableAdminShow', async (req, res) => {
+	app.get('/v1/account/adminShowDisable', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				state: (await collections.cache.findOne(null, { projection: { _id: 0, adminShowDisable: 1 } })).registerDisable
+				state: cache.adminShowDisable
 			});
 		}
 		catch (err) {
@@ -183,11 +194,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 
 
-	app.post('/v1/account/disableAdminShow', async (req, res) => {
+	app.post('/v1/account/adminShowDisable', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			cache.adminShowDisable = req.body.disable
 			if ((await collections.cache.updateOne({}, { "$set": { adminShowDisable: req.body.disable } })).matchedCount > 0) {
 				res.send({
 					success: true
@@ -212,7 +224,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				const username = signer.unsign(req.headers.authorization);
 				if (await checkPermissions(username) >= 2) admin = true
 			}
-			if (!admin && ((await collections.cache.findOne(null, { projection: { _id: 0, registerDisable: 1 } })).registerDisable)) {
+			if (!admin && cache.registerDisable) {
 				return res.send({ success: false, error: 'registration-disabled' })
 			}
 
@@ -450,8 +462,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (permissions === false) throw new Error('BadToken');
 
 			//Check announcements version to determine if it needs update
-			let version = await collections.cache.findOne(null, { projection: { _id: 0, announcements: 1 } })
-			version === null ? version = await createCache() : version = version.announcements
+			let version = cache.announcements
 			if (parseInt(req.params.version) < version) {
 				res.send({
 					success: true,
@@ -506,8 +517,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				content: req.body.content,
 				timestamp: new Date()
 			})
-			let version = await collections.cache.findOne(null, { projection: { _id: 0, announcements: 1 } })
-			version === null ? version = await createCache() : version = version.announcements
+			let version = cache.announcements
 			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			else res.send({ success: false })
 
@@ -528,8 +538,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					content: req.body.content,
 				}
 			})).matchedCount === 0) throw new Error('NotFound');
-			let version = await collections.cache.findOne(null, { projection: { _id: 0, announcements: 1 } })
-			if ((await collections.cache.updateOne({}, { '$set': { announcements: version.announcements + 1 } })).matchedCount > 0) res.send({ success: true })
+			let version = cache.announcements
+			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			else res.send({ success: false })
 
 		}
@@ -808,8 +818,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					_id: 1
 				}
 			}));
-			if ("requires" in chall) {
-				const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+			if ("requires" in hints) {
+				const solved = await collections.challs.findOne({ name: hints.requires }, { projection: { _id: 0, solves: 1 } })
 				if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
 				if (!(solved.solves.includes(username))) return res.send({ success: false, error: "required-challenge-not-completed" })
 			}
@@ -1201,7 +1211,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
-			
+
 			res.send({
 				success: true,
 				scores: await collections.users.find({ type: { $ne: 2 } }, { projection: { username: 1, score: 1, _id: 0 } }).toArray()
@@ -1359,7 +1369,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		if (targetFile.size > 512000) res.send({ success: false, error: "too-large" })
 		let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
 		if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
-		
+
 		await sharp(targetFile.data)
 			.toFormat('webp')
 			.webp({ quality: 30 })
