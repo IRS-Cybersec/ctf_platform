@@ -1190,6 +1190,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
+
 			res.send({
 				success: true,
 				users: await collections.transactions.aggregate([{
@@ -1215,9 +1216,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 
+			//Check if adminShowDisable is enabled, then don't return admin scores
+			let payload = null
+			if (cache.adminShowDisable) payload = { type: { $ne: 2 }}
+
 			res.send({
 				success: true,
-				scores: await collections.users.find({ type: { $ne: 2 } }, { projection: { username: 1, score: 1, _id: 0 } }).toArray()
+				scores: await collections.users.find(payload, { projection: { username: 1, score: 1, _id: 0 } }).toArray()
 			});
 		}
 		catch (err) {
@@ -1226,15 +1231,18 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.get('/v1/scoreboard/:username', async (req, res) => {
 		try {
+			
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			if (await checkPermissions(signer.unsign(req.headers.authorization)) == false) throw new Error('BadToken');
 			const scores = await collections.transactions.find({ points: { '$ne': 0 }, author: req.params.username }, { projection: { points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0 } }).toArray();
+			if (scores[0] && scores[0].type === 2 && cache.adminShowDisable) return res.send({ success: true, scores: [] })
 			res.send({
 				success: true,
 				scores: scores
 			});
 		}
 		catch (err) {
+			console.error(err)
 			errors(err, res);
 		}
 	});
@@ -1244,7 +1252,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(signer.unsign(req.headers.authorization)) === false) throw new Error('BadToken');
 			const score = (await collections.users.findOne({ username: req.params.username }, { projection: { score: 1, type: 1, _id: 0 } }));
 			if (score === null) throw new Error('NotFound');
-			if (score.type === 2) return res.send({ success: true, score: "hidden" })
+			if (score.type === 2 && cache.adminShowDisable) return res.send({ success: true, score: "hidden" })
 			res.send({
 				success: true,
 				score: score.score

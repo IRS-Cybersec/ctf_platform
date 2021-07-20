@@ -30,11 +30,13 @@ class Profile extends React.Component {
         const username = this.props.match.params.user;
         if (typeof username !== "undefined") {
             this.setState({ targetUser: username })
+            this.unpackChallengesData(username);
         }
         else {
             this.setState({ targetUser: this.props.username })
+            this.unpackChallengesData(this.props.username);
         }
-        this.unpackChallengesData();
+        
     }
 
     //Marvel in glory at the hideous mess of tangled backend handling.
@@ -42,8 +44,8 @@ class Profile extends React.Component {
     //Try, and fail, to interpret the sheer rubbish that is this method.
     //But it works. And that is enough for me to bury it forever.
     //- Leonard.
-    unpackChallengesData() {
-        fetch(window.ipAddress + "/v1/scoreboard/" + this.state.targetUser, {
+    unpackChallengesData(username) {
+        fetch(window.ipAddress + "/v1/scoreboard/" + username, {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -143,7 +145,7 @@ class Profile extends React.Component {
                 //console.log(graphData)
 
 
-                fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {
+                fetch(window.ipAddress + "/v1/scores/" + username, {
                     method: 'get',
                     headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                 }).then((results) => {
@@ -166,7 +168,7 @@ class Profile extends React.Component {
                 })
             }
             else if (data.success === false) {
-                fetch(window.ipAddress + "/v1/scores/" + this.state.targetUser, {
+                fetch(window.ipAddress + "/v1/scores/" + username, {
                     method: 'get',
                     headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                 }).then((results) => {
