@@ -518,6 +518,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				timestamp: new Date()
 			})
 			let version = cache.announcements
+			cache.announcements += 1
 			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			else res.send({ success: false })
 
@@ -539,6 +540,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				}
 			})).matchedCount === 0) throw new Error('NotFound');
 			let version = cache.announcements
+			cache.announcements += 1
 			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			else res.send({ success: false })
 
@@ -558,9 +560,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const delReq = await collections.announcements.deleteMany({ _id: { $in: ids } });
 			if (!delReq.result.ok) throw new Error('Unknown');
 			if (delReq.deletedCount === 0) throw new Error('NotFound');
-			res.send({
-				success: true
-			});
+
+			let version = cache.announcements
+			cache.announcements += 1
+			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 		}
 		catch (err) {
 			errors(err, res);
