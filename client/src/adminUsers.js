@@ -105,6 +105,8 @@ class AdminUsers extends React.Component {
             modalLoading: false,
             disableRegisterState: false,
             disableLoading: false,
+            disableLoading2: false,
+            disableAdminShow: false,
             selectedTableKeys: [],
             disableEditButtons: true
         }
@@ -112,12 +114,12 @@ class AdminUsers extends React.Component {
 
     componentDidMount() {
         this.fillTableData()
-        this.getDisableRegister()
+        this.getDisableStates()
     }
 
-    getDisableRegister = async () => {
+    getDisableStates = async () => {
         this.setState({ disableLoading: true })
-        await fetch(window.ipAddress + "/v1/account/disableCreate", {
+        await fetch(window.ipAddress + "/v1/account/disableStates", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
@@ -125,7 +127,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.state })
+                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable  })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -193,7 +195,7 @@ class AdminUsers extends React.Component {
 
 
     deleteAccounts = async (close, users) => {
-        this.setState({disableEditButtons: true})
+        this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/account/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -215,16 +217,16 @@ class AdminUsers extends React.Component {
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            
+
 
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
-            
+
         })
         close()
-        this.setState({selectedTableKeys: []})
+        this.setState({ selectedTableKeys: [] })
 
     }
 
@@ -299,6 +301,38 @@ class AdminUsers extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         this.setState({ disableLoading: false })
+    }
+
+    disableAdminShow = async (value) => {
+        this.setState({ disableLoading2: true })
+        await fetch(window.ipAddress + "/v1/account/adminShowDisable", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                disable: value
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                if (value) {
+                    message.success("Admin scores disabled")
+                }
+                else {
+                    message.success("Admin scores enabled")
+                }
+                this.setState({ disableAdminShow: value })
+
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ disableLoading2: false })
     }
 
 
@@ -413,7 +447,21 @@ class AdminUsers extends React.Component {
                     />
                 </Table>
                 <Divider />
-                <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={this.disableRegister} checked={this.state.disableRegisterState} /></h3>
+
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+
+                    <div>
+                        <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={this.disableRegister} checked={this.state.disableRegisterState} /></h3>
+                        <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
+                    </div>
+
+                        <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <div>
+                        <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={this.disableAdminShow} checked={this.state.disableAdminShow} /></h3>
+                        <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges.</p>
+                    </div>
+                </div>
 
             </Layout>
         );

@@ -34,7 +34,7 @@ const Login = lazy(() => import("./login.js"));
 const Admin = lazy(() => import("./admin.js"));
 const Oops = lazy(() => import("./oops.js"));
 
-var ctfxVersion = "0.9"
+var ctfxVersion = "0.9.1"
 
 
 class App extends React.Component {

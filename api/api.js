@@ -141,21 +141,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	}
 
-	app.get('/v1/account/disableCreate', async (req, res) => {
+	app.get('/v1/account/disableStates', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				state: cache.registerDisable
+				states: {registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable}
 			});
 		}
 		catch (err) {
 			errors(err, res);
 		}
 	});
-
 
 	app.post('/v1/account/disableCreate', async (req, res) => {
 		try {
@@ -172,21 +171,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				throw new Error('Unknown');
 			}
 
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
-
-	app.get('/v1/account/adminShowDisable', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			res.send({
-				success: true,
-				state: cache.adminShowDisable
-			});
 		}
 		catch (err) {
 			errors(err, res);
