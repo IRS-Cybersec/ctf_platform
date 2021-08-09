@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card } from 'antd';
+import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -31,10 +31,24 @@ const CreateChallengeForm = (props) => {
     for (let i = 0; i < props.allCat.length; i++) {
         existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
     }
-    //Render existing challenges select options
-    let existingChalls = []
+    //Render existing challenges select options minus the challenge itself
+    let existingChalls = {}
     for (let i = 0; i < props.challenges.length; i++) {
-        if (props.challenges[i].name !== props.initialData.name) existingChalls.push(<Option key={props.challenges[i].name} value={props.challenges[i].name}>{props.challenges[i].name}</Option>)
+        if (props.challenges[i].name !== props.initialData.name) {
+            if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
+            existingChalls[props.challenges[i].category].push({
+                value: props.challenges[i].name,
+                label: props.challenges[i].name
+            })
+        }
+    }
+    let finalSortedChalls = []
+    for (const category in existingChalls) {
+        finalSortedChalls.push({
+            value: category,
+            label: category,
+            children: existingChalls[category]
+        })
     }
 
     if (typeof form.getFieldValue("name") === "undefined") {
@@ -44,6 +58,8 @@ const CreateChallengeForm = (props) => {
         else if (props.initialData.visibility === true) {
             props.initialData.visibility = "true"
         }
+        // if we put only props.initialData.requires, we are merely putting a reference to props.initialData.requires, which is this array, creating a "loop"
+        if (props.initialData.requires) props.initialData.requires = [props.initialData.requires]
         props.initialData.category1 = props.initialData.category
         form.setFieldsValue(props.initialData)
         setEditorValue(props.initialData.description)
@@ -55,7 +71,7 @@ const CreateChallengeForm = (props) => {
             name="create_challenge_form"
             className="create_challenge_form"
             onValuesChange={() => { if (props.state.edited === false) props.setState({ edited: true }) }}
-            onFinish={(values) => {
+            onFinish={async (values) => {
                 props.setState({ edited: false })
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
@@ -74,8 +90,8 @@ const CreateChallengeForm = (props) => {
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
                     props.setState({ editLoading: true })
-                    //console.log(values)
-                    fetch(window.ipAddress + "/v1/challenge/edit", {
+                    console.log(values)
+                    await fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -91,7 +107,7 @@ const CreateChallengeForm = (props) => {
                             "visibility": values.visibility,
                             "writeup": values.writeup,
                             "writeupComplete": values.writeupComplete,
-                            "requires": values.requires
+                            "requires": values.requires[1]
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -99,7 +115,6 @@ const CreateChallengeForm = (props) => {
                         //console.log(data)
                         if (data.success === true) {
                             message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
-                            props.setState({ editLoading: false })
                             props.handleEditChallBack()
                             setEditorValue("")
                             form.resetFields()
@@ -113,6 +128,7 @@ const CreateChallengeForm = (props) => {
                         console.log(error)
                         message.error({ content: "Oops. There was an issue connecting with the server" });
                     })
+                    props.setState({ editLoading: false })
 
                 }
 
@@ -339,7 +355,7 @@ const CreateChallengeForm = (props) => {
                                                 fieldKey={[field.fieldKey, "hint"]}
                                                 rules={[{ required: true, message: 'Missing hint' }]}
                                             >
-                                                <Input placeholder="Hint" style={{width: "20vw"}}  />
+                                                <Input placeholder="Hint" style={{ width: "20vw" }} />
                                             </Form.Item>
 
                                             <Form.Item
@@ -418,20 +434,21 @@ const CreateChallengeForm = (props) => {
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
+
                 <div style={{ width: "40%", display: "flex", flexDirection: "column", marginLeft: "3%" }}>
                     <h1>Challenge Required: </h1>
                     <Form.Item
                         name="requires"
-                        rules={[{ message: 'Please enter a challenge' }]}
                     >
-
-                        <Select
+                        {/*
+                        The issue with this is that displayRender is supposed to return an array, 
+                        but setting a value causes it to become a string and error out
+                        */}
+                        <Cascader
+                            options={finalSortedChalls}
                             allowClear
                             showSearch
-                            placeholder="Select an existing challenge"
-                        >
-                            {existingChalls}
-                        </Select>
+                            placeholder="Select an existing challenge" />
 
                     </Form.Item>
                     <p>Locks this challenge until the provided challenge above has been solved.</p>

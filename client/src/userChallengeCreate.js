@@ -6,11 +6,11 @@ import {
     ProfileOutlined,
     FlagOutlined,
     FlagTwoTone,
-    LoadingOutlined,
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
 import './App.min.css';
+import { Ellipsis } from 'react-spinners-css';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './MarkdownRenderer.js';
 
@@ -43,7 +43,7 @@ const CreateChallengeForm = (props) => {
             form={form}
             name="create_challenge_form"
             className="create_challenge_form"
-            onFinish={(values) => {
+            onFinish={async (values) => {
                 props.setState({ edited: false })
                 //console.log(values)
                 if (typeof values.flags === "undefined") {
@@ -64,7 +64,7 @@ const CreateChallengeForm = (props) => {
                             values.writeupComplete = true
                         }
                     }
-                    fetch(window.ipAddress + "/v1/challenge/new", {
+                    await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -91,13 +91,14 @@ const CreateChallengeForm = (props) => {
                         else {
                             message.error({ content: "Oops. Unknown error, please contact an admin." })
                         }
-                        props.setState({ loading: false })
+
 
 
                     }).catch((error) => {
                         console.log(error)
                         message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
                     })
+                    props.setState({ loading: false })
 
 
                 }
@@ -247,7 +248,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Flag
-                                            </Button>
+                                        </Button>
                                     </Form.Item>
 
 
@@ -294,7 +295,7 @@ const CreateChallengeForm = (props) => {
                                             style={{ width: "50ch" }}
                                         >
                                             <PlusOutlined /> Add Tag
-                    </Button>
+                                        </Button>
                                     </Form.Item>
                                 </div>
                             );
@@ -318,7 +319,7 @@ const CreateChallengeForm = (props) => {
                                         fieldKey={[field.fieldKey, "hint"]}
                                         rules={[{ required: true, message: 'Missing hint' }]}
                                     >
-                                        <Input placeholder="Hint" style={{width: "20vw"}}  />
+                                        <Input placeholder="Hint" style={{ width: "20vw" }} />
                                     </Form.Item>
 
                                     <Form.Item
@@ -330,7 +331,7 @@ const CreateChallengeForm = (props) => {
                                             message: "Please enter a valid integer between 0-10000",
                                         },]}
                                     >
-                                        <InputNumber min={0} max={10000}  placeholder="Cost"></InputNumber>
+                                        <InputNumber min={0} max={10000} placeholder="Cost"></InputNumber>
                                     </Form.Item>
 
                                     <MinusCircleOutlined
@@ -352,7 +353,7 @@ const CreateChallengeForm = (props) => {
                                     style={{ width: "50ch" }}
                                 >
                                     <PlusOutlined /> Add Hint
-                    </Button>
+                                </Button>
                             </Form.Item>
                         </div>
                     );
@@ -558,7 +559,7 @@ class UserChallengeCreate extends React.Component {
                     {this.state.mainLoading && (
                         <div>
                             <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                <LoadingOutlined style={{ color: "#177ddc", fontSize: "600%", position: "absolute", zIndex: 1 }} />
+                                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                             </div>
                         </div>
                     )}

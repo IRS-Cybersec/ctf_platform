@@ -152,7 +152,7 @@ class AdminUsers extends React.Component {
                 for (let i = 0; i < data.list.length; i++) {
                     data.list[i].key = data.list[i].username
                 }
-                this.setState({ dataSource: data.list, loading: false })
+                this.setState({ dataSource: data.list })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -162,11 +162,12 @@ class AdminUsers extends React.Component {
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
+        this.setState({loading: false})
     }
 
-    changePermissions = () => {
+    changePermissions = async () => {
         this.setState({ modalLoading: true })
-        fetch(window.ipAddress + "/v1/account/permissions", {
+        await fetch(window.ipAddress + "/v1/account/permissions", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
@@ -178,7 +179,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 message.success({ content: "Permissions changed successfully" })
-                this.setState({ modalLoading: false, permissionModal: false })
+                this.setState({ permissionModal: false })
                 this.fillTableData()
             }
             else {
@@ -190,6 +191,7 @@ class AdminUsers extends React.Component {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
+        this.setState({modalLoading: false})
     }
 
 

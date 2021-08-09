@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card } from 'antd';
+import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
@@ -37,9 +37,21 @@ const CreateChallengeForm = (props) => {
         existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
     }
     //Render existing challenges select options
-    let existingChalls = []
+    let existingChalls = {}
     for (let i = 0; i < props.challenges.length; i++) {
-        existingChalls.push(<Option key={props.challenges[i].name} value={props.challenges[i].name}>{props.challenges[i].name}</Option>)
+        if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
+        existingChalls[props.challenges[i].category].push({
+            value: props.challenges[i].name,
+            label: props.challenges[i].name
+        })
+    }
+    let finalSortedChalls = []
+    for (const category in existingChalls) {
+        finalSortedChalls.push({
+            value: category,
+            label: category,
+            children: existingChalls[category]
+        })
     }
 
     return (
@@ -48,7 +60,7 @@ const CreateChallengeForm = (props) => {
             name="create_challenge_form"
             className="create_challenge_form"
             onValuesChange={() => { if (props.state.edited === false) props.setState({ edited: true }) }}
-            onFinish={(values) => {
+            onFinish={async (values) => {
                 props.setState({ edited: false })
                 if (typeof values.flags === "undefined") {
                     message.warn("Please enter at least 1 flag")
@@ -69,7 +81,7 @@ const CreateChallengeForm = (props) => {
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
 
-                    fetch(window.ipAddress + "/v1/challenge/new", {
+                    await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
@@ -84,7 +96,7 @@ const CreateChallengeForm = (props) => {
                             "visibility": values.visibility,
                             "writeup": values.writeup,
                             "writeupComplete": values.writeupComplete,
-                            "requires": values.requires
+                            "requires": values.requires[1]
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -98,13 +110,14 @@ const CreateChallengeForm = (props) => {
                         else {
                             message.error({ content: "Oops. Unknown error, please contact an admin." })
                         }
-                        props.setState({ loading: false })
+                        
 
 
                     }).catch((error) => {
                         console.log(error)
                         message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
                     })
+                    props.setState({ loading: false })
 
 
                 }
@@ -334,7 +347,7 @@ const CreateChallengeForm = (props) => {
                                                 fieldKey={[field.fieldKey, "hint"]}
                                                 rules={[{ required: true, message: 'Missing hint' }]}
                                             >
-                                                <Input placeholder="Hint" style={{width: "20vw"}} />
+                                                <Input placeholder="Hint" style={{ width: "20vw" }} />
                                             </Form.Item>
 
                                             <Form.Item
@@ -413,21 +426,18 @@ const CreateChallengeForm = (props) => {
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
-                <div style={{ width: "40%",display: "flex", flexDirection: "column", marginLeft: "3%" }}>
+                <div style={{ width: "40%", display: "flex", flexDirection: "column", marginLeft: "3%" }}>
                     <h1>Challenge Required: </h1>
                     <Form.Item
                         name="requires"
-                        rules={[{ message: 'Please enter a challenge' }]}
                     >
 
-                        <Select
+                        <Cascader
+                            options={finalSortedChalls}
                             allowClear
                             showSearch
-                            placeholder="Select an existing challenge"
-                        >
-                            {existingChalls}
-                        </Select>
-                    
+                            placeholder="Select an existing challenge" />
+
                     </Form.Item>
                     <p>Locks this challenge until the provided challenge above has been solved.</p>
                 </div>
