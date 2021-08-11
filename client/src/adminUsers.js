@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider } from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
@@ -8,7 +8,8 @@ import {
     UserOutlined,
     MailOutlined,
     LockOutlined,
-    RedoOutlined
+    RedoOutlined,
+    SearchOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -127,7 +128,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable  })
+                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -162,7 +163,7 @@ class AdminUsers extends React.Component {
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({loading: false})
+        this.setState({ loading: false })
     }
 
     changePermissions = async () => {
@@ -191,7 +192,7 @@ class AdminUsers extends React.Component {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({modalLoading: false})
+        this.setState({ modalLoading: false })
     }
 
 
@@ -274,12 +275,12 @@ class AdminUsers extends React.Component {
     }
 
     disableSetting = async (setting, value) => {
-        
+
         let settingName = ""
         if (setting === "registerDisable") {
             settingName = "User registration"
             this.setState({ disableLoading: true })
-        } 
+        }
         else if (setting === "adminShowDisable") {
             settingName = "Admin scores"
             this.setState({ disableLoading2: true })
@@ -303,8 +304,8 @@ class AdminUsers extends React.Component {
                 }
                 if (setting === "registerDisable") this.setState({ disableRegisterState: value })
                 else if (setting === "adminShowDisable") this.setState({ disableAdminShow: value })
-        
-                
+
+
 
             }
             else {
@@ -391,7 +392,7 @@ class AdminUsers extends React.Component {
                     emptyText: (
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                             <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                            <h1 style={{ fontSize: "200%" }}>There are no users created</h1>
+                            <h1 style={{ fontSize: "200%" }}>No users found/created</h1>
                         </div>
                     )
                 }}>
@@ -399,10 +400,65 @@ class AdminUsers extends React.Component {
                         render={(text, row, index) => {
                             return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                         }}
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Username"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.username.includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                        sorter={(a, b) => {
+                            if (a.username < b.username) return -1
+                            else return 1
+                        }}
                     />
-                    <Column title="Email" dataIndex="email" key="email" />
-                    <Column title="Score" dataIndex="score" key="score" />
-                    <Column title="Permissions" dataIndex="type" key="type" />
+                    <Column title="Email" dataIndex="email" key="email"
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Email"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.email.includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                        />
+                    <Column title="Score" dataIndex="score" key="score" sorter={(a, b) => a.score - b.score} />
+                    <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column
                         title=""
                         key="action"
@@ -432,7 +488,7 @@ class AdminUsers extends React.Component {
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
                     </div>
 
-                        <Divider type="vertical" style={{ height: "inherit" }} />
+                    <Divider type="vertical" style={{ height: "inherit" }} />
 
                     <div>
                         <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>

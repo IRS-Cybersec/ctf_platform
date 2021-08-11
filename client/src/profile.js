@@ -63,6 +63,7 @@ class Profile extends React.Component {
                     Score: 0,
                     Time: "0"
                 })
+                console.log(challengeArray)
 
                 for (let x = 0; x < challengeArray.length; x++) {
                     //Plot graph

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Layout, Table, message, Button } from 'antd';
+import { Layout, Table, message, Button, Space, Input } from 'antd';
 import {
     FileUnknownTwoTone,
-    RedoOutlined
+    RedoOutlined,
+    SearchOutlined
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
@@ -84,7 +85,7 @@ class AdminSubmissions extends React.Component {
                         emptyText: (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                                 <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>There are no submissions yet.</h1>
+                                <h1 style={{ fontSize: "200%" }}>No Submissions Found/Created.</h1>
                             </div>
                         )
                     }}>
@@ -92,12 +93,64 @@ class AdminSubmissions extends React.Component {
                         <Column title="Time" dataIndex="timestamp" key="timestamp" />
                         <Column title="Submittor" dataIndex="author" key="author" render={(text, row, index) => {
                             return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                        }} />
-                        <Column title="Challenge" dataIndex="challenge" key="challenge" />
+                        }}
+                            filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                                <div style={{ padding: 8 }}>
+                                    <Input
+                                        placeholder="Search Submittor"
+                                        value={selectedKeys[0]}
+                                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                        onPressEnter={() => confirm()}
+                                        style={{ marginBottom: 8, display: 'block' }}
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            onClick={() => { confirm() }}
+                                            icon={<SearchOutlined />}
+                                        >
+                                            Search
+                                        </Button>
+                                        <Button onClick={() => clearFilters()}>
+                                            Reset
+                                        </Button>
+                                    </Space>
+                                </div>
+                            )}
+                            onFilter={(value, record) => record.author.includes(value.toLowerCase())}
+                            filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+
+                        />
+                        <Column title="Challenge" dataIndex="challenge" key="challenge"
+                            filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                                <div style={{ padding: 8 }}>
+                                    <Input
+                                        placeholder="Search Challenge Name"
+                                        value={selectedKeys[0]}
+                                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                        onPressEnter={() => confirm()}
+                                        style={{ marginBottom: 8, display: 'block' }}
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            onClick={() => { confirm() }}
+                                            icon={<SearchOutlined />}
+                                        >
+                                            Search
+                                        </Button>
+                                        <Button onClick={() => clearFilters()}>
+                                            Reset
+                                        </Button>
+                                    </Space>
+                                </div>
+                            )}
+                            onFilter={(value, record) => record.challenge.includes(value.toLowerCase())}
+                            filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                         <Column title="Type" dataIndex="type" key="type" />
-                        <Column title="Points Awarded" dataIndex="points" key="points" />
+                        <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
                         <Column title="Flag Submitted" dataIndex="submission" key="submission" />
-                        <Column title="Correct" dataIndex="correct" key="correct" />
+                        <Column title="Correct" dataIndex="correct" key="correct" filters={[{ text: "True", value: "True" }, { text: "False", value: "False" }]} onFilter={(value, record) => { return value === record.correct }}  />
                     </Table>
                 )}
             </Layout >

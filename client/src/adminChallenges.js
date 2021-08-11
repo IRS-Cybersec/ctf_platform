@@ -1,6 +1,6 @@
 import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider } from 'antd';
-import {Switch as AntdSwitch} from 'antd';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space } from 'antd';
+import { Switch as AntdSwitch } from 'antd';
 import {
     ExclamationCircleOutlined,
     DeleteOutlined,
@@ -10,6 +10,7 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined,
     RedoOutlined,
+    SearchOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
@@ -144,7 +145,7 @@ class AdminChallenges extends React.Component {
     }
 
     editCategoryVisibility(visbility, categories) {
-        
+
         fetch(window.ipAddress + "/v1/challenge/edit/category", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -173,7 +174,7 @@ class AdminChallenges extends React.Component {
     }
 
     editChallengeVisibility(visibility, challenges) {
-        this.setState({disableEditButtons: true})
+        this.setState({ disableEditButtons: true })
         fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -191,7 +192,7 @@ class AdminChallenges extends React.Component {
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            this.setState({disableEditButtons: false})
+            this.setState({ disableEditButtons: false })
             this.fillTableData()
 
 
@@ -214,10 +215,10 @@ class AdminChallenges extends React.Component {
                 for (var i = 0; i < data.challenges.length; i++) {
                     data.challenges[i].key = data.challenges[i].name
                     if (data.challenges[i].visibility === false) {
-                        data.challenges[i].visibility = <span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span>
+                        data.challenges[i].visibility = <span visibility={data.challenges[i].visibility.toString()} style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span>
                     }
                     else {
-                        data.challenges[i].visibility = <span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
+                        data.challenges[i].visibility = <span visibility={data.challenges[i].visibility.toString()} style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
                     }
                 }
                 this.setState({ dataSource: data.challenges, loading: false })
@@ -236,7 +237,7 @@ class AdminChallenges extends React.Component {
 
 
     deleteChallenge = async (close, challenges) => {
-        this.setState({disableEditButtons: true})
+        this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -255,13 +256,13 @@ class AdminChallenges extends React.Component {
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            
+
 
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({selectedTableKeys: []})
+        this.setState({ selectedTableKeys: [] })
         close()
 
     }
@@ -294,12 +295,12 @@ class AdminChallenges extends React.Component {
 
     handleTableSelect = (selectedRowKeys) => {
         this.setState({ selectedTableKeys: selectedRowKeys })
-        if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({disableEditButtons: false})
-        else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({disableEditButtons: true})
-        
+        if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
+        else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
+
     }
     disableSetting = async (setting, value) => {
-        
+
         let settingName = ""
         if (setting === "submissionDisabled") {
             settingName = "Challenge submission"
@@ -323,8 +324,8 @@ class AdminChallenges extends React.Component {
                     message.success(settingName + " enabled")
                 }
                 if (setting === "submissionDisabled") this.setState({ submissionDisabled: value })
-                
-                   
+
+
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -345,7 +346,7 @@ class AdminChallenges extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ submissionDisabled: data.states.submissionDisabled  })
+                this.setState({ submissionDisabled: data.states.submissionDisabled })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -399,26 +400,88 @@ class AdminChallenges extends React.Component {
                         emptyText: (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                                 <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                <h1 style={{ fontSize: "200%" }}>No Challenges Have Been Created.</h1>
+                                <h1 style={{ fontSize: "200%" }}>No Challenges Found/Created</h1>
                             </div>
                         )
                     }}>
-                        <Column title="Name" dataIndex="name" key="name" render={(text, row, index) => {
-                            return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                        }} />
-                        <Column title="Category" dataIndex="category" key="category" render={(text, row, index) => {
+                        <Column title="Name" dataIndex="name" key="name"
+                            render={(text, row, index) => {
+                                return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            }}
+                            filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                                <div style={{ padding: 8 }}>
+                                    <Input
+                                        placeholder="Search Challenge Name"
+                                        value={selectedKeys[0]}
+                                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                        onPressEnter={() => confirm()}
+                                        style={{ marginBottom: 8, display: 'block' }}
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            onClick={() => { confirm() }}
+                                            icon={<SearchOutlined />}
+                                        >
+                                            Search
+                                        </Button>
+                                        <Button onClick={() => clearFilters()}>
+                                            Reset
+                                        </Button>
+                                    </Space>
+                                </div>
+                            )}
+                            onFilter={(value, record) => record.name.includes(value.toLowerCase())}
+                            filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                            sorter={(a, b) => {
+                                if (a.name < b.name) return -1
+                                else return 1
+                            }}
+                        />
+                        <Column filters={this.state.allCat.map(value => { return { text: value.key, value: value.key } })} onFilter={(value, record) => value === record.category} title="Category" dataIndex="category" key="category" render={(text, row, index) => {
                             return <Link to={"/Challenges/" + row.category}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                         }} />
-                        <Column title="Points" dataIndex="points" key="points" />
-                        <Column title="Visbility" dataIndex="visibility" key="visibility" />
-                        <Column title="Required Challenge" dataIndex="requires" key="requires" render={(text, row, index) => {
-                            return <Link to={"/Challenges/" + row.category + "/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                        }}/>
+                        <Column sorter={(a, b) => a.points - b.points} title="Points" dataIndex="points" key="points" />
+                        <Column filters={[{ text: "Visible", value: "true" }, { text: "Hidden", value: "false" }]} onFilter={(value, record) => { return value === record.visibility.props.visibility }} title="Visbility" dataIndex="visibility" key="visibility" />
+                        <Column title="Required Challenge" dataIndex="requires" key="requires"
+                            render={(text, row, index) => {
+                                return <Link to={"/Challenges/" + row.category + "/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            }}
+                            filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                                <div style={{ padding: 8 }}>
+                                    <Input
+                                        placeholder="Search Challenge Name"
+                                        value={selectedKeys[0]}
+                                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                        onPressEnter={() => confirm()}
+                                        style={{ marginBottom: 8, display: 'block' }}
+                                    />
+                                    <Space>
+                                        <Button
+                                            type="primary"
+                                            onClick={() => { confirm() }}
+                                            icon={<SearchOutlined />}
+                                        >
+                                            Search
+                                        </Button>
+                                        <Button onClick={() => clearFilters()}>
+                                            Reset
+                                        </Button>
+                                    </Space>
+                                </div>
+                            )}
+                            onFilter={(value, record) => { if (record.requires) return record.requires.includes(value.toLowerCase()) }}
+                            filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                            sorter={(a, b) => {
+                                if (a.name < b.name) return -1
+                                else return 1
+                            }}
+                        />
                         <Column
                             title=""
                             key="edit"
                             render={(text, record) => (
-                                <Button icon={<EditOutlined/>} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
+                                <Button icon={<EditOutlined />} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
                             )}
                         />
                     </Table>

@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Card } from 'antd';
+import React from 'react';
+import { Layout, Menu, Table, message, Dropdown, Button, Space, Modal, Form, Input, Card } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
     DeleteOutlined,
     ClusterOutlined,
     RedoOutlined,
-    NotificationOutlined
+    NotificationOutlined,
+    SearchOutlined
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
@@ -216,7 +217,7 @@ class AdminManageAnnouncements extends React.Component {
     }
 
     deleteAnnouncement = async (close, ids) => {
-        this.setState({disableEditButtons: true})
+        this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/announcements/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -229,9 +230,9 @@ class AdminManageAnnouncements extends React.Component {
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Deleted announcements [" + ids.join(', ') +"] successfully!" })
+                message.success({ content: "Deleted announcements [" + ids.join(', ') + "] successfully!" })
                 this.fillTableData()
-                
+
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -243,7 +244,7 @@ class AdminManageAnnouncements extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         close()
-        this.setState({selectedTableKeys: []})
+        this.setState({ selectedTableKeys: [] })
 
     }
 
@@ -376,12 +377,64 @@ class AdminManageAnnouncements extends React.Component {
                     )
                 }}>
                     <Column title="Announcement ID" dataIndex="_id" key="_id" />
-                    <Column title="Title" dataIndex="title" key="title" />
+                    <Column title="Title" dataIndex="title" key="title"
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Title"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.title.includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Content" dataIndex="content" key="content"
                         render={(text, row, index) => {
                             if (text.length > 25) return text.slice(0, 25) + "..."
                             else return text
-                        }} />
+                        }}
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Content"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.content.includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+
+                    />
                     <Column title="Time" dataIndex="timestamp" key="timestamp"
                         render={(text, row, index) => {
                             return new Date(text).toLocaleString("en-US", { timeZone: "Asia/Singapore" });
