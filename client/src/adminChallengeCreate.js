@@ -80,7 +80,8 @@ const CreateChallengeForm = (props) => {
                         }
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
-
+                    const requires = undefined
+                    if (values.requires) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -96,7 +97,7 @@ const CreateChallengeForm = (props) => {
                             "visibility": values.visibility,
                             "writeup": values.writeup,
                             "writeupComplete": values.writeupComplete,
-                            "requires": values.requires[1]
+                            "requires": requires
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
