@@ -6,7 +6,7 @@ const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
 const sanitizeFile = require('sanitize-filename');
-const sharp = require('sharp');
+const sharp = "h" //require('sharp');
 const MongoDB = require('mongodb');
 
 require('dotenv').config()
@@ -156,13 +156,17 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
-	app.post('/v1/account/disableCreate', async (req, res) => {
+	app.post('/v1/adminSettings/', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			cache.registerDisable = req.body.disable
-			if ((await collections.cache.updateOne({}, { "$set": { registerDisable: req.body.disable } })).matchedCount > 0) {
+			const allowedSettings = ["registerDisable", "adminShowDisable"]
+			if (!allowedSettings.includes(req.body.setting)) res.send({success:false, error: "invalid-setting"}) 
+			cache[req.body.setting] = req.body.disable
+			const set = {}
+			set[req.body.setting] = req.body.disable
+			if ((await collections.cache.updateOne({}, { "$set": set})).matchedCount > 0) {
 				res.send({
 					success: true
 				});
@@ -175,29 +179,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		catch (err) {
 			errors(err, res);
 		}
-	});
-
-
-	app.post('/v1/account/adminShowDisable', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			cache.adminShowDisable = req.body.disable
-			if ((await collections.cache.updateOne({}, { "$set": { adminShowDisable: req.body.disable } })).matchedCount > 0) {
-				res.send({
-					success: true
-				});
-			}
-			else {
-				throw new Error('Unknown');
-			}
-
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
+	})
 
 	app.post('/v1/account/create', async (req, res) => {
 

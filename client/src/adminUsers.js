@@ -273,25 +273,38 @@ class AdminUsers extends React.Component {
 
     }
 
-    disableRegister = async (value) => {
-        this.setState({ disableLoading: true })
-        await fetch(window.ipAddress + "/v1/account/disableCreate", {
+    disableSetting = async (setting, value) => {
+        
+        let settingName = ""
+        if (setting === "registerDisable") {
+            settingName = "User registration"
+            this.setState({ disableLoading: true })
+        } 
+        else if (setting === "adminShowDisable") {
+            settingName = "Admin scores"
+            this.setState({ disableLoading2: true })
+        }
+        await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                disable: value
+                disable: value,
+                setting: setting
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
                 if (value) {
-                    message.success("User registration disabled")
+                    message.success(settingName + " disabled")
                 }
                 else {
-                    message.success("User registration enabled")
+                    message.success(settingName + " enabled")
                 }
-                this.setState({ disableRegisterState: value })
+                if (setting === "registerDisable") this.setState({ disableRegisterState: value })
+                else if (setting === "adminShowDisable") this.setState({ disableAdminShow: value })
+        
+                
 
             }
             else {
@@ -302,39 +315,7 @@ class AdminUsers extends React.Component {
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({ disableLoading: false })
-    }
-
-    disableAdminShow = async (value) => {
-        this.setState({ disableLoading2: true })
-        await fetch(window.ipAddress + "/v1/account/adminShowDisable", {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
-            body: JSON.stringify({
-                disable: value
-            })
-        }).then((results) => {
-            return results.json(); //return data in JSON (since its JSON data)
-        }).then((data) => {
-            if (data.success === true) {
-                if (value) {
-                    message.success("Admin scores disabled")
-                }
-                else {
-                    message.success("Admin scores enabled")
-                }
-                this.setState({ disableAdminShow: value })
-
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-
-
-        }).catch((error) => {
-            message.error({ content: "Oops. There was an issue connecting with the server" });
-        })
-        this.setState({ disableLoading2: false })
+        this.setState({ disableLoading: false, disableLoading2: false })
     }
 
 
@@ -342,13 +323,7 @@ class AdminUsers extends React.Component {
         this.setState({ selectedTableKeys: selectedRowKeys })
         if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
-
     }
-
-
-
-
-
     render() {
         return (
 
@@ -453,14 +428,14 @@ class AdminUsers extends React.Component {
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
 
                     <div>
-                        <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={this.disableRegister} checked={this.state.disableRegisterState} /></h3>
+                        <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
                     </div>
 
                         <Divider type="vertical" style={{ height: "inherit" }} />
 
                     <div>
-                        <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={this.disableAdminShow} checked={this.state.disableAdminShow} /></h3>
+                        <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
                         <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges.</p>
                     </div>
                 </div>
