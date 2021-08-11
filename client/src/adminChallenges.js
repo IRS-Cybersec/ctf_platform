@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layout, Table, message, Button, Modal, Transfer, Divider } from 'antd';
+import {Switch as AntdSwitch} from 'antd';
 import {
     ExclamationCircleOutlined,
     DeleteOutlined,
@@ -39,7 +40,9 @@ class AdminChallenges extends React.Component {
             targetKeys: [],
             allCat: [],
             transferDisabled: false,
-            refreshLoading: false
+            refreshLoading: false,
+            disableLoading: false,
+            submissionDisabled: false
         }
     }
 
@@ -64,6 +67,7 @@ class AdminChallenges extends React.Component {
             await this.props.history.push("/Admin/Challenges")
         }
         this.handleRefresh()
+        this.getDisableStates()
     }
 
 
@@ -294,6 +298,65 @@ class AdminChallenges extends React.Component {
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({disableEditButtons: true})
         
     }
+    disableSetting = async (setting, value) => {
+        
+        let settingName = ""
+        if (setting === "submissionDisabled") {
+            settingName = "Challenge submission"
+            this.setState({ disableLoading: true })
+        }
+        await fetch(window.ipAddress + "/v1/adminSettings", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                disable: value,
+                setting: setting
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                if (value) {
+                    message.success(settingName + " disabled")
+                }
+                else {
+                    message.success(settingName + " enabled")
+                }
+                if (setting === "submissionDisabled") this.setState({ submissionDisabled: value })
+                
+                   
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ disableLoading: false })
+    }
+
+    getDisableStates = async () => {
+        this.setState({ disableLoading: true })
+        await fetch(window.ipAddress + "/v1/challenges/disableStates", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                //console.log(data)
+                this.setState({ submissionDisabled: data.states.submissionDisabled  })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ disableLoading: false })
+    }
 
 
 
@@ -379,6 +442,10 @@ class AdminChallenges extends React.Component {
 
                     <Divider />
 
+                    <div>
+                        <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
+                        <p>Prevents users from submitting any new submissions for all challenges. Hints can still be bought</p>
+                    </div>
 
 
                 </div>

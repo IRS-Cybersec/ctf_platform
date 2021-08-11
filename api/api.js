@@ -111,7 +111,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		announcements: 0,
 		challenges: 0,
 		registerDisable: false,
-		adminShowDisable: false
+		adminShowDisable: false,
+		submissionDisabled: false
 	}
 	console.info('MongoDB connected');
 
@@ -156,14 +157,31 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
+	app.get('/v1/challenges/disableStates', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			
+			res.send({
+				success: true,
+				states: {submissionDisabled: cache.submissionDisabled}
+			});
+		}
+		catch (err) {
+			errors(err, res);
+		}
+	});
+
 	app.post('/v1/adminSettings/', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			const allowedSettings = ["registerDisable", "adminShowDisable"]
-			if (!allowedSettings.includes(req.body.setting)) res.send({success:false, error: "invalid-setting"}) 
+			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled"]
+			if (!allowedSettings.includes(req.body.setting)) return res.send({success:false, error: "invalid-setting"}) 
 			cache[req.body.setting] = req.body.disable
+			
 			const set = {}
 			set[req.body.setting] = req.body.disable
 			if ((await collections.cache.updateOne({}, { "$set": set})).matchedCount > 0) {
@@ -832,6 +850,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 			const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
 			if (!chall) throw new Error('NotFound');
+			if (cache.submissionDisabled) return res.send({error: false, error: "submission-disabled"})
 			if (chall.solves.includes(username)) throw new Error('Submitted');
 
 			//Check if the required challenge has been solved (if any)
@@ -1248,6 +1267,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			if (await collections.users.countDocuments({ username: req.body.username.toLowerCase() }) == 0) throw new Error('UserNotFound');
+			
 			const chall = await collections.challs.findOneAndUpdate({
 				name: req.body.chall
 			}, {

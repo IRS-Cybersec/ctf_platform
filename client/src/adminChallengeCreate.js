@@ -80,7 +80,7 @@ const CreateChallengeForm = (props) => {
                         }
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
-                    const requires = undefined
+                    let requires = undefined
                     if (values.requires) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',

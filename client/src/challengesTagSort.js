@@ -478,6 +478,14 @@ class ChallengesTagSort extends React.Component {
             duration: 0
           });
         }
+        else if (data.error === "submission-disabled") {
+          notification["error"]({
+            message: 'Oops. Submission is disabled',
+            description:
+              'New flag submissions have been disabled. The competition might have ended/is not running',
+            duration: 0
+          });
+        }
         else {
           console.log(data.error)
           message.error({ content: "Oops. Unknown error" })
