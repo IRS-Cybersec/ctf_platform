@@ -505,10 +505,19 @@ class AdminChallenges extends React.Component {
 
                     <Divider />
 
+                    
+
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+
                     <div>
                         <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
                         <p>Prevents users from submitting any new submissions for all challenges. Hints can still be bought</p>
                     </div>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    
+                </div>
 
 
                 </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space } from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space, InputNumber } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
@@ -109,7 +109,9 @@ class AdminUsers extends React.Component {
             disableLoading2: false,
             disableAdminShow: false,
             selectedTableKeys: [],
-            disableEditButtons: true
+            disableEditButtons: true,
+            uploadSize: 512000,
+            uploadLoading: false
         }
     }
 
@@ -128,7 +130,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable })
+                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -319,6 +321,38 @@ class AdminUsers extends React.Component {
         this.setState({ disableLoading: false, disableLoading2: false })
     }
 
+    changeSetting = async (setting, value) => {
+
+        let settingName = ""
+        if (setting === "uploadSize") {
+            settingName = "Upload size"
+            this.setState({ uploadLoading: true })
+        }
+        await fetch(window.ipAddress + "/v1/adminSettings", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                disable: value,
+                setting: setting
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                message.success(settingName + " changed to " + value.toString() + "B")
+                if (setting === "uploadSize") this.setState({ uploadSize: value })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ uploadLoading: false })
+    }
+
 
     handleTableSelect = (selectedRowKeys) => {
         this.setState({ selectedTableKeys: selectedRowKeys })
@@ -456,7 +490,7 @@ class AdminUsers extends React.Component {
                         )}
                         onFilter={(value, record) => record.email.includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
-                        />
+                    />
                     <Column title="Score" dataIndex="score" key="score" sorter={(a, b) => a.score - b.score} />
                     <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column
@@ -494,6 +528,24 @@ class AdminUsers extends React.Component {
                         <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
                         <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges.</p>
                     </div>
+                </div>
+
+                <Divider />
+
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+
+                    <div>
+                        <h3>Profile Picture Max Upload Size:
+                            <InputNumber
+                                formatter={value => `${value} B`}
+                                parser={value => value.replace(' B', '')}
+                                value={this.state.uploadSize}
+                                onChange={(value) => this.setState({uploadSize: value})}
+                                onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
+                        <p>Sets the maximum file upload size for profile pictures (in Bytes). Press <b>Enter</b> to save</p>
+                    </div>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
                 </div>
 
             </Layout>

@@ -112,7 +112,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		challenges: 0,
 		registerDisable: false,
 		adminShowDisable: false,
-		submissionDisabled: false
+		submissionDisabled: false,
+		uploadSize: 512000
 	}
 	console.info('MongoDB connected');
 
@@ -149,7 +150,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				states: {registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable}
+				states: {registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize}
 			});
 		}
 		catch (err) {
@@ -178,7 +179,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled"]
+			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize"]
 			if (!allowedSettings.includes(req.body.setting)) return res.send({success:false, error: "invalid-setting"}) 
 			cache[req.body.setting] = req.body.disable
 			
@@ -1363,7 +1364,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		if (!req.files || !("profile_pic" in req.files)) res.send({ success: false, error: "no-file" })
 		if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
 		let targetFile = req.files.profile_pic
-		if (targetFile.size > 512000) res.send({ success: false, error: "too-large" })
+		if (targetFile.size > cache.uploadSize) res.send({ success: false, error: "too-large" })
 		let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
 		if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
 
