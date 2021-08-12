@@ -134,7 +134,12 @@ class Settings extends React.Component {
                                     }
                                     else if ("response" in file.file) {
                                         if (file.file.response.success) message.success("Uploaded profile picture")
-                                        else message.error("Failed to upload profile picture")
+                                        else {
+                                            message.error("Failed to upload profile picture")
+                                            if (file.file.response.error === "too-large") {
+                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + "Bytes." )
+                                            }
+                                        }
                                         this.setState({fileList: [], disableUpload: false})
                                     }
                                 }}
@@ -144,11 +149,6 @@ class Settings extends React.Component {
                                     const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
                                     if (!exts.includes(file.type)) {
                                         message.error(`${file.name} is not an image file.`);
-                                        return Upload.LIST_IGNORE
-                                    }
-                                    if (file.size > 512000) {
-                                        message.error(`${file.name} is larger than 500KB.`);
-                                        message.info('Please upload a smaller file')
                                         return Upload.LIST_IGNORE
                                     }
                                     return true

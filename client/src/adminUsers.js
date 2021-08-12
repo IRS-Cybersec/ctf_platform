@@ -537,8 +537,8 @@ class AdminUsers extends React.Component {
                     <div>
                         <h3>Profile Picture Max Upload Size:
                             <InputNumber
-                                formatter={value => `${value} B`}
-                                parser={value => value.replace(' B', '')}
+                                formatter={value => `${value}B`}
+                                parser={value => value.replace('B', '')}
                                 value={this.state.uploadSize}
                                 onChange={(value) => this.setState({uploadSize: value})}
                                 onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>

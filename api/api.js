@@ -1364,7 +1364,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		if (!req.files || !("profile_pic" in req.files)) res.send({ success: false, error: "no-file" })
 		if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
 		let targetFile = req.files.profile_pic
-		if (targetFile.size > cache.uploadSize) res.send({ success: false, error: "too-large" })
+		if (targetFile.size > cache.uploadSize) res.send({ success: false, error: "too-large", size: cache.uploadSize })
 		let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
 		if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
 
