@@ -7,6 +7,7 @@ import {
   UserOutlined,
   LogoutOutlined,
   CodeTwoTone,
+
   PlusSquareTwoTone,
   GithubOutlined,
   ExclamationCircleOutlined,
@@ -22,8 +23,8 @@ import { Ellipsis } from 'react-spinners-css';
 const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
-const production = true
-window.ipAddress = production ? "https://api.irscybersec.tk" : "http://localhost:20001"
+window.production = false
+window.ipAddress = window.production ? "https://api.irscybersec.tk" : "http://localhost:20001"
 
 const Home = lazy(() => import("./home.js"));
 const Challenges = lazy(() => import("./challenges.js"));
@@ -69,6 +70,7 @@ class App extends React.Component {
 
   componentDidMount = async () => {
     message.config({ maxCount: 2 })
+
     // Handles "remember me" logins
     this.setState({ current: this.props.location.pathname.split("/")[1] })
     if (!this.state.token) {
@@ -135,7 +137,7 @@ class App extends React.Component {
     sessionStorage.removeItem("IRSCTF-token")
     localStorage.removeItem("IRSCTF-token")
     this.setState({ token: false, logined: false })
-    
+
     message.info({ content: "Logged out. See you next time :D!" })
   }
 

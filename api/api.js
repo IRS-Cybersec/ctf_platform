@@ -6,13 +6,16 @@ const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
 const sanitizeFile = require('sanitize-filename');
-const sharp = "h" //require('sharp');
+const sharp = require('sharp');
 const MongoDB = require('mongodb');
+const ws = require('ws')
 
 require('dotenv').config()
 let permissions = [];
 const signer = new RD.Signer(process.env.SECRET, process.env.SALT);
 const app = express();
+let server = app.listen(20001, () => console.info('Web server started'));
+let wss = new ws.Server({ server })
 app.use(express.json());
 app.use(fileUpload());
 app.use(mongoSanitize());
@@ -117,6 +120,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	}
 	console.info('MongoDB connected');
 
+
+
 	createCache = async () => {
 		try {
 			await collections.cache.insertOne(cache);
@@ -150,7 +155,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				states: {registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize}
+				states: { registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize }
 			});
 		}
 		catch (err) {
@@ -163,10 +168,10 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			
+
 			res.send({
 				success: true,
-				states: {submissionDisabled: cache.submissionDisabled}
+				states: { submissionDisabled: cache.submissionDisabled }
 			});
 		}
 		catch (err) {
@@ -180,12 +185,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize"]
-			if (!allowedSettings.includes(req.body.setting)) return res.send({success:false, error: "invalid-setting"}) 
+			if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
 			cache[req.body.setting] = req.body.disable
-			
+
 			const set = {}
 			set[req.body.setting] = req.body.disable
-			if ((await collections.cache.updateOne({}, { "$set": set})).matchedCount > 0) {
+			if ((await collections.cache.updateOne({}, { "$set": set })).matchedCount > 0) {
 				res.send({
 					success: true
 				});
@@ -504,7 +509,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			})
 			let version = cache.announcements
 			cache.announcements += 1
-			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
+			if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) {
+				res.send({ success: true })
+			}
 			else res.send({ success: false })
 
 		}
@@ -813,6 +820,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}
 			if (!hints) throw new Error('NotFound');
 			if (!hints.hints[0]) throw new Error('OutOfRange');
+			let Gtimestamp = new Date()
 			if (!hints.hints[0].purchased.includes(username)) {
 				await collections.users.updateOne({
 					username: username
@@ -830,11 +838,16 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					author: username,
 					challenge: req.body.chall,
 					type: 'hint',
-					timestamp: new Date(),
+					timestamp: Gtimestamp,
 					points: -hints.hints[0].cost,
 					hint_id: parseInt(req.body.id)
 				});
 			}
+			broadCastNewSolve({
+				username: username,
+				timestamp: Gtimestamp,
+				points: -hints.hints[0].cost
+			})
 			res.send({
 				success: true,
 				hint: hints.hints[0].hint
@@ -851,7 +864,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
 			const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
 			if (!chall) throw new Error('NotFound');
-			if (cache.submissionDisabled) return res.send({error: false, error: "submission-disabled"})
+			if (cache.submissionDisabled) return res.send({ error: false, error: "submission-disabled" })
 			if (chall.solves.includes(username)) throw new Error('Submitted');
 
 			//Check if the required challenge has been solved (if any)
@@ -860,11 +873,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
 				if (!(solved.solves.includes(username))) return res.send({ success: false, error: "required-challenge-not-completed" })
 			}
+			let Gtimestamp = new Date()
 			async function insertTransaction(correct = false, blocked = false) {
 				await collections.transactions.insertOne({
 					author: username,
 					challenge: req.body.chall,
-					timestamp: new Date(),
+					timestamp: Gtimestamp,
 					type: blocked ? 'blocked_submission' : 'submission',
 					points: correct ? chall.points : 0,
 					correct: correct,
@@ -898,6 +912,11 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					data: 'correct'
 				});
 				solved = true;
+				broadCastNewSolve({
+					username: username,
+					timestamp: Gtimestamp,
+					points: chall.points
+				})
 			}
 			// for "double-blind" CTFs - ask me if you want to
 			// else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
@@ -1204,7 +1223,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 			//Check if adminShowDisable is enabled, then don't return admin scores
 			let payload = null
-			if (cache.adminShowDisable) payload = { type: { $ne: 2 }}
+			if (cache.adminShowDisable) payload = { type: { $ne: 2 } }
 
 			res.send({
 				success: true,
@@ -1217,7 +1236,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	});
 	app.get('/v1/scoreboard/:username', async (req, res) => {
 		try {
-			
+
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			if (await checkPermissions(signer.unsign(req.headers.authorization)) == false) throw new Error('BadToken');
 			const scores = await collections.transactions.find({ points: { '$ne': 0 }, author: req.params.username }, { projection: { points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0 } }).toArray();
@@ -1268,7 +1287,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			if (await collections.users.countDocuments({ username: req.body.username.toLowerCase() }) == 0) throw new Error('UserNotFound');
-			
+
 			const chall = await collections.challs.findOneAndUpdate({
 				name: req.body.chall
 			}, {
@@ -1378,7 +1397,20 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			})
 		res.send({ success: true })
 	})
-	app.listen(20001, () => console.info('Web server started'));
+
+	const broadCastNewSolve = async (solveDetails) => {
+		wss.clients.forEach((client) => {
+			if (client.readyState === ws.OPEN) {
+				client.send(JSON.stringify({ event: "score", data: solveDetails }));
+			}
+		})
+	}
+
+	//websocket methods
+	wss.on('connection', (socket) => {
+	})
+
+
 }).catch(err => {
 	errors(err, res);
 	console.error('\n\nError while connecting to MongoDB, exiting');
