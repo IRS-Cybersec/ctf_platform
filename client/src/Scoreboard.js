@@ -103,7 +103,7 @@ class Scoreboard extends React.Component {
     let webSocket = new WebSocket(window.production ? "wss://api.irscybersec.tk" : "ws://localhost:20001")
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
-      if (data.event === "score") {
+      if (data.type === "score") {
         updating = true
         const payload = data.data
         let found = false
@@ -132,8 +132,13 @@ class Scoreboard extends React.Component {
 
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
       }
+      else if (data.type === "init") {
+        if (data.data === "bad-auth") message.error("Error connecting to live updates")
+        else if (data.data === "missing-auth") message.error("Error connecting to live updates")
+      }
     }
     webSocket.onopen = (e) => {
+      webSocket.send(JSON.stringify({type: "init", data: {auth: "uijdhjsahbdjh" }}))
       this.setState({ liveUpdates: true })
     }
     webSocket.onerror = (e) => {
@@ -141,7 +146,7 @@ class Scoreboard extends React.Component {
     }
     webSocket.onclose = (e) => {
       this.setState({ liveUpdates: false })
-      console.log('Socket closed. Attempting to reconnect...', e.reason);
+      console.log('Socket closed. Attempting to reconnect in 1.5 seconds', e.reason);
       setTimeout(() => { this.connectWebSocket() }, 1500)
     };
   }

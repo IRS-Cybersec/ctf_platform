@@ -116,7 +116,11 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		registerDisable: false,
 		adminShowDisable: false,
 		submissionDisabled: false,
-		uploadSize: 512000
+		uploadSize: 512000,
+		latestSolveSubmissionID: 0
+	}
+	let socketUsers = {
+
 	}
 	console.info('MongoDB connected');
 
@@ -136,7 +140,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
 	if (checkCache === null) await createCache()
-	else cache = checkCache
+	else {
+		// Add any missing cache values
+		for (const key in cache) {
+			if (!(key in checkCache)) checkCache[key] = cache[key]
+		}
+		cache = checkCache
+	}
 
 	async function checkPermissions(username) {
 		if (permissions.includes(username)) return permissions.username;
@@ -882,7 +892,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					type: blocked ? 'blocked_submission' : 'submission',
 					points: correct ? chall.points : 0,
 					correct: correct,
-					submission: req.body.flag
+					submission: req.body.flag,
+					submissionUpdateID: cache.latestSolveSubmissionID
 				});
 				if (correct && !blocked) {
 					await collections.users.updateOne({
@@ -906,12 +917,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}
 			let solved = false;
 			if (chall.flags.includes(req.body.flag)) {
+				cache.latestSolveSubmissionID += 1
 				await insertTransaction(true);
 				res.send({
 					success: true,
 					data: 'correct'
 				});
 				solved = true;
+				await collections.cache.updateOne(null, { $set: { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
 				broadCastNewSolve({
 					username: username,
 					timestamp: Gtimestamp,
@@ -1195,7 +1208,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) === false) throw new Error('BadToken');
-
+			req.test = "hello"
 			res.send({
 				success: true,
 				users: await collections.transactions.aggregate([{
@@ -1401,13 +1414,38 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	const broadCastNewSolve = async (solveDetails) => {
 		wss.clients.forEach((client) => {
 			if (client.readyState === ws.OPEN) {
-				client.send(JSON.stringify({ event: "score", data: solveDetails }));
+				client.send(JSON.stringify({ type: "score", data: solveDetails }));
 			}
 		})
 	}
 
 	//websocket methods
 	wss.on('connection', (socket) => {
+		socket.test = "test"
+		socket.on("message", async (msg) => {
+			const data = JSON.parse(msg)
+			if (data.type === "init") {
+				const payload = data.data
+				//Authenticate
+				if (payload.auth == undefined) {
+					socket.send(JSON.stringify({ type: "init", data: "missing-auth" }));
+					return socket.terminate()
+				}
+				const username = signer.unsign(payload.auth);
+				if (await checkPermissions(username) === false) {
+					socket.send(JSON.stringify({ type: "init", data: "bad-auth" }))
+					return socket.terminate()
+				}
+				socket.isAuthed = true
+				console.log("authed")
+
+				/*
+				if (payload.lastChallengeID < cache.latestSolveSubmissionID) {
+					const challengesToBeSent = collections.transactions.find(null, {projection: {_id: 0, author: 1, timestamp: 1, points: 1 }}).sort({$natural:1}).limit(cache.latestSolveSubmissionID-payload.lastChallengeID).toArray();
+					console.log(challengesToBeSent)
+				}*/
+			}
+		})
 	})
 
 
