@@ -1221,7 +1221,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 							}
 						}
 					}
-				}]).toArray()
+				}]).toArray(),
+				lastChallengeID: cache.latestSolveSubmissionID
 			});
 		}
 		catch (err) {
@@ -1439,11 +1440,13 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				socket.isAuthed = true
 				console.log("authed")
 
-				/*
+				
 				if (payload.lastChallengeID < cache.latestSolveSubmissionID) {
 					const challengesToBeSent = collections.transactions.find(null, {projection: {_id: 0, author: 1, timestamp: 1, points: 1 }}).sort({$natural:1}).limit(cache.latestSolveSubmissionID-payload.lastChallengeID).toArray();
 					console.log(challengesToBeSent)
-				}*/
+					socket.send(JSON.stringify({type: "init", data: challengesToBeSent, lastChallengeID: cache.latestSolveSubmissionID}))
+				}
+				else socket.send(JSON.stringify({type: "init", data: "up-to-date"}))
 			}
 		})
 	})

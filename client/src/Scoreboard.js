@@ -30,7 +30,17 @@ class Scoreboard extends React.Component {
   }
 
   componentDidMount = async () => {
-    [finalScores, changes] = await Promise.all([this.getFinalScores(), this.getChanges()])
+    let scoreboardData = sessionStorage.getItem("scoreboard-data")
+    if (scoreboardData === null) {
+      [finalScores, changes] = await Promise.all([this.getFinalScores(), this.getChanges()])    
+    }
+    else {
+      scoreboardData = JSON.parse(scoreboardData)
+      finalScores = scoreboardData.finalScores
+      changes = scoreboardData.changes
+    }
+    console.log(finalScores)
+    console.log(changes)
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
     this.connectWebSocket() //Connect to socket server for live scoreboard
 
@@ -135,11 +145,49 @@ class Scoreboard extends React.Component {
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
         else if (data.data === "missing-auth") message.error("Error connecting to live updates")
+        else if (data.data === "up-to-date") {
+          this.setState({ liveUpdates: true })
+        }
+        else {
+          for (let y = 0; y < data.data.length; y++) {
+            const payload = data.data[y]  
+            let found = false
+              for (let i = 0; i < finalScores.scores.length; i++) {
+                if (finalScores.scores[i].username === payload.username) {
+      
+                  finalScores.scores[i].score += payload.points
+                  found = true
+                  break
+                }
+              }
+      
+              if (found) {
+                for (let x = 0; x < changes.users.length; x++) {
+                  if (changes.users[x]._id === payload.username) {
+                    changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
+                    break
+                  }
+                }
+              }
+              else {
+                // User is a new user not on the scoreboard for whatever reason
+                finalScores.scores.push({ username: payload.username, score: payload.points })
+                changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
+              }
+          }
+        
+
+        this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
+        
+        sessionStorage.setItem("scoreboard-data", JSON.stringify({finalScores: finalScores, changes: changes}))
+        sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
+        this.setState({ liveUpdates: true })
+        }
       }
     }
     webSocket.onopen = (e) => {
-      webSocket.send(JSON.stringify({type: "init", data: {auth: "uijdhjsahbdjh" }}))
-      this.setState({ liveUpdates: true })
+      const ID = sessionStorage.getItem("lastChallengeID")
+      webSocket.send(JSON.stringify({type: "init", data: {auth: localStorage.getItem("IRSCTF-token"), lastChallengeID: parseInt(ID) }}))
     }
     webSocket.onerror = (e) => {
       console.error(e)
@@ -284,7 +332,6 @@ class Scoreboard extends React.Component {
     }
 
     finalData.push(finalPoint)
-    console.log(scoreArray)
     this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray, loadingTable: false, top10: top10 })
     updating = false
   }
@@ -321,6 +368,7 @@ class Scoreboard extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       if (data.success === true) {
+        sessionStorage.setItem("lastChallengeID", data.lastChallengeID)
         return data
       }
       else {
@@ -425,7 +473,7 @@ class Scoreboard extends React.Component {
         </div>
         {this.state.liveUpdates ?
           <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Live Scoreboard </h4> <Ripple color="#a61d24" size={40} /></div> :
-          <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Connecting to live updates </h4> <Ellipsis color="#177ddc" size={40} /></div>
+          <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Connecting Live Scoreboard </h4> <Ellipsis color="#177ddc" size={40} /></div>
         }
         {!this.state.loadingTable && (
           <div style={{ height: "70%", width: "100%", minWidth: "70vw" }}>
