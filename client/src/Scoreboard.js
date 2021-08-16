@@ -32,81 +32,82 @@ class Scoreboard extends React.Component {
   componentDidMount = async () => {
     let scoreboardData = sessionStorage.getItem("scoreboard-data")
     if (scoreboardData === null) {
-      [finalScores, changes] = await Promise.all([this.getFinalScores(), this.getChanges()])    
+      [finalScores, changes] = await Promise.all([this.getFinalScores(), this.getChanges()])
+      sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
     }
     else {
       scoreboardData = JSON.parse(scoreboardData)
       finalScores = scoreboardData.finalScores
       changes = scoreboardData.changes
     }
-    console.log(finalScores)
-    console.log(changes)
+    // Render whatever data we have either: stored in sessionStorage/retrieved from Fetch for fast loading of scoreboard
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
-    this.connectWebSocket() //Connect to socket server for live scoreboard
+
+    this.connectWebSocket() //Connect to socket server for live scoreboard and this will update the scoreboard with the latest data
 
     //Update last solved timing
-    setInterval(() => {
-      if (!updating) {
-        let scoreArray = this.state.scores
-        for (let x = 0; x < scoreArray.length; x++) {
-  
-          if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
-            //console.log(scoreArray[x])
-            scoreArray[x].position = String(x + 1) + "."
-            const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
-            let minutes = Math.ceil(dateTime / 60)
-            let hours = 0
-            let days = 0
-            let months = 0
-            let years = 0
-            if (minutes >= 60) {
-              hours = Math.floor(minutes / 60)
-              minutes = minutes - hours * 60
-    
-              if (hours >= 24) {
-                days = Math.floor(hours / 24)
-                hours = hours - days * 24
-    
-                if (days >= 30) {
-                  months = Math.floor(days / 30)
-                  days = days - months * 30
-    
-                  if (months >= 12) {
-                    years = Math.floor(months / 12)
-                    months = months - years * 12
-                  }
+    setInterval(() => {this.lastSolveTiming()}, 60 * 1000)
+
+  }
+
+  lastSolveTiming() {
+    if (!updating) {
+      let scoreArray = this.state.scores
+      for (let x = 0; x < scoreArray.length; x++) {
+
+        if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
+          //console.log(scoreArray[x])
+          scoreArray[x].position = String(x + 1) + "."
+          const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+          let minutes = Math.ceil(dateTime / 60)
+          let hours = 0
+          let days = 0
+          let months = 0
+          let years = 0
+          if (minutes >= 60) {
+            hours = Math.floor(minutes / 60)
+            minutes = minutes - hours * 60
+
+            if (hours >= 24) {
+              days = Math.floor(hours / 24)
+              hours = hours - days * 24
+
+              if (days >= 30) {
+                months = Math.floor(days / 30)
+                days = days - months * 30
+
+                if (months >= 12) {
+                  years = Math.floor(months / 12)
+                  months = months - years * 12
                 }
               }
             }
-            let finalTime = " ago."
-            if (minutes !== 0) {
-              finalTime = minutes.toString() + " minutes " + finalTime
-            }
-            if (hours !== 0) {
-              finalTime = hours.toString() + " hours " + finalTime
-            }
-            if (days !== 0) {
-              finalTime = days.toString() + " days " + finalTime
-            }
-            if (months !== 0) {
-              finalTime = months.toString() + " months " + finalTime
-            }
-            if (years !== 0) {
-              finalTime = years.toString() + " years " + finalTime
-            }
-            scoreArray[x].time = finalTime
-            
           }
-          else {
-            scoreArray[x].timestamp = "No solves yet"
+          let finalTime = " ago."
+          if (minutes !== 0) {
+            finalTime = minutes.toString() + (minutes > 1 ? " minutes " : " minute ") + finalTime
           }
-        }
-        this.setState({scores: scoreArray})
-      }
-      
-      
-    }, 1000*60)
+          if (hours !== 0) {
+            finalTime = hours.toString() + (hours > 1 ? " hours " : " hour ") + finalTime
+          }
+          if (days !== 0) {
+            finalTime = days.toString() + (days > 1 ? " days " : " day ") + finalTime
+          }
+          if (months !== 0) {
+            finalTime = months.toString() + (months > 1 ? " months " : " month ") + finalTime
+          }
+          if (years !== 0) {
+            finalTime = years.toString() + (years > 1 ? " years " : " year ") + finalTime
+          }
+          scoreArray[x].time = finalTime
 
+        }
+        else {
+          scoreArray[x].timestamp = "No solves yet"
+        }
+      }
+      this.setState({ scores: scoreArray })
+    }
   }
 
   connectWebSocket() {
@@ -145,49 +146,47 @@ class Scoreboard extends React.Component {
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
         else if (data.data === "missing-auth") message.error("Error connecting to live updates")
-        else if (data.data === "up-to-date") {
-          this.setState({ liveUpdates: true })
-        }
+        else if (data.data === "up-to-date") this.setState({ liveUpdates: true })
         else {
           for (let y = 0; y < data.data.length; y++) {
-            const payload = data.data[y]  
+            const payload = data.data[y]
             let found = false
-              for (let i = 0; i < finalScores.scores.length; i++) {
-                if (finalScores.scores[i].username === payload.username) {
-      
-                  finalScores.scores[i].score += payload.points
-                  found = true
+            for (let i = 0; i < finalScores.scores.length; i++) {
+              if (finalScores.scores[i].username === payload.author) {
+
+                finalScores.scores[i].score += payload.points
+                found = true
+                break
+              }
+            }
+
+            if (found) {
+              for (let x = 0; x < changes.users.length; x++) {
+                if (changes.users[x]._id === payload.author) {
+                  changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
                   break
                 }
               }
-      
-              if (found) {
-                for (let x = 0; x < changes.users.length; x++) {
-                  if (changes.users[x]._id === payload.username) {
-                    changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
-                    break
-                  }
-                }
-              }
-              else {
-                // User is a new user not on the scoreboard for whatever reason
-                finalScores.scores.push({ username: payload.username, score: payload.points })
-                changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
-              }
+            }
+            else {
+              // User is a new user not on the scoreboard for whatever reason
+              finalScores.scores.push({ username: payload.author, score: payload.points })
+              changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
+            }
           }
-        
 
-        this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
-        
-        sessionStorage.setItem("scoreboard-data", JSON.stringify({finalScores: finalScores, changes: changes}))
-        sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
-        this.setState({ liveUpdates: true })
+
+          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
+
+          sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
+          sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
+          this.setState({ liveUpdates: true })
         }
       }
     }
     webSocket.onopen = (e) => {
       const ID = sessionStorage.getItem("lastChallengeID")
-      webSocket.send(JSON.stringify({type: "init", data: {auth: localStorage.getItem("IRSCTF-token"), lastChallengeID: parseInt(ID) }}))
+      webSocket.send(JSON.stringify({ type: "init", data: { auth: localStorage.getItem("IRSCTF-token"), lastChallengeID: parseInt(ID) } }))
     }
     webSocket.onerror = (e) => {
       console.error(e)
@@ -293,22 +292,22 @@ class Scoreboard extends React.Component {
         }
         let finalTime = " ago."
         if (minutes !== 0) {
-          finalTime = minutes.toString() + " minutes " + finalTime
+          finalTime = minutes.toString() + (minutes > 1 ? " minutes " : " minute ") + finalTime
         }
         if (hours !== 0) {
-          finalTime = hours.toString() + " hours " + finalTime
+          finalTime = hours.toString() + (hours > 1 ? " hours " : " hour ") + finalTime
         }
         if (days !== 0) {
-          finalTime = days.toString() + " days " + finalTime
+          finalTime = days.toString() + (days > 1 ? " days " : " day ") + finalTime
         }
         if (months !== 0) {
-          finalTime = months.toString() + " months " + finalTime
+          finalTime = months.toString() + (months > 1 ? " months " : " month ") + finalTime
         }
         if (years !== 0) {
-          finalTime = years.toString() + " years " + finalTime
+          finalTime = years.toString() + (years > 1 ? " years " : " year ") + finalTime
         }
         scoreArray[x].time = finalTime
-        
+
       }
       else {
         scoreArray[x].timestamp = "No solves yet"

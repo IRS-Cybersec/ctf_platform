@@ -853,6 +853,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					hint_id: parseInt(req.body.id)
 				});
 			}
+			cache.latestSolveSubmissionID += 1
+			await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
 			broadCastNewSolve({
 				username: username,
 				timestamp: Gtimestamp,
@@ -892,8 +894,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					type: blocked ? 'blocked_submission' : 'submission',
 					points: correct ? chall.points : 0,
 					correct: correct,
-					submission: req.body.flag,
-					submissionUpdateID: cache.latestSolveSubmissionID
+					submission: req.body.flag
 				});
 				if (correct && !blocked) {
 					await collections.users.updateOne({
@@ -917,14 +918,14 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			}
 			let solved = false;
 			if (chall.flags.includes(req.body.flag)) {
-				cache.latestSolveSubmissionID += 1
+				solved = true;
 				await insertTransaction(true);
 				res.send({
 					success: true,
 					data: 'correct'
 				});
-				solved = true;
-				await collections.cache.updateOne(null, { $set: { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
+				cache.latestSolveSubmissionID += 1
+				await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
 				broadCastNewSolve({
 					username: username,
 					timestamp: Gtimestamp,
@@ -1422,7 +1423,9 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	//websocket methods
 	wss.on('connection', (socket) => {
-		socket.test = "test"
+		socket.isAlive = true
+		socket.on('pong', () => {socket.isAlive = true}); // check for any clients that dced without informing the server
+
 		socket.on("message", async (msg) => {
 			const data = JSON.parse(msg)
 			if (data.type === "init") {
@@ -1438,18 +1441,31 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					return socket.terminate()
 				}
 				socket.isAuthed = true
-				console.log("authed")
-
 				
 				if (payload.lastChallengeID < cache.latestSolveSubmissionID) {
-					const challengesToBeSent = collections.transactions.find(null, {projection: {_id: 0, author: 1, timestamp: 1, points: 1 }}).sort({$natural:1}).limit(cache.latestSolveSubmissionID-payload.lastChallengeID).toArray();
-					console.log(challengesToBeSent)
+					const challengesToBeSent = await collections.transactions.find(null, {projection: {_id: 0, author: 1, timestamp: 1, points: 1 }}).sort({$natural:-1}).limit(cache.latestSolveSubmissionID-payload.lastChallengeID).toArray();
 					socket.send(JSON.stringify({type: "init", data: challengesToBeSent, lastChallengeID: cache.latestSolveSubmissionID}))
 				}
 				else socket.send(JSON.stringify({type: "init", data: "up-to-date"}))
 			}
 		})
 	})
+
+	// check for any clients that dced without informing the server
+	const interval = setInterval(function ping() {
+		wss.clients.forEach(function each(ws) {
+		  if (ws.isAlive === false)  return ws.terminate();
+	  
+		  ws.isAlive = false;
+		  ws.ping();
+		});
+	  }, 30000);
+
+	wss.on('close', function close() {
+		clearInterval(interval);
+	  });
+
+	
 
 
 }).catch(err => {

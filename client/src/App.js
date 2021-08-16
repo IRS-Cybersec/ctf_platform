@@ -23,8 +23,6 @@ import { Ellipsis } from 'react-spinners-css';
 const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
-window.production = false
-window.ipAddress = window.production ? "https://api.irscybersec.tk" : "http://localhost:20001"
 
 const Home = lazy(() => import("./home.js"));
 const Challenges = lazy(() => import("./challenges.js"));
