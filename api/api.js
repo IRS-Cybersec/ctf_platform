@@ -9,9 +9,7 @@ const sanitizeFile = require('sanitize-filename');
 const sharp = "h" //require('sharp');
 const MongoDB = require('mongodb');
 const ws = require('ws')
-const fs = require('fs')
-const bson = require('bson');
-const { EJSON } = require('bson');
+const validators = require('./validators.js')
 
 require('dotenv').config()
 let permissions = [];
@@ -115,11 +113,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	};
 
 	try {
-		const validators = {
-			users: JSON.parse(fs.readFileSync("users.bson")),
-			transactions: JSON.parse(fs.readFileSync("transactions.bson")),
-			challs: JSON.parse(fs.readFileSync("challs.bson"))
-		}
+		console.log(validators.users)
 		await db.command({collMod: "users", validator: validators.users})
 		await db.command({collMod: "transactions", validator: validators.transactions})
 		await db.command({collMod: "challs", validator: validators.challs})
