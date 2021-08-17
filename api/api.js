@@ -111,17 +111,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		announcements: db.collection('announcements'),
 		cache: db.collection('cache')
 	};
-
-	try {
-		console.log(validators.users)
-		await db.command({collMod: "users", validator: validators.users})
-		await db.command({collMod: "transactions", validator: validators.transactions})
-		await db.command({collMod: "challs", validator: validators.challs})
-		console.info('MongoDB connected');
-	
-	}
-	catch (e) {console.error(e)}
-	
+	console.info('MongoDB connected');
 
 	let cache = {
 		announcements: 0,
@@ -142,9 +132,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	}
 
-
 	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
-	if (checkCache === null) await createCache()
+	if (checkCache === null) await createCache() //First time set-up: (1) Create Cache 
 	else {
 		// Add any missing cache values
 		for (const key in cache) {
@@ -152,6 +141,35 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 		cache = checkCache
 	}
+
+	// (2) Insert Validation
+	try {
+		await db.command({collMod: "users", validator: validators.users})
+		await db.command({collMod: "transactions", validator: validators.transactions})
+		await db.command({collMod: "challs", validator: validators.challs})
+		console.log("Validation inserted")
+	}
+	catch (e) {console.error(e)}
+
+	// (3) Create Indexes
+	if ((await collections.users.indexes()).length === 1) {
+		// Users indexes
+		collections.users.createIndex({"username": 1}, {unique: true, name: "username"})
+		collections.users.createIndex({"email": 1}, {unique: true, name: "email"})
+		console.log("Users indexes created")
+	}
+	if ((await collections.challs.indexes()).length === 1) {
+		// Challs indexes
+		collections.challs.createIndex({"category": 1, "visibility": 1}, {name: "catvis"})
+		collections.challs.createIndex({"name": 1}, {unique: true, name: "name"})
+		console.log("Challs indexes created")
+	}
+	if ((await collections.transactions.indexes()).length === 1) {
+		// Transcations indexes
+		collections.transactions.createIndex({"author" : 1, "challenge" : 1, "type" : 1}, {name: "userchall"})
+		console.log("Transcations indexes created")
+	}
+
 
 	async function checkPermissions(username) {
 		if (permissions.includes(username)) return permissions.username;
