@@ -9,6 +9,7 @@ const sanitizeFile = require('sanitize-filename');
 const sharp = "h" //require('sharp');
 const MongoDB = require('mongodb');
 const ws = require('ws')
+const fs = require('fs')
 
 require('dotenv').config()
 let permissions = [];
@@ -110,6 +111,18 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		announcements: db.collection('announcements'),
 		cache: db.collection('cache')
 	};
+	const validators = {
+		users: JSON.parse(fs.readFileSync("users.bson")),
+		transactions: JSON.parse(fs.readFileSync("transcations.bson")),
+		challs: JSON.parse(fs.readFileSync("challs.bson"))
+	}
+	console.log(validators.users)
+	await db.command({collMod: "users", validator: validators.users})
+	await db.command({collMod: "transcations", validator: validators.transactions})
+	await db.command({collMod: "challs", validator: validators.challs})
+	console.info('MongoDB connected');
+
+
 	let cache = {
 		announcements: 0,
 		challenges: 0,
@@ -119,13 +132,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		uploadSize: 512000,
 		latestSolveSubmissionID: 0
 	}
-	let socketUsers = {
-
-	}
-	console.info('MongoDB connected');
-
-
-
 	createCache = async () => {
 		try {
 			await collections.cache.insertOne(cache);
@@ -134,7 +140,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		catch (err) {
 			errors(err);
 		}
-
 	}
 
 
