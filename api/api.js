@@ -10,6 +10,8 @@ const sharp = "h" //require('sharp');
 const MongoDB = require('mongodb');
 const ws = require('ws')
 const fs = require('fs')
+const bson = require('bson');
+const { EJSON } = require('bson');
 
 require('dotenv').config()
 let permissions = [];
@@ -111,17 +113,21 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		announcements: db.collection('announcements'),
 		cache: db.collection('cache')
 	};
-	const validators = {
-		users: JSON.parse(fs.readFileSync("users.bson")),
-		transactions: JSON.parse(fs.readFileSync("transcations.bson")),
-		challs: JSON.parse(fs.readFileSync("challs.bson"))
-	}
-	console.log(validators.users)
-	await db.command({collMod: "users", validator: validators.users})
-	await db.command({collMod: "transcations", validator: validators.transactions})
-	await db.command({collMod: "challs", validator: validators.challs})
-	console.info('MongoDB connected');
 
+	try {
+		const validators = {
+			users: JSON.parse(fs.readFileSync("users.bson")),
+			transactions: JSON.parse(fs.readFileSync("transactions.bson")),
+			challs: JSON.parse(fs.readFileSync("challs.bson"))
+		}
+		await db.command({collMod: "users", validator: validators.users})
+		await db.command({collMod: "transactions", validator: validators.transactions})
+		await db.command({collMod: "challs", validator: validators.challs})
+		console.info('MongoDB connected');
+	
+	}
+	catch (e) {console.error(e)}
+	
 
 	let cache = {
 		announcements: 0,
