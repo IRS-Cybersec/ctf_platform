@@ -448,6 +448,7 @@ class AdminUsers extends React.Component {
                                     onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                                     onPressEnter={() => confirm()}
                                     style={{ marginBottom: 8, display: 'block' }}
+                                    autoFocus
                                 />
                                 <Space>
                                     <Button
@@ -479,6 +480,7 @@ class AdminUsers extends React.Component {
                                     onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                                     onPressEnter={() => confirm()}
                                     style={{ marginBottom: 8, display: 'block' }}
+                                    autoFocus
                                 />
                                 <Space>
                                     <Button

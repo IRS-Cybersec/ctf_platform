@@ -411,6 +411,7 @@ class AdminChallenges extends React.Component {
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
                                     <Input
+                                    autoFocus
                                         placeholder="Search Challenge Name"
                                         value={selectedKeys[0]}
                                         onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
@@ -450,6 +451,7 @@ class AdminChallenges extends React.Component {
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
                                     <Input
+                                    autoFocus
                                         placeholder="Search Challenge Name"
                                         value={selectedKeys[0]}
                                         onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
