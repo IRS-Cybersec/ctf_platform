@@ -111,7 +111,9 @@ class AdminUsers extends React.Component {
             selectedTableKeys: [],
             disableEditButtons: true,
             uploadSize: 512000,
-            uploadLoading: false
+            uploadLoading: false,
+            uploadPath: "",
+            uploadPathLoading: false
         }
     }
 
@@ -130,7 +132,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize })
+                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -328,6 +330,10 @@ class AdminUsers extends React.Component {
             settingName = "Upload size"
             this.setState({ uploadLoading: true })
         }
+        else if (setting === "uploadPath") {
+            settingName = "Profile pictures upload path"
+            this.setState({ uploadPathLoading: true })
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
@@ -339,8 +345,8 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                message.success(settingName + " changed to " + value.toString() + "B")
-                if (setting === "uploadSize") this.setState({ uploadSize: value })
+                if (setting === "uploadSize") message.success(settingName + " changed to " + value.toString() + "B")
+                else if (setting === "uploadPath") message.success(settingName + " changed to " + value.toString())
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -515,7 +521,7 @@ class AdminUsers extends React.Component {
                 </Table>
                 <Divider />
 
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <div>
                         <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
@@ -532,7 +538,7 @@ class AdminUsers extends React.Component {
 
                 <Divider />
 
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <div>
                         <h3>Profile Picture Max Upload Size:
@@ -540,12 +546,22 @@ class AdminUsers extends React.Component {
                                 formatter={value => `${value}B`}
                                 parser={value => value.replace('B', '')}
                                 value={this.state.uploadSize}
+                                disabled={this.state.uploadLoading}
                                 onChange={(value) => this.setState({uploadSize: value})}
                                 onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
                         <p>Sets the maximum file upload size for profile pictures (in Bytes). Press <b>Enter</b> to save</p>
                     </div>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <div>
+                        <h3>Profile Picture Upload Path
+                            <Input
+                                value={this.state.uploadPath}
+                                onChange={(e) => this.setState({uploadPath: e.target.value})}
+                                onPressEnter={(e) => { this.changeSetting("uploadPath", this.state.uploadPath) }} /></h3>
+                        <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br/>set for the Node process to save the file there. Press <b>Enter</b> to save</p>
+                    </div>
                 </div>
 
             </Layout>

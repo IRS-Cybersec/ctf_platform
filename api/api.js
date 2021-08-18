@@ -120,7 +120,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		adminShowDisable: false,
 		submissionDisabled: false,
 		uploadSize: 512000,
-		latestSolveSubmissionID: 0
+		latestSolveSubmissionID: 0,
+		uploadPath: "/var/www/ctf_platform/static/uploads/profile"
 	}
 	createCache = async () => {
 		try {
@@ -188,7 +189,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
 			res.send({
 				success: true,
-				states: { registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize }
+				states: { registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize, uploadPath: cache.uploadPath }
 			});
 		}
 		catch (err) {
@@ -217,7 +218,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
 			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize"]
+			const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath"]
 			if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
 			cache[req.body.setting] = req.body.disable
 
@@ -1428,7 +1429,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		await sharp(targetFile.data)
 			.toFormat('webp')
 			.webp({ quality: 30 })
-			.toFile(path.join('/var', 'www', 'ctf_platform', 'static', 'uploads', 'profile', sanitizeFile(username)) + ".webp")
+			.toFile(path.join(cache.uploadPath, sanitizeFile(username)) + ".webp")
 			.catch((err) => {
 				console.error(err)
 				return res.send({ success: false, error: "file-upload" })

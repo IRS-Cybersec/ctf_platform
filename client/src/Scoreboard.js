@@ -103,7 +103,7 @@ class Scoreboard extends React.Component {
 
         }
         else {
-          scoreArray[x].timestamp = "No solves yet"
+          scoreArray[x].time = "No solves yet"
         }
       }
       this.setState({ scores: scoreArray })
@@ -310,7 +310,7 @@ class Scoreboard extends React.Component {
 
       }
       else {
-        scoreArray[x].timestamp = "No solves yet"
+        scoreArray[x].time = "No solves yet"
       }
     }
 

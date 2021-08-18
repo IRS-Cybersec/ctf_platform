@@ -144,7 +144,7 @@ class Challenges extends React.Component {
 
             <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({  currentCategory: false }) }} size="large">Back</Button>
             <div>
-              <Select disabled={!this.state.currentCategory} defaultValue="points" style={{ marginRight: "1.5vw", width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
+              <Select disabled={!this.state.currentCategory} defaultValue="points" style={{ width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
                 <Option value="points">Sort by ↑Points</Option>
                 <Option value="pointsrev">Sort by ↓Points</Option>
                 <Option value="abc">Sort A→Z</Option>
