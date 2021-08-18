@@ -431,7 +431,7 @@ class AdminChallenges extends React.Component {
                                     </Space>
                                 </div>
                             )}
-                            onFilter={(value, record) => record.name.includes(value.toLowerCase())}
+                            onFilter={(value, record) => record.name.toLowerCase().includes(value.toLowerCase())}
                             filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                             sorter={(a, b) => {
                                 if (a.name < b.name) return -1
@@ -470,7 +470,7 @@ class AdminChallenges extends React.Component {
                                     </Space>
                                 </div>
                             )}
-                            onFilter={(value, record) => { if (record.requires) return record.requires.includes(value.toLowerCase()) }}
+                            onFilter={(value, record) => { if (record.requires) return record.requires.toLowerCase().includes(value.toLowerCase()) }}
                             filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                             sorter={(a, b) => {
                                 if (a.name < b.name) return -1

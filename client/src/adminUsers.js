@@ -463,7 +463,7 @@ class AdminUsers extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.username.includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.username.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                         sorter={(a, b) => {
                             if (a.username < b.username) return -1
@@ -494,7 +494,7 @@ class AdminUsers extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.email.includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
                     <Column title="Score" dataIndex="score" key="score" sorter={(a, b) => a.score - b.score} />
