@@ -338,7 +338,7 @@ class AdminChallenges extends React.Component {
 
     getDisableStates = async () => {
         this.setState({ disableLoading: true })
-        await fetch(window.ipAddress + "/v1/challenges/disableStates", {
+        await fetch(window.ipAddress + "/v1/challenge/disableStates", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {
