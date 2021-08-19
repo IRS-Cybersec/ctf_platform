@@ -24,7 +24,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - Juicy React-Spring transitions
 
 ## Documentation
-Please check out the [wiki](https://github.com/IRS-Cybersec/ctf_platform/wiki) for more info!
+Please check out the [wiki](https://github.com/IRS-Cybersec/ctf_platform/wiki) for installation/API documentation!
 
 ## Screenshots
 
