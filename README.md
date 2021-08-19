@@ -16,12 +16,14 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - **Sorting of challenges** by their tags
 - **Announcements** with markdown support
 - **Markdown supported Challenge Descriptions** that allow you to add **code blocks with syntax highlighting, math** and more
+- **Live Scoreboard** that is relatively light on the server
 - **Writeup links** per challenge (along with the option to only release writeups after submitting the flag)
 - **Challenge Creator Role** so as to allow challenge authors to submit challenges without having full admin access
+- **Set Required Challenges** to unlock other challenges
 - Links to each challenge so that individual challenges can be shared
-- Easy management of challenges and users
+- Easy management of the platform via an integrated Admin Panel
   - Disable registration, change permissions etc.
-- Juicy React-Spring transitions
+
 
 ## Documentation
 Please check out the [wiki](https://github.com/IRS-Cybersec/ctf_platform/wiki) for installation/API documentation!
