@@ -197,7 +197,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
-	app.get('/v1/challenges/disableStates', async (req, res) => {
+	app.get('/v1/challenge/disableStates', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
