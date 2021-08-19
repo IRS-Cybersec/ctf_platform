@@ -1071,34 +1071,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
-	app.post('/v0/challenge/visibility/chall', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			res.send((await collections.challs.updateOne(
-				{ name: req.body.chall },
-				{ '$set': { visibility: req.body.visibility == true } }
-			)).matchedCount == 0 ? { success: false, error: 'not_found' } : { success: true });
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
-	app.post('/v0/challenge/visibility/category', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			res.send((await collections.challs.updateMany(
-				{ category: req.body.category },
-				{ '$set': { visibility: req.body.visibility == true } }
-			)).matchedCount == 0 ? { success: false, error: 'not_found' } : { success: true });
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
 	app.post('/v1/challenge/edit', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
