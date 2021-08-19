@@ -6,7 +6,7 @@ const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
 const sanitizeFile = require('sanitize-filename');
-const sharp = "h" //require('sharp');
+const sharp = require('sharp');
 const MongoDB = require('mongodb');
 const ws = require('ws')
 const validators = require('./validators.js')
@@ -1120,13 +1120,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			else throw new Error('NotFound');
 		}
 		catch (err) {
-			if (err.message == 'MissingHintCost') {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'validation'
-				});
-			}
 			errors(err, res);
 		}
 	});
