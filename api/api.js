@@ -6,7 +6,7 @@ const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
 const sanitizeFile = require('sanitize-filename');
-const sharp = "h" //require('sharp');
+const sharp = require('sharp');
 const MongoDB = require('mongodb');
 const ws = require('ws')
 const validators = require('./validators.js')
@@ -197,7 +197,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 		}
 	});
 
-	app.get('/v1/challenges/disableStates', async (req, res) => {
+	app.get('/v1/challenge/disableStates', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
 			const username = signer.unsign(req.headers.authorization);
@@ -1071,34 +1071,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			errors(err, res);
 		}
 	});
-	app.post('/v0/challenge/visibility/chall', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			res.send((await collections.challs.updateOne(
-				{ name: req.body.chall },
-				{ '$set': { visibility: req.body.visibility == true } }
-			)).matchedCount == 0 ? { success: false, error: 'not_found' } : { success: true });
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
-	app.post('/v0/challenge/visibility/category', async (req, res) => {
-		try {
-			if (req.headers.authorization == undefined) throw new Error('MissingToken');
-			const username = signer.unsign(req.headers.authorization);
-			if (await checkPermissions(username) < 2) throw new Error('Permissions');
-			res.send((await collections.challs.updateMany(
-				{ category: req.body.category },
-				{ '$set': { visibility: req.body.visibility == true } }
-			)).matchedCount == 0 ? { success: false, error: 'not_found' } : { success: true });
-		}
-		catch (err) {
-			errors(err, res);
-		}
-	});
 	app.post('/v1/challenge/edit', async (req, res) => {
 		try {
 			if (req.headers.authorization == undefined) throw new Error('MissingToken');
@@ -1148,13 +1120,6 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 			else throw new Error('NotFound');
 		}
 		catch (err) {
-			if (err.message == 'MissingHintCost') {
-				res.status(400);
-				res.send({
-					success: false,
-					error: 'validation'
-				});
-			}
 			errors(err, res);
 		}
 	});
