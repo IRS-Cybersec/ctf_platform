@@ -134,7 +134,6 @@ class ChallengesTagSort extends React.Component {
         else if (sortType === "pointsrev") challenges = orderBy(challenges, ["points"], ["desc"])
         else if (sortType === "abc") challenges = orderBy(challenges, ["name"], ["asc"])
         else if (sortType === "abcrev") challenges = orderBy(challenges, ["name"], ["desc"])
-        console.log(challenges)
         this.setState({ challenges: challenges })
       }
 

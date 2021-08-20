@@ -173,8 +173,8 @@ class Challenges extends React.Component {
                         <List
                           grid={{
                             xs: 1,
-                            sm: 1,
-                            md: 2,
+                            sm: 2,
+                            md: 3,
                             lg: 3,
                             xl: 3,
                             xxl: 4,
@@ -206,7 +206,7 @@ class Challenges extends React.Component {
                                       bodyStyle={{ backgroundColor: "#262626" }}
                                       className="card-design"
                                       style={{ overflow: "hidden" }}
-                                      cover={<img style={{ height: "35ch", width: "55ch", overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                                      cover={<img style={{overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
                                     >
                                       <Meta
                                         title={

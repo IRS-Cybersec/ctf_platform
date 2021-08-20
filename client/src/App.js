@@ -48,7 +48,8 @@ class App extends React.Component {
       username: "",
       permissions: 0,
       userScore: "Loading...",
-      loading: true
+      loading: true,
+      mobileBreakpoint: false
     };
   }
 
@@ -180,7 +181,13 @@ class App extends React.Component {
               return (
                 <animated.div style={{ ...styles, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")", backgroundSize: "cover" }}>
                   <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                    <Sider style={{ height: "100vh" }}>
+                    <Sider
+                    className={this.state.mobileBreakpoint ? "mobileSider" : ""}
+                    breakpoint="md"
+                    collapsedWidth={0}
+                    onBreakpoint={(broken) => {broken ? this.setState({mobileBreakpoint: true}) : this.setState({mobileBreakpoint: false})}}
+                    style={{boxShadow: "5px 0px 6px 3px rgba(0, 0, 0, .5)"}}
+                    >
                       <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
                         <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
                       </div>

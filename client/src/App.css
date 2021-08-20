@@ -12,6 +12,13 @@
     min-width: "5vw"!important;
 }
 
+.mobileSider {
+    position: absolute !important;
+    height: 100% !important;
+    z-index: 2;
+    
+}
+
 .challengeModal ul {
     display: inline-block;
     text-align: left;
@@ -63,7 +70,7 @@
 
 .card-design-name {
     text-overflow: ellipsis;
-    width: 13vw;
+    width: 95%;
     font-size: 2.3ch;
     overflow: hidden;
     white-space: nowrap;
@@ -205,7 +212,7 @@
 }
 
 .layout-style {
-    margin: 15px;
+    margin: 10px;
     background-color: rgba(0, 0, 0, 0);
 }
 
