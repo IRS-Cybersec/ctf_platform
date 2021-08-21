@@ -1,9 +1,10 @@
 import React from 'react';
-import { Layout, message, Avatar, Button, Form, Input, Divider, Upload } from 'antd';
+import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal } from 'antd';
 import {
     KeyOutlined,
     LockOutlined,
-    UploadOutlined
+    UploadOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 
@@ -99,13 +100,71 @@ const ChangePasswordForm = (props) => {
     );
 }
 
+const DeleteAccountForm = (props) => {
+    const [form] = Form.useForm();
+
+    return (
+        <Form
+            form={form}
+            name="changePassword"
+            className="change-password-form"
+            onFinish={(values) => {
+
+                fetch(window.ipAddress + "/v1/account/delete", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                    body: JSON.stringify({
+                        "password": values.password
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Account deleted successfully" })
+                        props.setState({deleteAccountModal: false})
+                        props.logout()
+                        form.resetFields()
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Password is incorrect. Please try again." })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
+        >
+            <h4>Your account data will be <b style={{color: "#d32029"}}>deleted permanently</b>. Please ensure you really no longer want this account.</h4>
+            <h3>Please Enter Your Password To Confirm:</h3>
+            <Form.Item
+                name="password"
+                rules={[{ required: true, message: 'Please input your password', }]}>
+
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter password." />
+            </Form.Item>
+            
+
+            <Form.Item>
+            <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ deleteAccountModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" danger icon={<KeyOutlined />}>Delete Account</Button>
+            </Form.Item>
+        </Form>
+    );
+}
+
 class Settings extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
             fileList: [],
-            disableUpload: false
+            disableUpload: false,
+            deleteAccountModal: false
         }
     }
 
@@ -116,10 +175,23 @@ class Settings extends React.Component {
     render() {
         return (
             <Layout className="layout-style">
+
+                <Modal
+                    title={"Delete Account"}
+                    visible={this.state.deleteAccountModal}
+                    footer={null}
+                    onCancel={() => { this.setState({ deleteAccountModal: false }) }}
+                    confirmLoading={this.state.modalLoading}
+                >
+
+                    <DeleteAccountForm logout={this.props.logout.bind(this)} setState={this.setState.bind(this)} />
+                </Modal>
+
+
                 <Divider />
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "15ch", overflow: "hidden" }}>
-                        <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.props.username + ".webp"}/>
+                        <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.props.username + ".webp"} />
                         <div style={{ marginTop: "2ch" }}>
                             <Upload
                                 fileList={this.state.fileList}
@@ -128,19 +200,19 @@ class Settings extends React.Component {
                                 action={window.ipAddress + "/v1/profile/upload"}
                                 maxCount={1}
                                 onChange={(file) => {
-                                    this.setState({fileList: file.fileList})
+                                    this.setState({ fileList: file.fileList })
                                     if (file.file.status === "uploading") {
-                                        this.setState({disableUpload: true})
+                                        this.setState({ disableUpload: true })
                                     }
                                     else if ("response" in file.file) {
                                         if (file.file.response.success) message.success("Uploaded profile picture")
                                         else {
                                             message.error("Failed to upload profile picture")
                                             if (file.file.response.error === "too-large") {
-                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + "Bytes." )
+                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + "Bytes.")
                                             }
                                         }
-                                        this.setState({fileList: [], disableUpload: false})
+                                        this.setState({ fileList: [], disableUpload: false })
                                     }
                                 }}
                                 headers={{ "Authorization": localStorage.getItem("IRSCTF-token") }}
@@ -167,6 +239,12 @@ class Settings extends React.Component {
                 </div>
 
                 <Divider />
+
+                <div>
+                    <h3>Very Very Dangerous Button</h3>
+                    <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.setState({deleteAccountModal: true})}} >Delete Account</Button>
+                    <p>You will be asked to key in your password to confirm</p>
+                </div>
             </Layout>
         )
     }

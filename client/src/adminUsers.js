@@ -9,7 +9,8 @@ import {
     MailOutlined,
     LockOutlined,
     RedoOutlined,
-    SearchOutlined
+    SearchOutlined,
+    KeyOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -90,6 +91,88 @@ const RegisterForm = (props) => {
     );
 };
 
+const ChangePasswordForm = (props) => {
+    const [form] = Form.useForm();
+
+    return (
+        <Form
+            form={form}
+            name="changePassword"
+            className="change-password-form"
+            onFinish={(values) => {
+
+                fetch(window.ipAddress + "/v1/account/adminChangePassword", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                    body: JSON.stringify({
+                        "password": values.newPassword,
+                        "username": props.username,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Password changed successfully." })
+                        form.resetFields()
+                        props.setState({ passwordResetModal: false })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%"}}
+        >
+            <h3>New Password:</h3>
+            <Form.Item
+                name="newPassword"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please input the new password',
+                    },
+                ]}
+                hasFeedback
+            >
+
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter a new password" />
+            </Form.Item>
+
+            <h3>Confirm New Password:</h3>
+            <Form.Item
+                name="confirm"
+                dependencies={['newPassword']}
+                hasFeedback
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please retype the new password to confirm',
+                    },
+                    ({ getFieldValue }) => ({
+                        validator(rule, value) {
+                            if (!value || getFieldValue('newPassword') === value) {
+                                return Promise.resolve();
+                            }
+                            return Promise.reject('Oops, the 2 passwords do not match');
+                        },
+                    }),
+                ]}
+            >
+
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
+            </Form.Item>
+            <Form.Item>
+            <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ passwordResetModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" icon={<KeyOutlined />}>Change Password</Button>
+            </Form.Item>
+        </Form>
+    );
+}
+
 
 class AdminUsers extends React.Component {
     constructor(props) {
@@ -113,7 +196,8 @@ class AdminUsers extends React.Component {
             uploadSize: 512000,
             uploadLoading: false,
             uploadPath: "",
-            uploadPathLoading: false
+            uploadPathLoading: false,
+            passwordResetModal: false
         }
     }
 
@@ -395,13 +479,23 @@ class AdminUsers extends React.Component {
                 <Modal
                     title="Create New Account"
                     visible={this.state.createUserModal}
-                    onOk={this.createAccount}
                     footer={null}
                     onCancel={() => { this.setState({ createUserModal: false }) }}
                     confirmLoading={this.state.modalLoading}
                 >
 
                     <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
+                </Modal>
+
+                <Modal
+                    title={"Changing Account Password For: " + this.state.username}
+                    visible={this.state.passwordResetModal}
+                    footer={null}
+                    onCancel={() => { this.setState({ passwordResetModal: false }) }}
+                    confirmLoading={this.state.modalLoading}
+                >
+
+                    <ChangePasswordForm username={this.state.username} setState={this.setState.bind(this)}></ChangePasswordForm>
                 </Modal>
 
 
@@ -512,6 +606,13 @@ class AdminUsers extends React.Component {
                                     }}>
                                         <span>
                                             Change Permissions <ClusterOutlined />
+                                        </span>
+                                    </Menu.Item>
+                                    <Menu.Item onClick={() => {
+                                        this.setState({ passwordResetModal: true, username: record.username })
+                                    }}>
+                                        <span>
+                                            Change Password <KeyOutlined />
                                         </span>
                                     </Menu.Item>
                                 </Menu>

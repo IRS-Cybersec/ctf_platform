@@ -145,29 +145,29 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 
 	// (2) Insert Validation
 	try {
-		await db.command({collMod: "users", validator: validators.users})
-		await db.command({collMod: "transactions", validator: validators.transactions})
-		await db.command({collMod: "challs", validator: validators.challs})
+		await db.command({ collMod: "users", validator: validators.users })
+		await db.command({ collMod: "transactions", validator: validators.transactions })
+		await db.command({ collMod: "challs", validator: validators.challs })
 		console.log("Validation inserted")
 	}
-	catch (e) {console.error(e)}
+	catch (e) { console.error(e) }
 
 	// (3) Create Indexes
 	if ((await collections.users.indexes()).length === 1) {
 		// Users indexes
-		collections.users.createIndex({"username": 1}, {unique: true, name: "username"})
-		collections.users.createIndex({"email": 1}, {unique: true, name: "email"})
+		collections.users.createIndex({ "username": 1 }, { unique: true, name: "username" })
+		collections.users.createIndex({ "email": 1 }, { unique: true, name: "email" })
 		console.log("Users indexes created")
 	}
 	if ((await collections.challs.indexes()).length === 1) {
 		// Challs indexes
-		collections.challs.createIndex({"category": 1, "visibility": 1}, {name: "catvis"})
-		collections.challs.createIndex({"name": 1}, {unique: true, name: "name"})
+		collections.challs.createIndex({ "category": 1, "visibility": 1 }, { name: "catvis" })
+		collections.challs.createIndex({ "name": 1 }, { unique: true, name: "name" })
 		console.log("Challs indexes created")
 	}
 	if ((await collections.transactions.indexes()).length === 1) {
 		// Transcations indexes
-		collections.transactions.createIndex({"author" : 1, "challenge" : 1, "type" : 1}, {name: "userchall"})
+		collections.transactions.createIndex({ "author": 1, "challenge": 1, "type": 1 }, { name: "userchall" })
 		console.log("Transcations indexes created")
 	}
 
@@ -368,6 +368,8 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 				res.send({ success: true });
 			}
 			else {
+				const user = await collections.users.findOne({ username: userToDelete }, { projection: { password: 1, _id: 0 } });
+				if (!(await argon2.verify(user.password, req.body.password))) return res.send({success: false, error: "wrong-pass"})
 				if ((await collections.users.deleteOne({ username: userToDelete.toLowerCase() })).deletedCount == 0) {
 					res.status(400);
 					res.send({
@@ -467,6 +469,31 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 						error: 'wrong-password'
 					});
 					return;
+				case 'EmptyPassword':
+					res.status(400);
+					res.send({
+						success: false,
+						error: 'empty-password'
+					});
+					return;
+			}
+			errors(err, res);
+		}
+	});
+	app.post('/v1/account/adminChangePassword', async (req, res) => {
+		try {
+			if (req.headers.authorization == undefined) throw new Error('MissingToken');
+			const username = signer.unsign(req.headers.authorization);
+			if (await checkPermissions(username) < 2) throw new Error('Permissions');
+			if (req.body.password == '') throw new Error('EmptyPassword');
+			await collections.users.updateOne(
+				{ username: req.body.username },
+				{ '$set': { password: await argon2.hash(req.body.password) } }
+			);
+			res.send({ success: true });
+		}
+		catch (err) {
+			switch (err.message) {
 				case 'EmptyPassword':
 					res.status(400);
 					res.send({
@@ -1413,7 +1440,7 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	//websocket methods
 	wss.on('connection', (socket) => {
 		socket.isAlive = true
-		socket.on('pong', () => {socket.isAlive = true}); // check for any clients that dced without informing the server
+		socket.on('pong', () => { socket.isAlive = true }); // check for any clients that dced without informing the server
 
 		socket.on("message", async (msg) => {
 			const data = JSON.parse(msg)
@@ -1430,12 +1457,12 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 					return socket.terminate()
 				}
 				socket.isAuthed = true
-				
+
 				if (payload.lastChallengeID < cache.latestSolveSubmissionID) {
-					const challengesToBeSent = await collections.transactions.find(null, {projection: {_id: 0, author: 1, timestamp: 1, points: 1 }}).sort({$natural:-1}).limit(cache.latestSolveSubmissionID-payload.lastChallengeID).toArray();
-					socket.send(JSON.stringify({type: "init", data: challengesToBeSent, lastChallengeID: cache.latestSolveSubmissionID}))
+					const challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(cache.latestSolveSubmissionID - payload.lastChallengeID).toArray();
+					socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: cache.latestSolveSubmissionID }))
 				}
-				else socket.send(JSON.stringify({type: "init", data: "up-to-date"}))
+				else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
 			}
 		})
 	})
@@ -1443,18 +1470,18 @@ MongoDB.MongoClient.connect('mongodb://localhost:27017', {
 	// check for any clients that dced without informing the server
 	const interval = setInterval(function ping() {
 		wss.clients.forEach(function each(ws) {
-		  if (ws.isAlive === false)  return ws.terminate();
-	  
-		  ws.isAlive = false;
-		  ws.ping();
+			if (ws.isAlive === false) return ws.terminate();
+
+			ws.isAlive = false;
+			ws.ping();
 		});
-	  }, 30000);
+	}, 30000);
 
 	wss.on('close', function close() {
 		clearInterval(interval);
-	  });
+	});
 
-	
+
 
 
 }).catch(err => {

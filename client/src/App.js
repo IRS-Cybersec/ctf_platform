@@ -318,7 +318,7 @@ class App extends React.Component {
                                     <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
 
                                     <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
-                                    <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
+                                    <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} key={window.location.pathname} />} />
                                     <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
 
 
