@@ -182,62 +182,62 @@ class App extends React.Component {
                 <animated.div style={{ ...styles, width: "100vw", height: "100vh", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")", backgroundSize: "cover" }}>
                   <Layout style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}>
                     <Sider
-                    className={this.state.mobileBreakpoint ? "mobileSider" : ""}
-                    breakpoint="md"
-                    collapsedWidth={0}
-                    onBreakpoint={(broken) => {broken ? this.setState({mobileBreakpoint: true}) : this.setState({mobileBreakpoint: false})}}
-                    style={{boxShadow: "5px 0px 6px 3px rgba(0, 0, 0, .5)"}}
+                      className={this.state.mobileBreakpoint ? "mobileSider" : ""}
+                      breakpoint="md"
+                      collapsedWidth={0}
+                      onBreakpoint={(broken) => { broken ? this.setState({ mobileBreakpoint: true }) : this.setState({ mobileBreakpoint: false }) }}
+                      style={{ boxShadow: "5px 0px 6px 3px rgba(0, 0, 0, .5)" }}
                     >
-                      <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                        <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
-                      </div>
-                      <Dropdown overlay={
-                        <Menu>
-                          <Menu.Item key="Profile">
-                            <NavLink to="/Profile">
-                              <span>Profile </span>
-                              <UserOutlined />
-                            </NavLink>
-                          </Menu.Item>
-                          <Menu.Item key="Settings">
-                            <NavLink to="/Settings">
-                              <span>Settings </span>
-                              <SettingOutlined />
-                            </NavLink>
-                          </Menu.Item>
-                          <Menu.Divider />
-                          <Menu.Item key="logout" onClick={() => {
-                            confirm({
-                              title: 'Are you sure you want to logout?',
-                              icon: <ExclamationCircleOutlined />,
-                              onOk: (close) => { this.handleLogout(); close(); },
-                              onCancel: () => { },
-                            });
-                          }}>
-                            <span style={{ color: "#d32029" }}>Logout <LogoutOutlined /></span>
-                          </Menu.Item>
-                        </Menu>}
-                        trigger={['click']}>
-                        <div className="buttonHover"
-                          style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
-                          <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
-                            <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                            <Avatar size="large" src={"https://api.irscybersec.tk/uploads/profile/" + this.state.username + ".webp"} />
-                          </div>
-                          <div>
-                            <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
-                          </div>
+                      <div className="overflow-handle">
+                        <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
+                          <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
                         </div>
-                      </Dropdown>
+                        <Dropdown overlay={
+                          <Menu>
+                            <Menu.Item key="Profile">
+                              <NavLink to="/Profile">
+                                <span>Profile </span>
+                                <UserOutlined />
+                              </NavLink>
+                            </Menu.Item>
+                            <Menu.Item key="Settings">
+                              <NavLink to="/Settings">
+                                <span>Settings </span>
+                                <SettingOutlined />
+                              </NavLink>
+                            </Menu.Item>
+                            <Menu.Divider />
+                            <Menu.Item key="logout" onClick={() => {
+                              confirm({
+                                title: 'Are you sure you want to logout?',
+                                icon: <ExclamationCircleOutlined />,
+                                onOk: (close) => { this.handleLogout(); close(); },
+                                onCancel: () => { },
+                              });
+                            }}>
+                              <span style={{ color: "#d32029" }}>Logout <LogoutOutlined /></span>
+                            </Menu.Item>
+                          </Menu>}
+                          trigger={['click']}>
+                          <div className="buttonHover"
+                            style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
+                            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
+                              <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
+                              <Avatar size="large" src={"https://api.irscybersec.tk/uploads/profile/" + this.state.username + ".webp"} />
+                            </div>
+                            <div>
+                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
+                            </div>
+                          </div>
+                        </Dropdown>
 
-                      <Menu
-                        selectedKeys={[this.state.current]}
-                        onSelect={(selection) => { this.setState({ current: selection.key }); this.obtainScore() }}
-                        //defaultOpenKeys={['']}
-                        mode="inline"
-                        theme="dark"
+                        <Menu
+                          selectedKeys={[this.state.current]}
+                          onSelect={(selection) => { this.setState({ current: selection.key }); this.obtainScore() }}
+                          mode="inline"
+                          theme="dark"
 
-                      > {/*
+                        > {/*
         defaultSelectedKeys - default selected menu items
         defaultOpenKeys - default opened sub menus
         inline - Sidebar Menu
@@ -246,56 +246,57 @@ class App extends React.Component {
 
 
 
-                        <Menu.Item key="" className="menu-item">
-                          <NavLink to="/">
-                            <HomeTwoTone className="menu-item-icon" />
-                            <span>Home</span>
-                          </NavLink>
-                        </Menu.Item>
-
-                        <Menu.Item key="Challenges" className="menu-item">
-                          <NavLink to="/Challenges">
-                            <FlagTwoTone className="menu-item-icon" />
-                            <span>Challenges</span>
-                          </NavLink>
-                        </Menu.Item>
-
-                        <Menu.Item key="Scoreboard" className="menu-item">
-                          <NavLink to="/Scoreboard">
-                            <FundTwoTone className="menu-item-icon" />
-                            <span>Scoreboard</span>
-                          </NavLink>
-                        </Menu.Item>
-
-                        <Menu.Divider />
-
-                        {this.state.permissions === 1 && (
-                          <Menu.Item key="CreateChallenge" className="menu-item">
-                            <NavLink to="/CreateChallenge">
-                              <PlusSquareTwoTone className="menu-item-icon" twoToneColor="#d89614" />
-                              <span>Create Challenge</span>
+                          <Menu.Item key="" className="menu-item">
+                            <NavLink to="/">
+                              <HomeTwoTone className="menu-item-icon" />
+                              <span>Home</span>
                             </NavLink>
                           </Menu.Item>
-                        )}
 
-                        {this.state.permissions === 2 && (
-
-                          <Menu.Item key="Admin" className="menu-item">
-                            <NavLink to="/Admin">
-                              <CodeTwoTone className="menu-item-icon" twoToneColor="#d32029" />
-                              <span>Admin Panel</span>
+                          <Menu.Item key="Challenges" className="menu-item">
+                            <NavLink to="/Challenges">
+                              <FlagTwoTone className="menu-item-icon" />
+                              <span>Challenges</span>
                             </NavLink>
                           </Menu.Item>
-                        )}
+
+                          <Menu.Item key="Scoreboard" className="menu-item">
+                            <NavLink to="/Scoreboard">
+                              <FundTwoTone className="menu-item-icon" />
+                              <span>Scoreboard</span>
+                            </NavLink>
+                          </Menu.Item>
+
+                          <Menu.Divider />
+
+                          {this.state.permissions === 1 && (
+                            <Menu.Item key="CreateChallenge" className="menu-item">
+                              <NavLink to="/CreateChallenge">
+                                <PlusSquareTwoTone className="menu-item-icon" twoToneColor="#d89614" />
+                                <span>Create Challenge</span>
+                              </NavLink>
+                            </Menu.Item>
+                          )}
+
+                          {this.state.permissions === 2 && (
+
+                            <Menu.Item key="Admin" className="menu-item">
+                              <NavLink to="/Admin">
+                                <CodeTwoTone className="menu-item-icon" twoToneColor="#d32029" />
+                                <span>Admin Panel</span>
+                              </NavLink>
+                            </Menu.Item>
+                          )}
 
 
-                      </Menu>
-                      <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
-                        <p>Sieberrsec CTF Platform {ctfxVersion} <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                        </Menu>
+                        <div style={{ textAlign: "center", marginTop: "3ch", color: "#8c8c8c" }}>
+                          <p>Sieberrsec CTF Platform {ctfxVersion} <a href="https://github.com/IRS-Cybersec/ctf_platform" target="_blank">Contribute <GithubOutlined /></a></p>
+                        </div>
                       </div>
                     </Sider>
 
-                    <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "20px" }}>
+                    <Content style={{ height: "100vh", position: "static", overflow: "hidden", margin: "17.5px" }}>
                       <Route
                         render={({ location, ...rest }) => (
                           <Transition

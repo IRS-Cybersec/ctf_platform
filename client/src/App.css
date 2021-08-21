@@ -7,16 +7,16 @@
     background-color: #15395b;
 }
 
-.ant-layout-sider {
-    width: "10vw"!important;
-    min-width: "5vw"!important;
-}
-
 .mobileSider {
     position: absolute !important;
     height: 100% !important;
-    z-index: 2;
-    
+    z-index: 5;
+}
+
+.mobileSider .overflow-handle {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    height: 100vh !important;
 }
 
 .challengeModal ul {
@@ -212,7 +212,7 @@
 }
 
 .layout-style {
-    margin: 10px;
+    margin: 15px;
     background-color: rgba(0, 0, 0, 0);
 }
 
