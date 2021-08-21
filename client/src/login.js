@@ -106,9 +106,9 @@ class Login extends React.Component {
 
         return (
 
-            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh", overflow: "hidden", backgroundColor: "rgba(0, 0, 0, 0)" }}>
+            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh"}}>
                 <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")" }}>
-                    <div style={{ display: "flex", flexDirection: "column", textAlign: "center", alignItems: "center", justifyContent: "center", height: "100vh", width: "70vw", backgroundSize: "cover", overflow: `hidden` }}>
+                    <div className="login-banner login-banner-responsive">
                         <div style={{ fontSize: "7ch", color: "#595959" }}>
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}>Sieberrsec Training Platform</span>
                         </div>
@@ -118,19 +118,19 @@ class Login extends React.Component {
                     </div>
 
 
-                    <div style={{ display: "flex", flexDirection: "column", backgroundColor: "rgba(0, 0, 0, 0.8)", alignItems: "center", justifyContent: "center", height: "100vh", width: "30vw", minWidth: "65ch", boxShadow: "-5px 0px 20px black" }}>
+                    <div className="login-page login-page-responsive">
                         <div style={{ padding: "15px", marginBottom: "5vh" }}>
                             <img src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
                         </div>
                         {this.state.login && (
-                            <div>
+                            <div style={{width: "100%"}}>
                                 <h1 style={{ color: "white", fontSize: "3ch" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="normal_login"
                                     className="login-form"
                                     initialValues={{ remember: true }}
                                     onFinish={this.handleLogin}
-                                    style={{ width: "60ch" }}
+                                    style={{ width: "95%"}}
                                 >
                                     <Form.Item
                                         name="username"
@@ -165,13 +165,13 @@ class Login extends React.Component {
                             </div>
                         )}
                         {this.state.register && (
-                            <div>
+                            <div style={{width: "100%"}}>
                                 <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="register_form"
                                     className="register-form"
                                     onFinish={this.handleRegister}
-                                    style={{ width: "60ch" }}
+                                    style={{ width: "95%" }}
                                 >
                                     <Form.Item
                                         name="username"

@@ -216,6 +216,47 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
+.login-page {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    box-shadow: -5px 0px 20px black;
+    padding: 10px;
+}
+
+.login-banner {
+    display: flex; 
+    flex-direction: column; 
+    text-align: center; 
+    align-items: center; 
+    justify-content: center; 
+    height: 100vh; 
+    
+    background-size: cover; 
+    overflow: hidden;
+}
+
+@media only screen and (min-width: 65ch) {
+    .login-page-responsive {
+        width: 30vw;
+        min-width: 65ch;
+    }
+    .login-banner-responsive {
+        width: 70vw; 
+    }
+}
+@media only screen and (max-width: 65ch) {
+    .login-page-responsive {
+        width: 100vw;
+    }
+    .login-banner-responsive {
+        width: 0vw; 
+    }
+}
+
 .loading-style {
     position: absolute;
     left: 55%;
