@@ -11,7 +11,7 @@ const Connection = require('./utils/mongoDB.js')
 const ws = require('ws')
 const errorHandling = require('./middlewares/errorHandling.js');
 const startupChecks = require('./utils/startupChecks.js')
-const permissionUtils = require('./utils/permissionUtils.js')
+const {checkPermissions, deletePermissions, setPermissions} = require('./utils/permissionUtils.js')
 
 require('dotenv').config()
 const signer = new RD.Signer(process.env.SECRET, process.env.SALT);
@@ -25,19 +25,20 @@ app.use(mongoSanitize());
 app.use(cors());
 
 
-let cache = {
-	announcements: 0,
-	challenges: 0,
-	registerDisable: false,
-	adminShowDisable: false,
-	submissionDisabled: false,
-	uploadSize: 512000,
-	latestSolveSubmissionID: 0,
-	uploadPath: "/var/www/ctf_platform/static/uploads/profile"
-}
+
 
 const startCache = async () => {
 
+	let cache = {
+		announcements: 0,
+		challenges: 0,
+		registerDisable: false,
+		adminShowDisable: false,
+		submissionDisabled: false,
+		uploadSize: 512000,
+		latestSolveSubmissionID: 0,
+		uploadPath: "/var/www/ctf_platform/static/uploads/profile"
+	}
     const collections = Connection.collections
     createCache = async () => {
         try {
@@ -63,7 +64,6 @@ const startCache = async () => {
 			}
 			app.set(key, checkCache[key])
         }
-		cache = checkCache //for compatibility while I work out app.set and shit
     }
     return true
 }
@@ -75,17 +75,14 @@ const main = async () => {
 		await startCache()
 		await startupChecks.startValidation()
 
-		var checkPermissions = permissionUtils.checkPermissions
-
 		app.get('/v1/account/disableStates', async (req, res, next) => {
 			try {
 				if (req.headers.authorization == undefined) throw new Error('MissingToken');
 				const username = signer.unsign(req.headers.authorization);
 				if (await checkPermissions(username) < 2) throw new Error('Permissions');
-				const cache = req.app.get()
 				res.send({
 					success: true,
-					states: { registerDisable: cache.registerDisable, adminShowDisable: cache.adminShowDisable, uploadSize: cache.uploadSize, uploadPath: cache.uploadPath }
+					states: { registerDisable: app.get("registerDisable"), adminShowDisable: app.get("adminShowDisable"), uploadSize: app.get("uploadSize"), uploadPath: app.get("uploadPath") }
 				});
 			}
 			catch (err) {
@@ -102,7 +99,7 @@ const main = async () => {
 
 				res.send({
 					success: true,
-					states: { submissionDisabled: cache.submissionDisabled }
+					states: { submissionDisabled: app.get("submissionDisabled") }
 				});
 			}
 			catch (err) {
@@ -145,7 +142,7 @@ const main = async () => {
 					const username = signer.unsign(req.headers.authorization);
 					if (await checkPermissions(username) >= 2) admin = true
 				}
-				if (!admin && cache.registerDisable) {
+				if (!admin && app.get("registerDisable")) {
 					return res.send({ success: false, error: 'registration-disabled' })
 				}
 
@@ -260,7 +257,7 @@ const main = async () => {
 					});
 					await collections.challs.deleteMany({ author: { $in: usersToDelete } });
 					await collections.transactions.deleteMany({ author: { $in: usersToDelete } });
-					usersToDelete.forEach(username => { if (permissions.includes(username)) permissionUtils.deletePermissions(username) })
+					usersToDelete.forEach(username => { if (permissions.includes(username)) deletePermissions(username) })
 
 					res.send({ success: true });
 				}
@@ -291,7 +288,7 @@ const main = async () => {
 					});
 					await collections.challs.deleteMany({ author: userToDelete });
 					await collections.transactions.deleteMany({ author: userToDelete });
-					if (permissions.includes(username)) permissionUtils.deletePermissions(username);
+					if (permissions.includes(username)) deletePermissions(username);
 					res.send({ success: true });
 				}
 
@@ -305,7 +302,7 @@ const main = async () => {
 				const user = await collections.users.findOne({ username: req.body.username.toLowerCase() }, { projection: { password: 1, type: 1, _id: 0 } });
 				if (!user) throw new Error('WrongDetails');
 				else if (await argon2.verify(user.password, req.body.password)) {
-					permissionUtils.setPermissions(req.body.username, user.type)
+					setPermissions(req.body.username, user.type)
 					res.send({
 						success: true,
 						permissions: user.type,
@@ -410,7 +407,7 @@ const main = async () => {
 				if (permissions === false) throw new Error('BadToken');
 
 				//Check announcements version to determine if it needs update
-				let version = cache.announcements
+				let version = app.get("announcements")
 				if (parseInt(req.params.version) < version) {
 					res.send({
 						success: true,
@@ -465,8 +462,8 @@ const main = async () => {
 					content: req.body.content,
 					timestamp: new Date()
 				})
-				let version = cache.announcements
-				cache.announcements += 1
+				let version = app.get("announcements")
+				app.set("announcements", version+1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) {
 					res.send({ success: true })
 				}
@@ -489,8 +486,8 @@ const main = async () => {
 						content: req.body.content,
 					}
 				})).matchedCount === 0) throw new Error('NotFound');
-				let version = cache.announcements
-				cache.announcements += 1
+				let version = app.get("announcements")
+				app.set("announcements", version+1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 				else res.send({ success: false })
 
@@ -511,8 +508,8 @@ const main = async () => {
 				if (!delReq.result.ok) throw new Error('Unknown');
 				if (delReq.deletedCount === 0) throw new Error('NotFound');
 
-				let version = cache.announcements
-				cache.announcements += 1
+				let version = app.get("announcements")
+				app.set("announcements", version+1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			}
 			catch (err) {
@@ -800,8 +797,9 @@ const main = async () => {
 						hint_id: parseInt(req.body.id)
 					});
 				}
-				cache.latestSolveSubmissionID += 1
-				await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
+				let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+				latestSolveSubmissionID += 1
+				await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
 				broadCastNewSolve({
 					username: username,
 					timestamp: Gtimestamp,
@@ -823,7 +821,7 @@ const main = async () => {
 				if (await checkPermissions(username) === false) throw new Error('BadToken');
 				const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
 				if (!chall) throw new Error('NotFound');
-				if (cache.submissionDisabled) return res.send({ error: false, error: "submission-disabled" })
+				if (app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
 				if (chall.solves.includes(username)) throw new Error('Submitted');
 
 				//Check if the required challenge has been solved (if any)
@@ -871,8 +869,9 @@ const main = async () => {
 						success: true,
 						data: 'correct'
 					});
-					cache.latestSolveSubmissionID += 1
-					await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: cache.latestSolveSubmissionID } })
+					let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+					latestSolveSubmissionID += 1
+					await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
 					broadCastNewSolve({
 						username: username,
 						timestamp: Gtimestamp,
@@ -1135,7 +1134,7 @@ const main = async () => {
 							}
 						}
 					}]).toArray(),
-					lastChallengeID: cache.latestSolveSubmissionID
+					lastChallengeID: app.get("latestSolveSubmissionID")
 				});
 			}
 			catch (err) {
@@ -1150,7 +1149,7 @@ const main = async () => {
 
 				//Check if adminShowDisable is enabled, then don't return admin scores
 				let payload = null
-				if (cache.adminShowDisable) payload = { type: { $ne: 2 } }
+				if (app.get("adminShowDisable")) payload = { type: { $ne: 2 } }
 
 				res.send({
 					success: true,
@@ -1167,7 +1166,7 @@ const main = async () => {
 				if (req.headers.authorization == undefined) throw new Error('MissingToken');
 				if (await checkPermissions(signer.unsign(req.headers.authorization)) == false) throw new Error('BadToken');
 				const scores = await collections.transactions.find({ points: { '$ne': 0 }, author: req.params.username }, { projection: { points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0 } }).toArray();
-				if (scores[0] && scores[0].type === 2 && cache.adminShowDisable) return res.send({ success: true, scores: [] })
+				if (scores[0] && scores[0].type === 2 && app.get("adminShowDisable")) return res.send({ success: true, scores: [] })
 				res.send({
 					success: true,
 					scores: scores
@@ -1184,7 +1183,7 @@ const main = async () => {
 				if (await checkPermissions(signer.unsign(req.headers.authorization)) === false) throw new Error('BadToken');
 				const score = (await collections.users.findOne({ username: req.params.username }, { projection: { score: 1, type: 1, _id: 0 } }));
 				if (score === null) throw new Error('NotFound');
-				if (score.type === 2 && cache.adminShowDisable) return res.send({ success: true, score: "hidden" })
+				if (score.type === 2 && app.get("adminShowDisable")) return res.send({ success: true, score: "hidden" })
 				res.send({
 					success: true,
 					score: score.score
@@ -1310,14 +1309,14 @@ const main = async () => {
 			if (!req.files || !("profile_pic" in req.files)) res.send({ success: false, error: "no-file" })
 			if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
 			let targetFile = req.files.profile_pic
-			if (targetFile.size > cache.uploadSize) res.send({ success: false, error: "too-large", size: cache.uploadSize })
+			if (targetFile.size > app.get("uploadSize")) res.send({ success: false, error: "too-large", size: app.get("uploadSize") })
 			let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
 			if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
 
 			await sharp(targetFile.data)
 				.toFormat('webp')
 				.webp({ quality: 30 })
-				.toFile(path.join(cache.uploadPath, sanitizeFile(username)) + ".webp")
+				.toFile(path.join(app.get("uploadPath"), sanitizeFile(username)) + ".webp")
 				.catch((err) => {
 					console.error(err)
 					return res.send({ success: false, error: "file-upload" })
@@ -1354,9 +1353,9 @@ const main = async () => {
 					}
 					socket.isAuthed = true
 
-					if (payload.lastChallengeID < cache.latestSolveSubmissionID) {
-						const challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(cache.latestSolveSubmissionID - payload.lastChallengeID).toArray();
-						socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: cache.latestSolveSubmissionID }))
+					if (payload.lastChallengeID < app.get("latestSolveSubmissionID")) {
+						const challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID).toArray();
+						socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: app.get("latestSolveSubmissionID") }))
 					}
 					else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
 				}
