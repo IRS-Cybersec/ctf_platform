@@ -7,7 +7,6 @@ import {
   UserOutlined,
   LogoutOutlined,
   CodeTwoTone,
-
   PlusSquareTwoTone,
   GithubOutlined,
   ExclamationCircleOutlined,
@@ -15,7 +14,6 @@ import {
 } from '@ant-design/icons';
 import './App.min.css';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
-import UserChallengeCreate from "./userChallengeCreate.js";
 import { Transition, animated } from 'react-spring';
 import { Ellipsis } from 'react-spinners-css';
 
@@ -24,14 +22,15 @@ const { confirm } = Modal;
 const { Content, Sider } = Layout;
 
 
-const Home = lazy(() => import("./home.js"));
-const Challenges = lazy(() => import("./challenges.js"));
-const Profile = lazy(() => import("./profile.js"));
-const Settings = lazy(() => import("./Settings.js"));
-const Scoreboard = lazy(() => import("./Scoreboard.js"));
-const Login = lazy(() => import("./login.js"));
-const Admin = lazy(() => import("./admin.js"));
-const Oops = lazy(() => import("./oops.js"));
+const Home = lazy(() => import("./Misc/home.js"));
+const Challenges = lazy(() => import("./Challenges/challenges.js"));
+const Profile = lazy(() => import("./SidebarDropdown/profile.js"));
+const Settings = lazy(() => import("./SidebarDropdown/Settings.js"));
+const Scoreboard = lazy(() => import("./Scoreboard/Scoreboard.js"));
+const Login = lazy(() => import("./Login/login.js"));
+const Admin = lazy(() => import("./AdminPanel/admin.js"));
+const Oops = lazy(() => import("./Misc/oops.js"));
+const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
 var ctfxVersion = "0.9.5"
 
@@ -190,7 +189,7 @@ class App extends React.Component {
                     >
                       <div className="overflow-handle">
                         <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                          <img alt="Sieberrsec Logo" src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
+                          <img alt="Sieberrsec Logo" src={require("./assets/sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
                         </div>
                         <Dropdown overlay={
                           <Menu>

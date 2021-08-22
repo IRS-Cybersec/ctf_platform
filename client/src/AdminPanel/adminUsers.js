@@ -14,7 +14,7 @@ import {
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
-import './App.min.css';
+import './../App.min.css';
 
 const { Column } = Table;
 const { Option } = Select;

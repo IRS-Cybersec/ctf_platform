@@ -107,7 +107,7 @@ class Login extends React.Component {
         return (
 
             <Layout style={{ maxWidth: "100vw", maxHeight: "100vh"}}>
-                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./assets/mainBG.webp").default + ")" }}>
+                <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./../assets/mainBG.webp").default + ")" }}>
                     <div className="login-banner login-banner-responsive">
                         <div style={{ fontSize: "7ch", color: "#595959" }}>
                             <span style={{ fontWeight: "500", textShadow: '1px -1px 1px -1px #000000' }}>Sieberrsec Training Platform</span>
@@ -120,7 +120,7 @@ class Login extends React.Component {
 
                     <div className="login-page login-page-responsive">
                         <div style={{ padding: "15px", marginBottom: "5vh" }}>
-                            <img src={require("./sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
+                            <img src={require("./../assets/sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
                         </div>
                         {this.state.login && (
                             <div style={{width: "100%"}}>

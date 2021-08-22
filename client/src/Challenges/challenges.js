@@ -4,7 +4,7 @@ import {
   FileUnknownTwoTone,
   LeftCircleOutlined,
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 import { Link } from 'react-router-dom';
 import ChallengesTagSort from "./challengesTagSort.js";
 import { Ellipsis } from 'react-spinners-css';
@@ -13,7 +13,7 @@ import { Transition, animated } from 'react-spring';
 const { Meta } = Card;
 const { Option } = Select;
 
-const categoryImages = [require("./assets/catPhoto1.webp").default]
+const categoryImages = [require("./../assets/catPhoto1.webp").default]
 
 
 

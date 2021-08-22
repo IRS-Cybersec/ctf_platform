@@ -7,7 +7,7 @@ import {
   LockOutlined,
   CheckOutlined
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 
 const { Meta } = Card;
 const { Panel } = Collapse;
@@ -74,7 +74,7 @@ class ChallengesTagSortList extends React.Component {
                                     <LockOutlined className="disabled-style"/>
                                     <h1 className="card-design-name" >{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
-                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
+                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
                                     {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
@@ -110,7 +110,7 @@ class ChallengesTagSortList extends React.Component {
                                   <div  className="card-design-body">
                                     <h1 className="card-design-name">{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
-                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
+                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
                                     {this.props.loadingChallenge && this.props.currentChallenge === item.name && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
@@ -145,7 +145,7 @@ class ChallengesTagSortList extends React.Component {
                                     <CheckOutlined className="correct-style"/>
                                     <h1 className="card-design-name">{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
-                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./assets/blood.svg").default} /> {item.firstBlood}</h1>
+                                    <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
                                     {this.props.loadingChallenge && this.props.currentChallenge === item.name && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />

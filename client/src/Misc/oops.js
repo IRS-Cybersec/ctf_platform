@@ -3,7 +3,7 @@ import { Layout } from 'antd';
 import {
   FileUnknownOutlined,
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 
 
 class Oops extends React.Component {

@@ -6,7 +6,7 @@ import { orderBy } from "lodash";
 import {
     FileUnknownTwoTone,
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 
 const { Column } = Table;
 

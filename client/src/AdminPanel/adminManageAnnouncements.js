@@ -11,9 +11,9 @@ import {
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
-import './App.min.css';
+import './../App.min.css';
 import MDEditor from '@uiw/react-md-editor';
-import MarkdownRender from './MarkdownRenderer.js';
+import MarkdownRender from './../Misc/MarkdownRenderer.js';
 
 const { Column } = Table;
 const { confirm } = Modal;

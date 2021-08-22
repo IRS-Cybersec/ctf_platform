@@ -12,7 +12,7 @@ import {
     RedoOutlined,
     SearchOutlined
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
 import { difference } from "lodash";

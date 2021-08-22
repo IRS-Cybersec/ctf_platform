@@ -7,7 +7,7 @@ import {
 import MarkdownRenderer from './MarkdownRenderer.js';
 import { Ellipsis } from 'react-spinners-css';
 import { orderBy } from "lodash";
-import './App.min.css';
+import './../App.min.css';
 
 
 

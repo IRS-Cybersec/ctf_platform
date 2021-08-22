@@ -1,20 +1,21 @@
 import React from 'react';
-import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card, Cascader } from 'antd';
+import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
     PlusOutlined,
     LeftOutlined,
     ProfileOutlined,
     FlagOutlined,
-    FlagTwoTone,
+    EditTwoTone,
     SolutionOutlined,
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
-import './App.min.css';
-import { Prompt } from 'react-router';
+import './../App.min.css';
+import { Ellipsis } from 'react-spinners-css';
 import MDEditor from '@uiw/react-md-editor';
-import MarkdownRender from './MarkdownRenderer.js';
+import MarkdownRender from './../Misc/MarkdownRenderer.js';
+import { Prompt } from 'react-router';
 
 
 const { Option } = Select;
@@ -25,25 +26,21 @@ const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
     const [editorValue, setEditorValue] = React.useState("")
 
-    if (typeof form.getFieldValue("flags") === "undefined") {
-        var currentValues = form.getFieldsValue()
-        currentValues.flags = [""]
-
-        form.setFieldsValue(currentValues)
-    }
     //Render existing categories select options
     let existingCats = []
     for (let i = 0; i < props.allCat.length; i++) {
         existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
     }
-    //Render existing challenges select options
+    //Render existing challenges select options minus the challenge itself
     let existingChalls = {}
     for (let i = 0; i < props.challenges.length; i++) {
-        if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
-        existingChalls[props.challenges[i].category].push({
-            value: props.challenges[i].name,
-            label: props.challenges[i].name
-        })
+        if (props.challenges[i].name !== props.initialData.name) {
+            if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
+            existingChalls[props.challenges[i].category].push({
+                value: props.challenges[i].name,
+                label: props.challenges[i].name
+            })
+        }
     }
     let finalSortedChalls = []
     for (const category in existingChalls) {
@@ -52,6 +49,20 @@ const CreateChallengeForm = (props) => {
             label: category,
             children: existingChalls[category]
         })
+    }
+
+    if (typeof form.getFieldValue("name") === "undefined") {
+        if (props.initialData.visibility === false) {
+            props.initialData.visibility = "false"
+        }
+        else if (props.initialData.visibility === true) {
+            props.initialData.visibility = "true"
+        }
+        // if we put only props.initialData.requires, we are merely putting a reference to props.initialData.requires, which is this array, creating a "loop"
+        if (props.initialData.requires) props.initialData.requires = [props.initialData.requires]
+        props.initialData.category1 = props.initialData.category
+        form.setFieldsValue(props.initialData)
+        setEditorValue(props.initialData.description)
     }
 
     return (
@@ -66,8 +77,6 @@ const CreateChallengeForm = (props) => {
                     message.warn("Please enter at least 1 flag")
                 }
                 else {
-                    //console.log(values)
-                    props.setState({ loading: true })
                     if (values.visibility === "false") {
                         values.visibility = false
                     }
@@ -80,12 +89,14 @@ const CreateChallengeForm = (props) => {
                         }
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
+                    props.setState({ editLoading: true })
                     let requires = undefined
                     if (values.requires) requires = values.requires[1]
-                    await fetch(window.ipAddress + "/v1/challenge/new", {
+                    await fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
+                            "chall": props.initialData.name,
                             "name": values.name,
                             "category": category,
                             "description": values.description,
@@ -104,31 +115,29 @@ const CreateChallengeForm = (props) => {
                     }).then((data) => {
                         //console.log(data)
                         if (data.success === true) {
-                            message.success({ content: "Created challenge " + values.name + " successfully!" })
+                            message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
+                            props.handleEditChallBack()
+                            setEditorValue("")
                             form.resetFields()
-                            props.handleCreateBack()
                         }
                         else {
-                            message.error({ content: "Oops. Unknown error, please contact an admin." })
+                            message.error({ content: "Oops. Unknown error" })
                         }
-                        
 
 
                     }).catch((error) => {
                         console.log(error)
-                        message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
+                        message.error({ content: "Oops. There was an issue connecting with the server" });
                     })
-                    props.setState({ loading: false })
-
+                    props.setState({ editLoading: false })
 
                 }
 
             }}
-
         >
             <Prompt
                 when={props.state.edited}
-                message='The challenge details you entered have not been saved. Are you sure you want to leave?'
+                message='The challenge details you modified have not been saved. Are you sure you want to leave?'
             />
 
             <h1>Challenge Name:</h1>
@@ -145,6 +154,7 @@ const CreateChallengeForm = (props) => {
             <h4>Select an Existing Category: </h4>
             <Form.Item
                 name="category1"
+                initialValue={""}
                 rules={[{ required: !props.state.selectCatDisabled, message: 'Please enter a challenge category' }]}
             >
 
@@ -200,9 +210,9 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "40%" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "35vw" }}>
                     <h1>Challenge Points:</h1>
                     <Form.Item
                         name="points"
@@ -210,7 +220,7 @@ const CreateChallengeForm = (props) => {
                             type: 'integer',
                             message: "Please enter a valid integer between 1-100000",
                         },]}
-                        initialValue={1}
+                        initialValue={0}
                     >
 
                         <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
@@ -231,11 +241,12 @@ const CreateChallengeForm = (props) => {
                     </Form.Item>
                 </div>
 
-                <Divider type="vertical" style={{ height: "inherit" }} />
+                <Divider type="vertical" style={{ height: "inherit" }}></Divider>
 
-                <div style={{ display: "flex", flexDirection: "column", width: "40%", marginLeft: "3%" }}>
+                <div style={{ display: "flex", flexDirection: "column", width: "35vw", marginLeft: "2vw" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
+
                             return (
                                 <div>
                                     <h1>Flags</h1>
@@ -289,7 +300,6 @@ const CreateChallengeForm = (props) => {
                                     <h1>Tags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
-
                                             <Form.Item
                                                 {...field}
                                                 name={[field.name]}
@@ -330,8 +340,6 @@ const CreateChallengeForm = (props) => {
             </div>
 
             <Divider />
-
-
             <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
 
                 <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
@@ -427,12 +435,16 @@ const CreateChallengeForm = (props) => {
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
+
                 <div style={{ width: "40%", display: "flex", flexDirection: "column", marginLeft: "3%" }}>
                     <h1>Challenge Required: </h1>
                     <Form.Item
                         name="requires"
                     >
-
+                        {/*
+                        The issue with this is that displayRender is supposed to return an array, 
+                        but setting a value causes it to become a string and error out
+                        */}
                         <Cascader
                             options={finalSortedChalls}
                             allowClear
@@ -445,10 +457,10 @@ const CreateChallengeForm = (props) => {
             </div>
 
             <Form.Item>
-                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row", marginTop: "2vh" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
                     <div>
-                        <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()); }}>Preview</Button>
-                        <Button loading={props.loadingStatus} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Create Challenge</Button>
+                        <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()) }}>Preview</Button>
+                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Challenge</Button>
                     </div>
                     <div>
                         <Button style={{ marginRight: "2vw" }} type="primary" danger onClick={() => { form.resetFields() }}>Clear</Button>
@@ -461,13 +473,26 @@ const CreateChallengeForm = (props) => {
 };
 
 
-class AdminChallengeCreate extends React.Component {
+class AdminChallengeEdit extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             loading: false,
-            previewChallenge: {
+            editLoading: false,
+            challengeData: {
+                name: "",
+                category: this.props.category,
+                description: "",
+                points: 0,
+                author: "",
+                created: "",
+                solves: [],
+                max_attempts: 0,
+                tags: [],
+                hints: [],
+            },
+            previewData: {
                 name: "",
                 category: this.props.category,
                 description: "",
@@ -480,10 +505,10 @@ class AdminChallengeCreate extends React.Component {
                 hints: [],
             },
             challengeTags: [],
-            challengeHints: [],
             previewModal: false,
-            inputCatDisabled: false,
+            oldChallengeName: "",
             selectCatDisabled: false,
+            inputCatDisabled: true,
             challengeWriteup: "",
             edited: false
         }
@@ -495,6 +520,36 @@ class AdminChallengeCreate extends React.Component {
         }
     }
 
+    componentDidMount() {
+        this.getChallengeDetails(this.props.challengeName)
+        this.setState({ oldChallengeName: this.props.challengeName })
+    }
+
+    getChallengeDetails = (name) => {
+        this.setState({ loading: true })
+        fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name) + "/detailed", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                this.setState({ challengeData: data.chall })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+            this.setState({ loading: false })
+
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+    }
+
     previewChallenge = (values) => {
 
         if (values.max_attempts === 0) {
@@ -503,13 +558,6 @@ class AdminChallengeCreate extends React.Component {
         else {
             values.max_attempts = String(values.max_attempts) + "/" + String(values.max_attempts)
         }
-
-        //Render writeup link
-        let writeupLink = ""
-        if (typeof values.writeup !== "undefined") {
-            writeupLink = values.writeup
-        }
-        else writeupLink = ""
 
         var renderTags = []
         if (typeof values.tags !== "undefined") {
@@ -538,14 +586,20 @@ class AdminChallengeCreate extends React.Component {
 
         }
 
-        this.setState({ previewChallenge: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints, challengeWriteup: writeupLink })
+        //Render writeup link
+        let writeupLink = ""
+        if (typeof values.writeup !== "undefined") {
+            writeupLink = values.writeup
+        }
+        else writeupLink = ""
+
+        this.setState({ previewData: values, previewModal: true, challengeTags: renderTags, challengeHints: renderHints, challengeWriteup: writeupLink })
     }
 
     render() {
         return (
 
             <Layout className="form-style">
-
                 <Modal
                     title={null}
                     visible={this.state.previewModal}
@@ -568,26 +622,28 @@ class AdminChallengeCreate extends React.Component {
                                     <Button disabled shape="circle" size="large" style={{ position: "absolute", right: "2ch" }} type="primary" icon={<SolutionOutlined />} />
                                 </Tooltip>
                             )}
-                            <h1 style={{ fontSize: "150%" }}>{this.state.previewChallenge.name}</h1>
+                            <h1 style={{ fontSize: "150%" }}>{this.state.previewData.name}</h1>
                             <div>
                                 {this.state.challengeTags}
                             </div>
-                            <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.previewChallenge.points}</h2>
+                            <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "2vh", fontSize: "200%" }}>{this.state.previewData.points}</h2>
 
                             <div className="challengeModal">
-                                <MarkdownRender>{this.state.previewChallenge.description}</MarkdownRender>
+                                <MarkdownRender>{this.state.previewData.description}</MarkdownRender>
                             </div>
+
 
                             <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
                                 {this.state.challengeHints}
                             </div>
+
                             <div style={{ display: "flex", justifyContent: "center" }}>
                                 <Input style={{ width: "45ch" }} defaultValue="" placeholder={"Enter a flag"} />
                                 <Button type="primary" icon={<FlagOutlined />}>Submit</Button>
                             </div>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "2vh" }}>
-                                <p>Challenge Author: <em>You</em></p>
-                                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewChallenge.max_attempts}</p>
+                                <p>Challenge Author: {this.state.challengeData.author}</p>
+                                <p style={{ color: "#d87a16", fontWeight: 500 }}>Attempts Remaining: {this.state.previewData.max_attempts}</p>
                             </div>
                         </TabPane>
                     </Tabs>
@@ -595,14 +651,24 @@ class AdminChallengeCreate extends React.Component {
 
                 </Modal>
                 <div style={{ display: "flex", alignItems: "center", alignContent: "center" }}>
-                    <Button type="primary" onClick={this.props.handleBack} icon={<LeftOutlined />} style={{ maxWidth: "20ch", marginBottom: "3vh", marginRight: "2vw" }}>Back</Button>
-                    <h1 style={{ fontSize: "180%" }}> <FlagTwoTone /> Create New Challenge</h1>
+                    <Button type="primary" onClick={this.props.handleEditBack} icon={<LeftOutlined />} style={{ maxWidth: "20ch", marginBottom: "3vh", marginRight: "2vw" }}>Back</Button>
+                    <h1 style={{ fontSize: "180%" }}> <EditTwoTone /> Edit Challenge</h1>
 
                 </div>
-                <CreateChallengeForm allCat={this.props.allCat} challenges={this.props.challenges} handleCreateBack={this.props.handleCreateBack.bind(this)} previewChallenge={this.previewChallenge.bind(this)} state={this.state} loadingStatus={this.state.loading} setState={this.setState.bind(this)}></CreateChallengeForm>
+                {!this.state.loading && (
+                    <CreateChallengeForm allCat={this.props.allCat} challenges={this.props.challenges} state={this.state} editLoading={this.state.editLoading} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} initialData={this.state.challengeData} handleEditChallBack={this.props.handleEditChallBack}></CreateChallengeForm>
+                )}
+
+                {this.state.loading && (
+                    <div>
+                        <div className="demo-loading-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                            <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+                        </div>
+                    </div>
+                )}
             </Layout>
         );
     }
 }
 
-export default AdminChallengeCreate;
+export default AdminChallengeEdit;

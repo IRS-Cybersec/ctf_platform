@@ -6,7 +6,7 @@ import {
   BarsOutlined,
   NotificationOutlined
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 import AdminUsers from "./adminUsers.js";
 import AdminChallenges from "./adminChallenges.js";
 import AdminSubmissions from "./adminSubmissions.js";

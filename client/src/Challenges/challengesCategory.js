@@ -12,7 +12,7 @@ import {
   SolutionOutlined,
   LinkOutlined
 } from '@ant-design/icons';
-import './App.min.css';
+import './../App.min.css';
 import MarkdownRender from './MarkdownRenderer.js';
 import { orderBy } from 'lodash';
 import { Ellipsis } from 'react-spinners-css';
@@ -437,7 +437,7 @@ class ChallengesCategory extends React.Component {
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
-                        avatar={<Avatar src={require("./assets/profile.webp").default} />}
+                        avatar={<Avatar src={require("./../assets/profile.webp").default} />}
                         title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>
