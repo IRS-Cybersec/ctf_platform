@@ -140,7 +140,8 @@ class Scoreboard extends React.Component {
           finalScores.scores.push({ username: payload.username, score: payload.points })
           changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
         }
-
+        sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
+        sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
       }
       else if (data.type === "init") {
@@ -193,8 +194,8 @@ class Scoreboard extends React.Component {
     }
     webSocket.onclose = (e) => {
       this.setState({ liveUpdates: false })
-      console.log('Socket closed. Attempting to reconnect in 1.5 seconds', e.reason);
-      setTimeout(() => { this.connectWebSocket() }, 1500)
+      console.log('Socket closed. Attempting to reconnect in 3 seconds', e.reason);
+      setTimeout(() => { this.connectWebSocket() }, 3000)
     };
   }
 

@@ -108,6 +108,9 @@ const CreateChallengeForm = (props) => {
                             form.resetFields()
                             props.handleCreateBack()
                         }
+                        else if (data.error === "exists") {
+                            message.warn("A challenge with an existing name exists")
+                        }
                         else {
                             message.error({ content: "Oops. Unknown error, please contact an admin." })
                         }

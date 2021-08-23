@@ -120,6 +120,9 @@ const CreateChallengeForm = (props) => {
                             setEditorValue("")
                             form.resetFields()
                         }
+                        else if (data.error === "exists") {
+                            message.warn("A challenge with an existing name exists")
+                        }
                         else {
                             message.error({ content: "Oops. Unknown error" })
                         }

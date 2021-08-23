@@ -11,7 +11,7 @@ const Connection = require('./utils/mongoDB.js')
 const ws = require('ws')
 const errorHandling = require('./middlewares/errorHandling.js');
 const startupChecks = require('./utils/startupChecks.js')
-const {checkPermissions, deletePermissions, setPermissions} = require('./utils/permissionUtils.js')
+const { checkPermissions, deletePermissions, setPermissions } = require('./utils/permissionUtils.js')
 
 require('dotenv').config()
 const signer = new RD.Signer(process.env.SECRET, process.env.SALT);
@@ -39,33 +39,33 @@ const startCache = async () => {
 		latestSolveSubmissionID: 0,
 		uploadPath: "/var/www/ctf_platform/static/uploads/profile"
 	}
-    const collections = Connection.collections
-    createCache = async () => {
-        try {
-            await collections.cache.insertOne(cache);
-            console.info("Cache created")
-        }
-        catch (err) {
-            console.error(err)
-        }
-    }
+	const collections = Connection.collections
+	createCache = async () => {
+		try {
+			await collections.cache.insertOne(cache);
+			console.info("Cache created")
+		}
+		catch (err) {
+			console.error(err)
+		}
+	}
 
-    let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
-    if (checkCache === null) await createCache() //First time set-up: (1) Create Cache 
-    else {
-        // Add any missing cache values
-        for (const key in cache) {
-            if (!(key in checkCache)) {
+	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
+	if (checkCache === null) await createCache() //First time set-up: (1) Create Cache 
+	else {
+		// Add any missing cache values
+		for (const key in cache) {
+			if (!(key in checkCache)) {
 				checkCache[key] = cache[key]
 				const updateObj = {}
 				updateObj[key] = cache[key]
-				await collections.cache.updateOne({}, {$set: updateObj})
+				await collections.cache.updateOne({}, { $set: updateObj })
 				console.log("Missing value " + key + " added")
 			}
 			app.set(key, checkCache[key])
-        }
-    }
-    return true
+		}
+	}
+	return true
 }
 
 const main = async () => {
@@ -114,7 +114,7 @@ const main = async () => {
 				if (await checkPermissions(username) < 2) throw new Error('Permissions');
 				const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath"]
 				if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
-				cache[req.body.setting] = req.body.disable
+				app.set(req.body.setting, req.body.disable)
 
 				const set = {}
 				set[req.body.setting] = req.body.disable
@@ -463,7 +463,7 @@ const main = async () => {
 					timestamp: new Date()
 				})
 				let version = app.get("announcements")
-				app.set("announcements", version+1)
+				app.set("announcements", version + 1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) {
 					res.send({ success: true })
 				}
@@ -487,7 +487,7 @@ const main = async () => {
 					}
 				})).matchedCount === 0) throw new Error('NotFound');
 				let version = app.get("announcements")
-				app.set("announcements", version+1)
+				app.set("announcements", version + 1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 				else res.send({ success: false })
 
@@ -509,7 +509,7 @@ const main = async () => {
 				if (delReq.deletedCount === 0) throw new Error('NotFound');
 
 				let version = app.get("announcements")
-				app.set("announcements", version+1)
+				app.set("announcements", version + 1)
 				if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
 			}
 			catch (err) {
@@ -756,11 +756,12 @@ const main = async () => {
 			try {
 				if (req.headers.authorization == undefined) throw new Error('MissingToken');
 				const username = signer.unsign(req.headers.authorization);
-				if (await checkPermissions(username) === false) throw new Error('BadToken');
-				let hints = (await collections.challs.findOne({
-					visibility: true,
-					name: req.body.chall
-				}, {
+				const permissions = await checkPermissions(username)
+				if (permissions === false) throw new Error('BadToken');
+
+				let findObject = { visibility: true, name: req.body.chall }
+				if (permissions === 2) findObject = { name: req.body.chall }
+				let hints = (await collections.challs.findOne(findObject, {
 					projection: {
 						hints: { $slice: [req.body.id, 1] },
 						requires: 1,
@@ -793,6 +794,7 @@ const main = async () => {
 						challenge: req.body.chall,
 						type: 'hint',
 						timestamp: Gtimestamp,
+						perms: permissions,
 						points: -hints.hints[0].cost,
 						hint_id: parseInt(req.body.id)
 					});
@@ -804,7 +806,9 @@ const main = async () => {
 				broadCastNewSolve({
 					username: username,
 					timestamp: Gtimestamp,
-					points: -hints.hints[0].cost
+					points: -hints.hints[0].cost,
+					perms: permissions,
+					lastChallengeID: latestSolveSubmissionID
 				})
 				res.send({
 					success: true,
@@ -819,7 +823,8 @@ const main = async () => {
 			try {
 				if (req.headers.authorization == undefined) throw new Error('MissingToken');
 				const username = signer.unsign(req.headers.authorization);
-				if (await checkPermissions(username) === false) throw new Error('BadToken');
+				const permissions = await checkPermissions(username)
+				if (permissions === false) throw new Error('BadToken');
 				const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
 				if (!chall) throw new Error('NotFound');
 				if (app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
@@ -838,6 +843,7 @@ const main = async () => {
 						challenge: req.body.chall,
 						timestamp: Gtimestamp,
 						type: blocked ? 'blocked_submission' : 'submission',
+						perms: permissions,
 						points: correct ? chall.points : 0,
 						correct: correct,
 						submission: req.body.flag
@@ -877,7 +883,9 @@ const main = async () => {
 					broadCastNewSolve({
 						username: username,
 						timestamp: Gtimestamp,
-						points: chall.points
+						points: chall.points,
+						perms: permissions,
+						lastChallengeID: latestSolveSubmissionID
 					})
 				}
 				// for "double-blind" CTFs - ask me if you want to
@@ -1025,6 +1033,24 @@ const main = async () => {
 						error: 'validation'
 					});
 				}
+				if (err.name == 'MongoError') {
+					switch (err.code) {
+						case 11000:
+							switch (Object.keys(err.keyPattern)[0]) {
+								case 'name':
+									res.status(403);
+									res.send({
+										success: false,
+										error: 'exists'
+									});
+									return;
+							}
+							res.send({
+								success: false,
+								error: 'validation'
+							});
+					}
+				}
 				next(err);
 			}
 		});
@@ -1122,20 +1148,26 @@ const main = async () => {
 				if (req.headers.authorization == undefined) throw new Error('MissingToken');
 				const username = signer.unsign(req.headers.authorization);
 				if (await checkPermissions(username) === false) throw new Error('BadToken');
-				req.test = "hello"
+				let payload = {}
+				if (app.get("adminShowDisable")) payload = { perms: { $ne: 2 } }
+
 				res.send({
 					success: true,
-					users: await collections.transactions.aggregate([{
-						$group: {
-							_id: '$author',
-							changes: {
-								$push: {
-									points: '$points',
-									timestamp: '$timestamp'
+					users: await collections.transactions.aggregate([
+						{
+							$match: payload
+						},
+						{
+							$group: {
+								_id: '$author',
+								changes: {
+									$push: {
+										points: '$points',
+										timestamp: '$timestamp'
+									}
 								}
 							}
-						}
-					}]).toArray(),
+						}]).toArray(),
 					lastChallengeID: app.get("latestSolveSubmissionID")
 				});
 			}
@@ -1327,6 +1359,9 @@ const main = async () => {
 		})
 
 		const broadCastNewSolve = async (solveDetails) => {
+			if (app.get("adminShowDisable") && solveDetails.perms === 2) {
+				return false
+			}
 			wss.clients.forEach((client) => {
 				if (client.readyState === ws.OPEN && client.isAuthed === true) {
 					client.send(JSON.stringify({ type: "score", data: solveDetails }));
@@ -1355,9 +1390,15 @@ const main = async () => {
 					}
 					socket.isAuthed = true
 
-					if (payload.lastChallengeID < app.get("latestSolveSubmissionID")) {
-						const challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID).toArray();
-						socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: app.get("latestSolveSubmissionID") }))
+					const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+					if (payload.lastChallengeID < latestSolveSubmissionID) {
+						let challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID).toArray();
+						if (app.get("adminShowDisable")) {
+							for (let i = 0; i < challengesToBeSent.length; i++) {
+								if (challengesToBeSent[i].perms === 2) challengesToBeSent.splice(i, 1)
+							}
+						}
+						socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: latestSolveSubmissionID }))
 					}
 					else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
 				}

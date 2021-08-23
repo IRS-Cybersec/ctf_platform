@@ -635,7 +635,7 @@ class AdminUsers extends React.Component {
 
                     <div>
                         <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
-                        <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges.</p>
+                        <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges. <br/> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
                     </div>
                 </div>
 
