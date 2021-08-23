@@ -187,7 +187,7 @@ class App extends React.Component {
                       onBreakpoint={(broken) => { broken ? this.setState({ mobileBreakpoint: true }) : this.setState({ mobileBreakpoint: false }) }}
                       style={{ boxShadow: "5px 0px 6px 3px rgba(0, 0, 0, .5)" }}
                     >
-                      <div className="overflow-handle">
+                      <div className="sider-overflow-handle">
                         <div style={{ height: "9ch", padding: "15px", display: "flex", alignItems: "center", justifyItems: "center" }}>
                           <img alt="Sieberrsec Logo" src={require("./assets/sieberrsec_ctf.svg").default} style={{ width: "100%", height: "100%", marginRight: "1vw" }}></img>
                         </div>

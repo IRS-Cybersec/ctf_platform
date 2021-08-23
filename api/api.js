@@ -6,7 +6,7 @@ const RD = require('reallydangerous');
 const path = require('path');
 const cors = require('cors');
 const sanitizeFile = require('sanitize-filename');
-const sharp = require('sharp');
+const sharp = "h" //require('sharp');
 const Connection = require('./utils/mongoDB.js')
 const ws = require('ws')
 const errorHandling = require('./middlewares/errorHandling.js');
@@ -799,6 +799,7 @@ const main = async () => {
 				}
 				let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
 				latestSolveSubmissionID += 1
+				app.set("latestSolveSubmissionID", latestSolveSubmissionID)
 				await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
 				broadCastNewSolve({
 					username: username,
@@ -871,6 +872,7 @@ const main = async () => {
 					});
 					let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
 					latestSolveSubmissionID += 1
+					app.set("latestSolveSubmissionID", latestSolveSubmissionID)
 					await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
 					broadCastNewSolve({
 						username: username,
