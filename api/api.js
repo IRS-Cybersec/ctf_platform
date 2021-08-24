@@ -1392,13 +1392,17 @@ const main = async () => {
 
 					const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
 					if (payload.lastChallengeID < latestSolveSubmissionID) {
-						let challengesToBeSent = await collections.transactions.find(null, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID).toArray();
+						let challengesToBeSent = collections.transactions.find(null, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID);
+						let finalChallenges = []
 						if (app.get("adminShowDisable")) {
-							for (let i = 0; i < challengesToBeSent.length; i++) {
-								if (challengesToBeSent[i].perms === 2) challengesToBeSent.splice(i, 1)
-							}
+							await challengesToBeSent.forEach((doc) => {
+								if (doc.perms !== 2) finalChallenges.push(doc)
+							})
 						}
-						socket.send(JSON.stringify({ type: "init", data: challengesToBeSent, lastChallengeID: latestSolveSubmissionID }))
+						else {
+							finalChallenges = await challengesToBeSent.toArray()
+						}
+						socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
 					}
 					else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
 				}
