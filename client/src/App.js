@@ -32,7 +32,7 @@ const Admin = lazy(() => import("./AdminPanel/admin.js"));
 const Oops = lazy(() => import("./Misc/oops.js"));
 const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
-var ctfxVersion = "0.9.5"
+var ctfxVersion = "0.9.6"
 
 
 class App extends React.Component {

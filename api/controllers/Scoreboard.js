@@ -23,7 +23,7 @@ const scoreboard = async (req, res, next) => {
                         }
                     }
                 }]).toArray(),
-            lastChallengeID: app.get("latestSolveSubmissionID")
+            lastChallengeID: req.app.get("latestSolveSubmissionID")
         });
     }
     catch (err) {
