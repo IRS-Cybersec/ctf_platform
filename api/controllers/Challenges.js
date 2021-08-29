@@ -461,8 +461,14 @@ const edit = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
 
         let updateObj = {};
+        let unsetObj = {};
         const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete', 'requires'];
-        for (field of editables) if (req.body[field] != undefined) updateObj[field] = req.body[field];
+        for (field of editables) {
+            if (req.body[field] != undefined) {
+                if (req.body[field] === '') unsetObj[field] = "" // If the field is set to "", it means the user wants to delete this optional argument
+                else updateObj[field] = req.body[field];
+            } 
+        }
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {
                 if (hint.cost == undefined) throw new Error('MissingHintCost');
@@ -473,8 +479,14 @@ const edit = async (req, res, next) => {
         if ((await collections.challs.updateOne(
             { name: req.body.chall },
             { '$set': updateObj }
-        )).matchedCount > 0) res.send({ success: true });
-        else throw new Error('NotFound');
+        )).matchedCount === 0) throw new Error('NotFound');
+        if (Object.keys(unsetObj).length > 0) {
+            if ((await collections.challs.updateOne(
+                { name: req.body.chall },
+                { '$unset': unsetObj }
+            )).matchedCount === 0) throw new Error('NotFound');
+        }
+        res.send({ success: true });
     }
     catch (err) {
         if (err.message == 'MissingHintCost') {

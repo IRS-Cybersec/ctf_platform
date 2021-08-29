@@ -90,8 +90,8 @@ const CreateChallengeForm = (props) => {
                     }
                     const category = (typeof values.category1 !== "undefined") ? values.category1 : values.category2
                     props.setState({ editLoading: true })
-                    let requires = undefined
-                    if (values.requires) requires = values.requires[1]
+                    let requires = ""
+                    if (values.requires && values.requires.length > 0) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
