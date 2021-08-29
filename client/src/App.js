@@ -133,6 +133,8 @@ class App extends React.Component {
 
   handleLogout = async (close) => {
     sessionStorage.removeItem("IRSCTF-token")
+    sessionStorage.removeItem("scoreboard-data")
+    sessionStorage.removeItem("lastChallengeID")
     localStorage.removeItem("IRSCTF-token")
     this.setState({ token: false, logined: false })
 
