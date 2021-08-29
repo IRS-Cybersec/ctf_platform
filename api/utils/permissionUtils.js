@@ -24,4 +24,4 @@ const deletePermissions = async(username) => {
     delete permissions[username]
 }
 
-module.exports = {checkPermissions, setPermissions, deletePermissions}
+module.exports = {checkPermissions, setPermissions, deletePermissions, signer}
