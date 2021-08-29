@@ -28,7 +28,7 @@
     "mongodb": "^3.6.10",
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
-    "ws": "^8.1.0",
+    "ws": "^8.2.0",
     "sharp": "^0.29.0"
   }
 }
