@@ -251,18 +251,19 @@ const hint = async (req, res, next) => {
                 points: -hints.hints[0].cost,
                 hint_id: parseInt(req.body.id)
             });
+            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            latestSolveSubmissionID += 1
+            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+            await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
+            broadCastNewSolve({
+                username: res.locals.username,
+                timestamp: Gtimestamp,
+                points: -hints.hints[0].cost,
+                perms: res.locals.perms,
+                lastChallengeID: latestSolveSubmissionID
+            })
         }
-        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
-        latestSolveSubmissionID += 1
-        app.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-        broadCastNewSolve({
-            username: res.locals.username,
-            timestamp: Gtimestamp,
-            points: -hints.hints[0].cost,
-            perms: res.locals.perms,
-            lastChallengeID: latestSolveSubmissionID
-        })
+       
         res.send({
             success: true,
             hint: hints.hints[0].hint
