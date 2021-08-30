@@ -1,4 +1,5 @@
 const Connection = require('./../utils/mongoDB.js')
+const MongoDB = require('mongodb')
 
 const disableStates = async (req, res, next) => {
     try {
@@ -23,6 +24,7 @@ const list = async (req, res, next) => {
                 _id: '$category',
                 challenges: {
                     $push: {
+                        _id: "$_id",
                         name: '$name',
                         points: '$points',
                         solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
@@ -39,6 +41,7 @@ const list = async (req, res, next) => {
                     _id: '$category',
                     challenges: {
                         $push: {
+                            _id: "$_id",
                             name: '$name',
                             points: '$points',
                             solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
@@ -71,7 +74,6 @@ const listCategory = async (req, res, next) => {
             }
         }, {
             $project: {
-                _id: 0,
                 name: '$name',
                 points: '$points',
                 solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
@@ -110,7 +112,7 @@ const listAll = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, _id: 0, requires: 1 } }).toArray())
+            challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, requires: 1 } }).toArray())
         });
     }
     catch (err) {
@@ -190,7 +192,7 @@ const showDetailed = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        const chall = await collections.challs.findOne({ name: req.params.chall }, { projection: { _id: 0 } });
+        const chall = await collections.challs.findOne({ _id: MongoDB.ObjectID(req.params.chall) }, null);
         if (!chall) {
             res.status(400);
             res.send({

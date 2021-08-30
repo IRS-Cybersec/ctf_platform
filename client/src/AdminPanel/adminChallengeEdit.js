@@ -142,6 +142,8 @@ const CreateChallengeForm = (props) => {
                 when={props.state.edited}
                 message='The challenge details you modified have not been saved. Are you sure you want to leave?'
             />
+            <p><b><u>ID:</u></b> <code>{props.initialData._id}</code></p>
+            
 
             <h1>Challenge Name:</h1>
             <Form.Item
@@ -151,6 +153,7 @@ const CreateChallengeForm = (props) => {
 
                 <Input allowClear placeholder="Challenge name" />
             </Form.Item>
+
 
             <Divider />
             <h1>Challenge Category:</h1>
@@ -524,13 +527,13 @@ class AdminChallengeEdit extends React.Component {
     }
 
     componentDidMount() {
-        this.getChallengeDetails(this.props.challengeName)
+        this.getChallengeDetails(this.props.id)
         this.setState({ oldChallengeName: this.props.challengeName })
     }
 
-    getChallengeDetails = (name) => {
+    getChallengeDetails = (id) => {
         this.setState({ loading: true })
-        fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name) + "/detailed", {
+        fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(id) + "/detailed", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         }).then((results) => {

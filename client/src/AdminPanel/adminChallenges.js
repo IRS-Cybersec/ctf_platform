@@ -31,7 +31,7 @@ class AdminChallenges extends React.Component {
         this.state = {
             loading: false,
             dataSource: [],
-            challengeName: "",
+            id: "",
             modalLoading: false,
             challengeCreate: false,
             editChallenge: false,
@@ -404,6 +404,7 @@ class AdminChallenges extends React.Component {
                             </div>
                         )
                     }}>
+                        <Column title="ID" dataIndex="_id" key="_id" />
                         <Column title="Name" dataIndex="name" key="name"
                             render={(text, row, index) => {
                                 return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
@@ -483,7 +484,7 @@ class AdminChallenges extends React.Component {
                             title=""
                             key="edit"
                             render={(text, record) => (
-                                <Button icon={<EditOutlined />} onClick={() => { this.setState({ editChallenge: true, challengeName: record.name }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
+                                <Button icon={<EditOutlined />} onClick={() => { this.setState({ editChallenge: true, id: record._id }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
                             )}
                         />
                     </Table>
@@ -527,7 +528,7 @@ class AdminChallenges extends React.Component {
 
                 <Switch>
                     <Route exact path='/Admin/Challenges/Create' render={(props) => <AdminChallengeCreate {...props} challenges={this.state.dataSource} handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)} allCat={this.state.allCat} />} />
-                    <Route exact path='/Admin/Challenges/Edit' render={(props) => <AdminChallengeEdit {...props} allCat={this.state.allCat} challenges={this.state.dataSource} challengeName={this.state.challengeName} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)} />} />
+                    <Route exact path='/Admin/Challenges/Edit' render={(props) => <AdminChallengeEdit {...props} allCat={this.state.allCat} challenges={this.state.dataSource} id={this.state.id} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)} />} />
 
                 </Switch>
 
