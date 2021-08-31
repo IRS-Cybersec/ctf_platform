@@ -37,7 +37,7 @@ const CreateChallengeForm = (props) => {
         if (props.challenges[i].name !== props.initialData.name) {
             if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
             existingChalls[props.challenges[i].category].push({
-                value: props.challenges[i].name,
+                value: props.challenges[i]._id,
                 label: props.challenges[i].name
             })
         }
@@ -96,7 +96,7 @@ const CreateChallengeForm = (props) => {
                         method: 'post',
                         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
                         body: JSON.stringify({
-                            "chall": props.initialData.name,
+                            "id": props.initialData._id,
                             "name": values.name,
                             "category": category,
                             "description": values.description,
@@ -113,7 +113,7 @@ const CreateChallengeForm = (props) => {
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
                     }).then((data) => {
-                        //console.log(data)
+                        console.log(data)
                         if (data.success === true) {
                             message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
                             props.handleEditChallBack()

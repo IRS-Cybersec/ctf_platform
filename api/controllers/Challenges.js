@@ -93,6 +93,7 @@ const listCategory = async (req, res, next) => {
     }
 }
 
+
 const listCategories = async (req, res, next) => {
     const collections = Connection.collections
     try {
@@ -411,7 +412,7 @@ const newChall = async (req, res, next) => {
             doc.writeupComplete = req.body.writeupComplete
         }
         if (req.body.requires) {
-            doc.requires = req.body.requires
+            doc.requires = MongoDB.ObjectID(req.body.requires)
         }
         // if (req.body.files) {
         // 	for (file of req.body.files) {
@@ -480,12 +481,12 @@ const edit = async (req, res, next) => {
             });
         }
         if ((await collections.challs.updateOne(
-            { name: req.body.chall },
+            { _id: MongoDB.ObjectID(req.body.id) },
             { '$set': updateObj }
         )).matchedCount === 0) throw new Error('NotFound');
         if (Object.keys(unsetObj).length > 0) {
             if ((await collections.challs.updateOne(
-                { name: req.body.chall },
+                { _id: MongoDB.ObjectID(req.body.id) },
                 { '$unset': unsetObj }
             )).matchedCount === 0) throw new Error('NotFound');
         }
@@ -526,9 +527,11 @@ const editVisibility = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
+        let challenges = []
+        for (let i = 0; i < req.body.challenges.length; i++) challenges.push(MongoDB.ObjectID(req.body.challenges[i])) 
         if ((await collections.challs.updateMany({
-            name: {
-                $in: req.body.challenges
+            _id: {
+                $in: challenges
             }
         }, {
             $set: { visibility: req.body.visibility }
@@ -571,9 +574,12 @@ const deleteChall = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
+        let challenges = []
         for (let i = 0; i < req.body.chall.length; i++) {
+            const currentID = ObjectID(req.body.chall[i])
+            challenges.push(currentiD)
             const delReq = await collections.challs.findOneAndDelete({
-                name: req.body.chall[i]
+                _id: currentID
             }, {
                 solves: 1,
                 points: 1,
@@ -583,7 +589,7 @@ const deleteChall = async (req, res, next) => {
             if (!delReq.ok) throw new Error('Unknown');
             if (delReq.value === null) throw new Error('NotFound');
 
-            await collections.transactions.deleteMany({ challenge: req.body.chall });
+            await collections.transactions.deleteMany({ challengeID: challenges });
             await collections.users.updateMany({
                 username: { $in: delReq.value.solves }
             }, {

@@ -43,7 +43,8 @@ class AdminChallenges extends React.Component {
             transferDisabled: false,
             refreshLoading: false,
             disableLoading: false,
-            submissionDisabled: false
+            submissionDisabled: false,
+            selectedRows: []
         }
     }
 
@@ -173,26 +174,29 @@ class AdminChallenges extends React.Component {
         })
     }
 
-    editChallengeVisibility(visibility, challenges) {
+    editChallengeVisibility = async(visibility, names, challenges) => {
+        let challengeIDs = []
+        for (let i = 0; i < challenges.length; i++) {
+            challengeIDs.push(challenges[i]._id)
+        }
         this.setState({ disableEditButtons: true })
-        fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
+        await fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
                 "visibility": visibility,
-                "challenges": challenges,
+                "challenges": challengeIDs,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success("The visibility of (" + challenges.join(", ") + ") challenge(s) have been updated")
+                message.success("The visibility of (" + names.join(", ") + ") challenge(s) have been updated")
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
             }
-            this.setState({ disableEditButtons: false })
             this.fillTableData()
 
 
@@ -200,6 +204,7 @@ class AdminChallenges extends React.Component {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
+        this.setState({ disableEditButtons: false })
     }
 
     fillTableData = async () => {
@@ -293,8 +298,8 @@ class AdminChallenges extends React.Component {
         await Promise.all([this.fillTableData(), this.handleCategoryData()])
     }
 
-    handleTableSelect = (selectedRowKeys) => {
-        this.setState({ selectedTableKeys: selectedRowKeys })
+    handleTableSelect = (selectedRowKeys, selectedRows) => {
+        this.setState({ selectedTableKeys: selectedRowKeys, selectedRows: selectedRows })
         if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
 
@@ -384,8 +389,8 @@ class AdminChallenges extends React.Component {
                         <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.handleRefresh(); message.success("Challenge list refreshed.") }} />
                     </div>
                     <div style={{ display: "flex", alignItems: "center" }}>
-                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true, this.state.selectedTableKeys) }}>Show</Button>
-                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys) }}>Hide</Button>
+                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true,this.state.selectedTableKeys, this.state.selectedRows) }}>Show</Button>
+                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys, this.state.selectedRows) }}>Hide</Button>
                         <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
                             confirm({
                                 confirmLoading: this.state.disableEditButtons,
@@ -404,8 +409,7 @@ class AdminChallenges extends React.Component {
                             </div>
                         )
                     }}>
-                        <Column title="ID" dataIndex="_id" key="_id" />
-                        <Column title="Name" dataIndex="name" key="name"
+                    <Column title="Name" dataIndex="name" key="name"
                             render={(text, row, index) => {
                                 return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                             }}
