@@ -44,7 +44,8 @@ class AdminChallenges extends React.Component {
             refreshLoading: false,
             disableLoading: false,
             submissionDisabled: false,
-            selectedRows: []
+            selectedRows: [],
+            IDNameMapping: {}
         }
     }
 
@@ -217,6 +218,7 @@ class AdminChallenges extends React.Component {
         }).then((data) => {
 
             if (data.success === true) {
+                let IDNameMapping = {}
                 for (var i = 0; i < data.challenges.length; i++) {
                     data.challenges[i].key = data.challenges[i].name
                     if (data.challenges[i].visibility === false) {
@@ -225,8 +227,9 @@ class AdminChallenges extends React.Component {
                     else {
                         data.challenges[i].visibility = <span visibility={data.challenges[i].visibility.toString()} style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
                     }
+                    IDNameMapping[data.challenges[i]._id] = data.challenges[i].name
                 }
-                this.setState({ dataSource: data.challenges, loading: false })
+                this.setState({ dataSource: data.challenges, IDNameMapping: IDNameMapping, loading: false })
 
             }
             else {
@@ -411,7 +414,7 @@ class AdminChallenges extends React.Component {
                     }}>
                     <Column title="Name" dataIndex="name" key="name"
                             render={(text, row, index) => {
-                                return <Link to={"/Challenges/" + row.category + "/" + row.name}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                return <Link to={"/Challenges/" + row.category + "/" + row._id}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                             }}
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
@@ -451,7 +454,7 @@ class AdminChallenges extends React.Component {
                         <Column filters={[{ text: "Visible", value: "true" }, { text: "Hidden", value: "false" }]} onFilter={(value, record) => { return value === record.visibility.props.visibility }} title="Visbility" dataIndex="visibility" key="visibility" />
                         <Column title="Required Challenge" dataIndex="requires" key="requires"
                             render={(text, row, index) => {
-                                return <Link to={"/Challenges/" + row.category + "/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                return <Link to={"/Challenges/" + row.category + "/" + text}><a style={{ fontWeight: 700 }}>{this.state.IDNameMapping[text]}</a></Link>;
                             }}
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
@@ -477,10 +480,12 @@ class AdminChallenges extends React.Component {
                                     </Space>
                                 </div>
                             )}
-                            onFilter={(value, record) => { if (record.requires) return record.requires.toLowerCase().includes(value.toLowerCase()) }}
+                            onFilter={(value, record) => { if (record.requires) return this.state.IDNameMapping[record.requires].toLowerCase().includes(value) }}
                             filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                             sorter={(a, b) => {
-                                if (a.name < b.name) return -1
+                                if (!a.requires) return -1
+                                if (!b.requires) return 1
+                                if (this.state.IDNameMapping[a.requires] < this.state.IDNameMapping[b.requires]) return -1
                                 else return 1
                             }}
                         />
@@ -532,7 +537,7 @@ class AdminChallenges extends React.Component {
 
                 <Switch>
                     <Route exact path='/Admin/Challenges/Create' render={(props) => <AdminChallengeCreate {...props} challenges={this.state.dataSource} handleBack={this.handleBack.bind(this)} handleCreateBack={this.handleCreateBack.bind(this)} allCat={this.state.allCat} />} />
-                    <Route exact path='/Admin/Challenges/Edit' render={(props) => <AdminChallengeEdit {...props} allCat={this.state.allCat} challenges={this.state.dataSource} id={this.state.id} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)} />} />
+                    <Route exact path='/Admin/Challenges/Edit' render={(props) => <AdminChallengeEdit {...props} allCat={this.state.allCat} IDNameMapping={this.state.IDNameMapping} challenges={this.state.dataSource} id={this.state.id} handleEditBack={this.handleEditBack.bind(this)} handleEditChallBack={this.handleEditChallBack.bind(this)} />} />
 
                 </Switch>
 

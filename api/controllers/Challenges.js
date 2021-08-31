@@ -1,5 +1,6 @@
 const Connection = require('./../utils/mongoDB.js')
 const MongoDB = require('mongodb')
+const {broadCastNewSolve} = require('./../controllers/Sockets.js')
 
 const disableStates = async (req, res, next) => {
     try {
@@ -138,11 +139,11 @@ const listAllCategories = async (req, res, next) => {
 const show = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const filter = res.locals.perms == 2 ? { name: req.params.chall } : { visibility: true, name: req.params.chall };
+        const filter = res.locals.perms == 2 ? { _id: MongoDB.ObjectID(req.params.chall) } : { visibility: true, _id: MongoDB.ObjectID(req.params.chall) };
         let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
 
         if ("requires" in chall && res.locals.perms < 2) {
-            const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
@@ -176,7 +177,7 @@ const show = async (req, res, next) => {
         if (chall.max_attempts != 0)
             chall.used_attempts = await collections.transactions.countDocuments({
                 author: res.locals.username,
-                challenge: req.params.chall,
+                challengeID: MongoDB.ObjectID(req.params.chall),
                 type: 'submission'
             }, { limit: chall.max_attempts });
         res.send({
@@ -215,17 +216,18 @@ const showDetailed = async (req, res, next) => {
 const hint = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        let findObject = { visibility: true, name: req.body.chall }
-        if (res.locals.perms === 2) findObject = { name: req.body.chall }
+        let findObject = { visibility: true, _id: MongoDB.ObjectID(req.body.chall) }
+        if (res.locals.perms === 2) findObject = { _id: MongoDB.ObjectID(req.body.chall) }
         let hints = (await collections.challs.findOne(findObject, {
             projection: {
+                name: 1,
                 hints: { $slice: [req.body.id, 1] },
                 requires: 1,
                 _id: 1
             }
         }));
         if ("requires" in hints) {
-            const solved = await collections.challs.findOne({ name: hints.requires }, { projection: { _id: 0, solves: 1 } })
+            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(hints.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
@@ -239,7 +241,7 @@ const hint = async (req, res, next) => {
                 $inc: { score: -hints.hints[0].cost }
             });
             await collections.challs.updateOne({
-                name: req.body.chall
+                _id: MongoDB.ObjectID(req.body.chall)
             }, {
                 $push: {
                     [`hints.${req.body.id}.purchased`]: res.locals.username
@@ -247,7 +249,8 @@ const hint = async (req, res, next) => {
             });
             await collections.transactions.insertOne({
                 author: res.locals.username,
-                challenge: req.body.chall,
+                challenge: hints.name,
+                challengeID: req.body.chall,
                 type: 'hint',
                 timestamp: Gtimestamp,
                 perms: res.locals.perms,
@@ -280,14 +283,14 @@ const hint = async (req, res, next) => {
 const submit = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, name: req.body.chall }, { projection: { points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
+        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name:1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
         if (!chall) throw new Error('NotFound');
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
         if (chall.solves.includes(res.locals.username)) throw new Error('Submitted');
 
         //Check if the required challenge has been solved (if any)
         if ("requires" in chall) {
-            const solved = await collections.challs.findOne({ name: chall.requires }, { projection: { _id: 0, solves: 1 } })
+            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
@@ -295,7 +298,8 @@ const submit = async (req, res, next) => {
         async function insertTransaction(correct = false, blocked = false) {
             await collections.transactions.insertOne({
                 author: res.locals.username,
-                challenge: req.body.chall,
+                challenge: chall.name,
+                challengeID: MongoDB.ObjectID(req.body.chall),
                 timestamp: Gtimestamp,
                 type: blocked ? 'blocked_submission' : 'submission',
                 perms: res.locals.perms,
@@ -310,7 +314,7 @@ const submit = async (req, res, next) => {
                     $inc: { score: chall.points }
                 });
                 await collections.challs.updateOne({
-                    name: req.body.chall
+                    _id: MongoDB.ObjectID(req.body.chall)
                 }, {
                     $push: { solves: res.locals.username.toLowerCase() }
                 });
@@ -319,7 +323,7 @@ const submit = async (req, res, next) => {
         if (chall.max_attempts != 0) {
             if (await collections.transactions.countDocuments({
                 author: res.locals.username.toLowerCase(),
-                challenge: req.body.chall,
+                _id: MongoDB.ObjectID(req.body.chall),
                 type: 'submission'
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }

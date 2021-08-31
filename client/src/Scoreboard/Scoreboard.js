@@ -244,7 +244,6 @@ class Scoreboard extends React.Component {
     }
 
     finalPoint = top10scores
-    console.log(top10scores)
     finalPoint["Time"] = new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
     for (let i = 0; i < data.users.length; i++) {
       let currentPoint = {}

@@ -1,11 +1,14 @@
 var wss = null
 var app = null
+var collections = null
 const ws = require('ws')
 const { checkPermissions } = require('./../utils/permissionUtils.js')
+const Connection = require('./../utils/mongoDB.js')
 
-const startup = async (server, app) => {
+const startup = async (server, appVar) => {
+    collections = Connection.collections
     wss = new ws.Server({ server })
-    app = app
+    app = appVar
 
     //websocket methods
     wss.on('connection', (socket) => {
@@ -28,9 +31,12 @@ const startup = async (server, app) => {
                 }
                 socket.isAuthed = true
 
+                
                 const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+                console.log(payload.lastChallengeID)
+                console.log(latestSolveSubmissionID)
                 if (payload.lastChallengeID < latestSolveSubmissionID) {
-                    let challengesToBeSent = collections.transactions.find(null, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID);
+                    let challengesToBeSent = collections.transactions.find({}, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID);
                     let finalChallenges = []
                     if (app.get("adminShowDisable")) {
                         await challengesToBeSent.forEach((doc) => {
@@ -40,6 +46,7 @@ const startup = async (server, app) => {
                     else {
                         finalChallenges = await challengesToBeSent.toArray()
                     }
+                    console.log(finalChallenges)
                     socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                 }
                 else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))

@@ -60,9 +60,9 @@ class ChallengesTagSortList extends React.Component {
                     if (item.requires && !item.requiresSolved) {
 
                       return (
-                        <List.Item key={item.name}>
-                          <Tooltip title={<span>Please solve "<b><u>{item.requires}</u></b>" to unlock this challenge.</span>}>
-                          <div id={item.name}>
+                        <List.Item key={item._id}>
+                          <Tooltip title={<span>Please solve "<b><u>{item.requiresName}</u></b>" to unlock this challenge.</span>}>
+                          <div id={item._id}>
                             <Card
                               type="inner"
                               bordered={true}
@@ -75,7 +75,7 @@ class ChallengesTagSortList extends React.Component {
                                     <h1 className="card-design-name" >{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
                                     <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                                    {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
+                                    {this.state.loadingChallenge && this.state.currentChallenge === item._id && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                       </div>
@@ -97,8 +97,8 @@ class ChallengesTagSortList extends React.Component {
                     }
                     else if (item.solved === false) {
                       return (
-                        <List.Item key={item.name}>
-                          <div id={item.name} onClick={() => { this.props.loadChallengeDetails(item.name, item.solved); }}>
+                        <List.Item key={item._id}>
+                          <div id={item._id} onClick={() => { this.props.loadChallengeDetails(item._id, item.solved); }}>
                             <Card
                               hoverable
                               type="inner"
@@ -111,7 +111,7 @@ class ChallengesTagSortList extends React.Component {
                                     <h1 className="card-design-name">{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
                                     <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                                    {this.props.loadingChallenge && this.props.currentChallenge === item.name && (
+                                    {this.props.loadingChallenge && this.props.currentChallenge === item._id && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                       </div>
@@ -131,8 +131,8 @@ class ChallengesTagSortList extends React.Component {
                     }
                     else {
                       return (
-                        <List.Item key={item.name}>
-                          <div id={item.name} onClick={() => { this.props.loadChallengeDetails(item.name, item.solved);}}>
+                        <List.Item key={item._id}>
+                          <div id={item._id} onClick={() => { this.props.loadChallengeDetails(item._id, item.solved);}}>
                             <Card
                               hoverable
                               type="inner"
@@ -146,7 +146,7 @@ class ChallengesTagSortList extends React.Component {
                                     <h1 className="card-design-name">{item.name}</h1>
                                     <h1 className="card-design-points">{item.points}</h1>
                                     <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                                    {this.props.loadingChallenge && this.props.currentChallenge === item.name && (
+                                    {this.props.loadingChallenge && this.props.currentChallenge === item._id && (
                                       <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                         <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                       </div>

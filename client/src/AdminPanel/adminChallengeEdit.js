@@ -51,18 +51,24 @@ const CreateChallengeForm = (props) => {
         })
     }
 
+    let initialData = JSON.parse(JSON.stringify(props.initialData))
+
     if (typeof form.getFieldValue("name") === "undefined") {
         if (props.initialData.visibility === false) {
-            props.initialData.visibility = "false"
+            initialData.visibility = "false"
         }
         else if (props.initialData.visibility === true) {
-            props.initialData.visibility = "true"
+            initialData.visibility = "true"
         }
         // if we put only props.initialData.requires, we are merely putting a reference to props.initialData.requires, which is this array, creating a "loop"
-        if (props.initialData.requires) props.initialData.requires = [props.initialData.requires]
-        props.initialData.category1 = props.initialData.category
-        form.setFieldsValue(props.initialData)
-        setEditorValue(props.initialData.description)
+        
+        if (props.initialData.requires) {
+            initialData.requires = [props.IDNameMapping[props.initialData.requires], props.initialData.requires]
+            
+        }
+        initialData.category1 = initialData.category
+        form.setFieldsValue(initialData)
+        setEditorValue(initialData.description)
     }
 
     return (
@@ -113,7 +119,6 @@ const CreateChallengeForm = (props) => {
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
                     }).then((data) => {
-                        console.log(data)
                         if (data.success === true) {
                             message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
                             props.handleEditChallBack()
@@ -662,7 +667,7 @@ class AdminChallengeEdit extends React.Component {
 
                 </div>
                 {!this.state.loading && (
-                    <CreateChallengeForm allCat={this.props.allCat} challenges={this.props.challenges} state={this.state} editLoading={this.state.editLoading} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} initialData={this.state.challengeData} handleEditChallBack={this.props.handleEditChallBack}></CreateChallengeForm>
+                    <CreateChallengeForm IDNameMapping={this.props.IDNameMapping} allCat={this.props.allCat} challenges={this.props.challenges} state={this.state} editLoading={this.state.editLoading} setState={this.setState.bind(this)} previewChallenge={this.previewChallenge.bind(this)} initialData={this.state.challengeData} handleEditChallBack={this.props.handleEditChallBack}></CreateChallengeForm>
                 )}
 
                 {this.state.loading && (

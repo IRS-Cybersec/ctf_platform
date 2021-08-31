@@ -105,7 +105,7 @@ class ChallengesTagSort extends React.Component {
     let challenge = this.props.match.params.challenge;
     if (typeof challenge !== "undefined") {
       challenge = decodeURIComponent(challenge)
-      const solved = this.props.currentCategoryChallenges[0].find(element => element.name === challenge)
+      const solved = this.props.currentCategoryChallenges[0].find(element => element._id === challenge)
       if (typeof solved !== "undefined") {
         this.sortByTags(challenge)
         this.loadChallengeDetails(challenge, solved.solved)
@@ -151,9 +151,12 @@ class ChallengesTagSort extends React.Component {
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
 
           if ("requires" in currentCat[x]) {
-            const requires = currentCat.find((value) => value.name === currentCat[x].requires)
+            const requires = currentCat.find((value) => value._id === currentCat[x].requires)
             if (requires && requires.solved) currentCat[x].requiresSolved = true
-            else currentCat[x].requiresSolved = false
+            else {
+              currentCat[x].requiresSolved = false
+              currentCat[x].requiresName = requires.name
+            } 
           }
 
           if ("tags" in currentCat[x]) {
@@ -180,6 +183,7 @@ class ChallengesTagSort extends React.Component {
     else {
 
       let found = false
+      console.log(originalData)
       for (const [key, value] of Object.entries(originalData)) {
         let currentCat = originalData[key]
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
@@ -190,9 +194,12 @@ class ChallengesTagSort extends React.Component {
             found = true
           }
           if ("requires" in currentCat[x]) {
-            const requires = currentCat.find((value) => value.name === currentCat[x].requires)
+            const requires = currentCat.find((value) => value._id === currentCat[x].requires)
             if (requires && requires.solved) currentCat[x].requiresSolved = true
-            else currentCat[x].requiresSolved = false
+            else {
+              currentCat[x].requiresSolved = false
+              currentCat[x].requiresName = requires.name
+            } 
           }
           if ("tags" in currentCat[x]) {
             const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
@@ -251,13 +258,13 @@ class ChallengesTagSort extends React.Component {
     this.setState({ tag: tag, loadingTag: false })
   }
 
-  handleBuyHint(close, id, chall) {
+  handleBuyHint(close, id, challID) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
       body: JSON.stringify({
         "id": parseInt(id),
-        "chall": chall,
+        "chall": challID,
       })
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
@@ -267,7 +274,7 @@ class ChallengesTagSort extends React.Component {
         message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
         let challengeHints = this.state.challengeHints
         challengeHints[id] = (
-          <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, chall, true) }}>Hint {id + 1} - Purchased</Button>
+          <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, challID, true) }}>Hint {id + 1} - Purchased</Button>
         )
         this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
         close()
@@ -279,13 +286,13 @@ class ChallengesTagSort extends React.Component {
     })
   }
 
-  handleHint(id, chall, bought) {
+  handleHint(id, challID, bought) {
 
     if (bought === false) {
       confirm({
-        title: 'Are you sure you want to purchase hint ' + parseInt(id + 1) + ' for "' + chall + '"?',
+        title: 'Are you sure you want to purchase hint ' + parseInt(id + 1) + ' for "' + this.state.viewingChallengeDetails.name + '"?',
         icon: <ExclamationCircleOutlined />,
-        onOk: (close) => { this.handleBuyHint(close.bind(this), id, chall) },
+        onOk: (close) => { this.handleBuyHint(close.bind(this), id, challID) },
         onCancel() { },
       });
     }
@@ -295,7 +302,7 @@ class ChallengesTagSort extends React.Component {
         headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
         body: JSON.stringify({
           "id": parseInt(id),
-          "chall": chall,
+          "chall": challID,
         })
       }).then((results) => {
         return results.json(); //return data in JSON (since its JSON data)
@@ -312,9 +319,9 @@ class ChallengesTagSort extends React.Component {
 
   }
 
-  loadChallengeDetails = async (name, solved) => {
-    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(name));
-    await this.setState({ currentChallenge: name, loadingChallenge: true, currentChallengeSolved: solved, tagList: this.state.tagLists })
+  loadChallengeDetails = async (ID, solved) => {
+    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(ID));
+    await this.setState({ currentChallenge: ID, loadingChallenge: true, currentChallengeSolved: solved, tagList: this.state.tagLists })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
     }
@@ -322,7 +329,7 @@ class ChallengesTagSort extends React.Component {
       this.setState({ currentChallengeStatus: "Enter the flag (case-sensitive)" })
     }
     //document.getElementById(name).style.pointerEvents = "none"
-    await fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
+    await fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(ID), {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
     }).then((results) => {
@@ -376,12 +383,12 @@ class ChallengesTagSort extends React.Component {
                 hints[y].cost = String(hints[y].cost) + " Points"
               }
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, name, false) }}>Hint {y + 1} - {hints[y].cost}</Button>
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, ID, false) }}>Hint {y + 1} - {hints[y].cost}</Button>
               )
             }
             else {
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(y, name, true) }}>Hint {y + 1} - Purchased</Button>
+                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(y, ID, true) }}>Hint {y + 1} - Purchased</Button>
               )
             }
 
@@ -430,7 +437,7 @@ class ChallengesTagSort extends React.Component {
           notification["success"]({
             message: 'Challenge Solved! Congratulations!',
             description:
-              'Congratulations on solving "' + this.state.currentChallenge + '".',
+              'Congratulations on solving "' + this.state.viewingChallengeDetails.name + '".',
             duration: 0
           });
           const refresh = async () => {
@@ -447,7 +454,7 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Incorrect Flag',
             description:
-              'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.currentChallenge + '".',
+              'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.viewingChallengeDetails.name + '".',
             duration: 0
           });
         }
@@ -457,7 +464,7 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Attempts Exhausted',
             description:
-              'It seems like you have execeeded the maximum number of attempts for "' + this.state.currentChallenge + '". Contact an admin if you need more tries',
+              'It seems like you have execeeded the maximum number of attempts for "' + this.state.viewingChallengeDetails.name + '". Contact an admin if you need more tries',
             duration: 0
           });
         }
@@ -649,9 +656,9 @@ class ChallengesTagSort extends React.Component {
               if (item.requires && !item.requiresSolved) {
 
                 return (
-                  <List.Item key={item.name}>
-                    <Tooltip title={<span>Please solve "<b><u>{item.requires}</u></b>" to unlock this challenge.</span>}>
-                      <div id={item.name}>
+                  <List.Item key={item._id}>
+                    <Tooltip title={<span>Please solve "<b><u>{item.requiresName}</u></b>" to unlock this challenge.</span>}>
+                      <div id={item._id}>
                         <Card
                           type="inner"
                           bordered={true}
@@ -665,7 +672,7 @@ class ChallengesTagSort extends React.Component {
                                 <h1 className="card-design-name" >{item.name}</h1>
                                 <h1 className="card-design-points">{item.points}</h1>
                                 <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                                {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
+                                {this.state.loadingChallenge && this.state.currentChallenge === item._id && (
                                   <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                     <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                   </div>
@@ -687,8 +694,8 @@ class ChallengesTagSort extends React.Component {
               }
               else if (!item.solved) {
                 return (
-                  <List.Item key={item.name}>
-                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved, item.firstBlood) }}>
+                  <List.Item key={item._id}>
+                    <div id={item._id} onClick={() => { this.loadChallengeDetails(item._id, item.solved, item.firstBlood) }}>
                       <Card
                         hoverable
                         type="inner"
@@ -701,7 +708,7 @@ class ChallengesTagSort extends React.Component {
                               <h1 className="card-design-name">{item.name}</h1>
                               <h1 className="card-design-points">{item.points}</h1>
                               <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                              {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
+                              {this.state.loadingChallenge && this.state.currentChallenge === item._id && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                 </div>
@@ -721,8 +728,8 @@ class ChallengesTagSort extends React.Component {
               }
               else {
                 return (
-                  <List.Item key={item.name}>
-                    <div id={item.name} onClick={() => { this.loadChallengeDetails(item.name, item.solved) }}>
+                  <List.Item key={item._id}>
+                    <div id={item._id} onClick={() => { this.loadChallengeDetails(item._id, item.solved) }}>
                       <Card
                         hoverable
                         type="inner"
@@ -736,7 +743,7 @@ class ChallengesTagSort extends React.Component {
                               <h1 className="card-design-name">{item.name}</h1>
                               <h1 className="card-design-points">{item.points}</h1>
                               <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
-                              {this.state.loadingChallenge && this.state.currentChallenge === item.name && (
+                              {this.state.loadingChallenge && this.state.currentChallenge === item._id && (
                                 <div style={{ width: "100%", height: "100%", backgroundColor: "red", zIndex: 1 }}>
                                   <LoadingOutlined style={{ color: "#177ddc", fontSize: "500%", position: "absolute", zIndex: 1, left: "40%", top: "30%" }} />
                                 </div>

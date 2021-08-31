@@ -41,7 +41,7 @@ const CreateChallengeForm = (props) => {
     for (let i = 0; i < props.challenges.length; i++) {
         if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
         existingChalls[props.challenges[i].category].push({
-            value: props.challenges[i].name,
+            value: props.challenges[i]._id,
             label: props.challenges[i].name
         })
     }
