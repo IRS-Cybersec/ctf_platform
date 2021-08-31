@@ -111,6 +111,9 @@ class Scoreboard extends React.Component {
   }
 
   connectWebSocket() {
+    //
+    // WARNING: MAKING REACT HOT LOADING CHANGES HERE SEEMS TO CAUSE THE CREATION OF MULTIPLE SOCKET CONNECTIONS WHICH MESSES THINGS UP
+    //
     let webSocket = new WebSocket(window.production ? "wss://api.irscybersec.tk" : "ws://localhost:20001")
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
@@ -194,8 +197,8 @@ class Scoreboard extends React.Component {
     }
     webSocket.onclose = (e) => {
       this.setState({ liveUpdates: false })
-      console.log('Socket closed. Attempting to reconnect in 3 seconds', e.reason);
-      setTimeout(() => { this.connectWebSocket() }, 3000)
+      console.log('Socket closed. Attempting to reconnect in 5 seconds', e.reason);
+      setTimeout(() => { this.connectWebSocket() }, 5000)
     };
   }
 
@@ -241,6 +244,7 @@ class Scoreboard extends React.Component {
     }
 
     finalPoint = top10scores
+    console.log(top10scores)
     finalPoint["Time"] = new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
     for (let i = 0; i < data.users.length; i++) {
       let currentPoint = {}
