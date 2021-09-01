@@ -6,7 +6,7 @@ const { checkPermissions } = require('./../utils/permissionUtils.js')
 const Connection = require('./../utils/mongoDB.js')
 
 
-// Give the client 5 seconds to get authed, if not we will disconnect them
+// Give the client 10 seconds to get authed, if not we will disconnect them
 const kickTimeOut = async (socket) => {
     if ((!"isAuthed" in socket) || socket.isAuthed === false) {
         socket.terminate()
@@ -23,7 +23,7 @@ const startup = async (server, appVar) => {
         socket.isAlive = true
         socket.isAuthed = false
         socket.on('pong', () => { socket.isAlive = true }); // check for any clients that dced without informing the server
-        setTimeout(() => { kickTimeOut(socket) }, 5000)
+        setTimeout(() => { kickTimeOut(socket) }, 10000)
 
         socket.on("message", async (msg) => {
             const data = JSON.parse(msg)
