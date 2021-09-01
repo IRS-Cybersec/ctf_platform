@@ -33,6 +33,7 @@ const startCache = async () => {
 		submissionDisabled: false,
 		uploadSize: 512000,
 		latestSolveSubmissionID: 0,
+		maxSockets: 5,
 		uploadPath: "/var/www/ctf_platform/static/uploads/profile"
 	}
 	const collections = Connection.collections

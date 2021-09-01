@@ -8,7 +8,7 @@ const adminSettings = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath"]
+        const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets"]
         if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
         req.app.set(req.body.setting, req.body.disable)
 

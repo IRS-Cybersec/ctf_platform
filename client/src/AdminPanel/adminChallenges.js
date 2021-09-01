@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space } from 'antd';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber } from 'antd';
 import { Switch as AntdSwitch } from 'antd';
 import {
     ExclamationCircleOutlined,
@@ -45,7 +45,8 @@ class AdminChallenges extends React.Component {
             disableLoading: false,
             submissionDisabled: false,
             selectedRows: [],
-            IDNameMapping: {}
+            IDNameMapping: {},
+            maxSockets: 0
         }
     }
 
@@ -354,7 +355,7 @@ class AdminChallenges extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ submissionDisabled: data.states.submissionDisabled })
+                this.setState({ submissionDisabled: data.states.submissionDisabled, maxSockets: data.states.maxSockets })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -365,6 +366,36 @@ class AdminChallenges extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         this.setState({ disableLoading: false })
+    }
+
+    changeSetting = async (setting, value) => {
+        let settingName = ""
+        if (setting === "maxSockets") {
+            settingName = "Maximum number of sockets"
+            this.setState({ uploadLoading: true })
+        }
+        await fetch(window.ipAddress + "/v1/adminSettings", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            body: JSON.stringify({
+                disable: value,
+                setting: setting
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                if (setting === "maxSockets") message.success(settingName + " changed to " + value.toString())
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ uploadLoading: false })
     }
 
 
@@ -527,6 +558,15 @@ class AdminChallenges extends React.Component {
                     </div>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <div>
+                        <h3>Set Socket Limit:  <InputNumber
+                                value={this.state.maxSockets}
+                                disabled={this.state.disableLoading}
+                                onChange={(value) => this.setState({maxSockets: value})}
+                                onPressEnter={(e) => { this.changeSetting("maxSockets", this.state.maxSockets) }} /></h3>
+                        <p>Sets the maximum number of socket connections allowed <b>per account</b> to connect to the live scoreboard. <br/> <b>Press "Enter" to save</b></p>
+                    </div>
 
                     
                 </div>

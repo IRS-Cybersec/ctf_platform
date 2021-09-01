@@ -48,7 +48,8 @@ class App extends React.Component {
       permissions: 0,
       userScore: "Loading...",
       loading: true,
-      mobileBreakpoint: false
+      mobileBreakpoint: false,
+      scoreboardSocket: false
     };
   }
 
@@ -62,6 +63,15 @@ class App extends React.Component {
     // Handle any page changes 
     if (this.props.location.pathname.split("/")[1] !== prevProps.location.pathname.split("/")[1]) {
       this.setState({ current: this.props.location.pathname.split("/")[1] })
+      if (prevProps.location.pathname.split("/")[1] === "Scoreboard") {
+        const webSocket = this.state.scoreboardSocket
+        if (webSocket !== false && webSocket.readyState !== 3) {
+          console.log("closed")
+          webSocket.close(1000)
+          this.setState({scoreboardSocket: false})
+        }
+
+      }
     }
   }
 
@@ -164,6 +174,10 @@ class App extends React.Component {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
+  }
+
+  handleWebSocket(webSocket) {
+    this.setState({scoreboardSocket: webSocket})
   }
 
 
@@ -316,7 +330,7 @@ class App extends React.Component {
                                   <Switch>
                                     <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
                                     <Route path='/Challenges/:category?/:challenge?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
-                                    <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} transition={style} />} />
+                                    <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} handleWebSocket={this.handleWebSocket.bind(this)} transition={style} scoreboardSocket={this.state.scoreboardSocket} />} />
 
                                     <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
                                     <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} key={window.location.pathname} />} />

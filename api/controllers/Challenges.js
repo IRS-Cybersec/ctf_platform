@@ -7,7 +7,7 @@ const disableStates = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            states: { submissionDisabled: req.app.get("submissionDisabled") }
+            states: { submissionDisabled: req.app.get("submissionDisabled"), maxSockets: req.app.get("maxSockets")  }
         });
     }
     catch (err) {

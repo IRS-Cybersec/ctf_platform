@@ -13,6 +13,7 @@ const { Column } = Table;
 
 var finalScores = []
 var changes = []
+var lastChallengeID = 0
 var updating = false
 
 class Scoreboard extends React.Component {
@@ -46,7 +47,7 @@ class Scoreboard extends React.Component {
     this.connectWebSocket() //Connect to socket server for live scoreboard and this will update the scoreboard with the latest data
 
     //Update last solved timing
-    setInterval(() => {this.lastSolveTiming()}, 60 * 1000)
+    setInterval(() => { this.lastSolveTiming() }, 60 * 1000)
 
   }
 
@@ -111,46 +112,51 @@ class Scoreboard extends React.Component {
   }
 
   connectWebSocket() {
-    //
-    // WARNING: MAKING REACT HOT LOADING CHANGES HERE SEEMS TO CAUSE THE CREATION OF MULTIPLE SOCKET CONNECTIONS WHICH MESSES THINGS UP
-    //
     let webSocket = new WebSocket(window.production ? "wss://api.irscybersec.tk" : "ws://localhost:20001")
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
-        updating = true
-        const payload = data.data
-        let found = false
-        for (let i = 0; i < finalScores.scores.length; i++) {
-          if (finalScores.scores[i].username === payload.username) {
+        console.log("msg")
+        if (parseInt(data.data.lastChallengeID) !== lastChallengeID) { // Prevents the client from processing the same msg twice
+          updating = true
+          lastChallengeID = parseInt(data.data.lastChallengeID)
+          const payload = data.data
+          console.log(payload)
+          let found = false
+          for (let i = 0; i < finalScores.scores.length; i++) {
+            if (finalScores.scores[i].username === payload.username) {
 
-            finalScores.scores[i].score += payload.points
-            found = true
-            break
-          }
-        }
-
-        if (found) {
-          for (let x = 0; x < changes.users.length; x++) {
-            if (changes.users[x]._id === payload.username) {
-              changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
+              finalScores.scores[i].score += payload.points
+              found = true
               break
             }
           }
+
+          if (found) {
+            for (let x = 0; x < changes.users.length; x++) {
+              if (changes.users[x]._id === payload.username) {
+                changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
+                break
+              }
+            }
+          }
+          else {
+            // User is a new user not on the scoreboard for whatever reason
+            finalScores.scores.push({ username: payload.username, score: payload.points })
+            changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
+          }
+          sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
+          sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
+          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
         }
-        else {
-          // User is a new user not on the scoreboard for whatever reason
-          finalScores.scores.push({ username: payload.username, score: payload.points })
-          changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
-        }
-        sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
-        sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
-        this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
       }
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
         else if (data.data === "missing-auth") message.error("Error connecting to live updates")
         else if (data.data === "up-to-date") this.setState({ liveUpdates: true })
+        else if (data.data === "max-connections") {
+          message.warn("Your account has more than the concurrent number of socket connections allowed. Disconnecting...")
+        } 
         else {
           for (let y = 0; y < data.data.length; y++) {
             const payload = data.data[y]
@@ -191,14 +197,18 @@ class Scoreboard extends React.Component {
     webSocket.onopen = (e) => {
       const ID = sessionStorage.getItem("lastChallengeID")
       webSocket.send(JSON.stringify({ type: "init", data: { auth: localStorage.getItem("IRSCTF-token"), lastChallengeID: parseInt(ID) } }))
+      this.props.handleWebSocket(webSocket)
     }
     webSocket.onerror = (e) => {
       console.error(e)
     }
     webSocket.onclose = (e) => {
+      
       this.setState({ liveUpdates: false })
-      console.log('Socket closed. Attempting to reconnect in 5 seconds', e.reason);
-      setTimeout(() => { this.connectWebSocket() }, 5000)
+      if (e.code !== 1000) {
+        console.log('Socket closed. Attempting to reconnect in 5 seconds', e.reason);
+        setTimeout(() => { this.connectWebSocket() }, 5000)
+      }
     };
   }
 

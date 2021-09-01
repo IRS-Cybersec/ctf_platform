@@ -5,6 +5,14 @@ const ws = require('ws')
 const { checkPermissions } = require('./../utils/permissionUtils.js')
 const Connection = require('./../utils/mongoDB.js')
 
+
+// Give the client 5 seconds to get authed, if not we will disconnect them
+const kickTimeOut = async (socket) => {
+    if ((!"isAuthed" in socket) || socket.isAuthed === false) {
+        socket.terminate()
+    }
+}
+
 const startup = async (server, appVar) => {
     collections = Connection.collections
     wss = new ws.Server({ server })
@@ -13,7 +21,9 @@ const startup = async (server, appVar) => {
     //websocket methods
     wss.on('connection', (socket) => {
         socket.isAlive = true
+        socket.isAuthed = false
         socket.on('pong', () => { socket.isAlive = true }); // check for any clients that dced without informing the server
+        setTimeout(() => { kickTimeOut(socket) }, 5000)
 
         socket.on("message", async (msg) => {
             const data = JSON.parse(msg)
@@ -29,12 +39,23 @@ const startup = async (server, appVar) => {
                     socket.send(JSON.stringify({ type: "init", data: "bad-auth" }))
                     return socket.terminate()
                 }
+                // Check if any other clients of the same username are connected, and if so, disconnect them
                 socket.isAuthed = true
+                let numConnections = 0
+                const maxSockets = app.get("maxSockets")
+                await wss.clients.forEach((ws) => {
+                    if (ws.username === permsObject.username) {
+                        numConnections += 1
+                        if (numConnections >= maxSockets) {
+                            ws.send(JSON.stringify({ type: "init", data: "max-connections" }))
+                            ws.close(1000)
+                        }
+                    }
+                })
+                socket.username = permsObject.username
 
-                
+
                 const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
-                console.log(payload.lastChallengeID)
-                console.log(latestSolveSubmissionID)
                 if (payload.lastChallengeID < latestSolveSubmissionID) {
                     let challengesToBeSent = collections.transactions.find({}, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID);
                     let finalChallenges = []
@@ -46,7 +67,6 @@ const startup = async (server, appVar) => {
                     else {
                         finalChallenges = await challengesToBeSent.toArray()
                     }
-                    console.log(finalChallenges)
                     socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                 }
                 else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
@@ -74,6 +94,7 @@ const broadCastNewSolve = async (solveDetails) => {
         return false
     }
     wss.clients.forEach((client) => {
+        console.log("hi")
         if (client.readyState === ws.OPEN && client.isAuthed === true) {
             client.send(JSON.stringify({ type: "score", data: solveDetails }));
         }
