@@ -1,6 +1,7 @@
 var wss = null
 var app = null
 var collections = null
+var socketConns = {}
 const ws = require('ws')
 const { checkPermissions } = require('./../utils/permissionUtils.js')
 const Connection = require('./../utils/mongoDB.js')
@@ -41,8 +42,27 @@ const startup = async (server, appVar) => {
                 }
                 // Check if any other clients of the same username are connected, and if so, disconnect them
                 socket.isAuthed = true
-                let numConnections = 0
+                
                 const maxSockets = app.get("maxSockets")
+                let socketNumber = 0
+                if (permsObject.username in socketConns) {
+                    if (socketConns[permsObject.username].length >= maxSockets) {
+                        const removeSocket = socketConns[permsObject.username].splice(0, socketConns[permsObject.username].length-maxSockets+1)
+                        for (let i = 0; i < removeSocket.length; i++) {
+                            removeSocket[i].send(JSON.stringify({ type: "init", data: "max-connections" }))
+                            removeSocket[i].close(1000)
+                        }
+                    }
+                    socketNumber = socketConns[permsObject.username].length
+                    socketConns[permsObject.username].push(socket)
+                }
+                else {
+                    socketConns[permsObject.username] = [socket]
+                }
+                socket.username = permsObject.username
+                socket.id = socketNumber
+                /*
+                let numConnections = 0
                 await wss.clients.forEach((ws) => {
                     if (ws.username === permsObject.username) {
                         numConnections += 1
@@ -51,8 +71,8 @@ const startup = async (server, appVar) => {
                             ws.close(1000)
                         }
                     }
-                })
-                socket.username = permsObject.username
+                })*/
+                
 
 
                 const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
@@ -72,12 +92,34 @@ const startup = async (server, appVar) => {
                 else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
             }
         })
+        socket.on('close', (e) => {
+            if (socket.username in socketConns) {
+                for (let i = 0; i < socketConns[socket.username]; i++) {
+                    if (socket.readyState === ws.CLOSED) {
+                        socketConns[socket.username].splice(i, 1)
+                        break
+                    }
+                }
+                if (socketConns[socket.username].length === 0) delete socketConns[socket.username]
+            }
+        })
     })
 
     // check for any clients that dced without informing the server
     const interval = setInterval(function ping() {
         wss.clients.forEach(function each(ws) {
-            if (ws.isAlive === false) return ws.terminate();
+            if (ws.isAlive === false) {
+                if (ws.username in socketConns) {
+                    for (let i = 0; i < socketConns[ws.username]; i++) {
+                        if (ws.isAlive === false) {
+                            socketConns[ws.username].splice(i, 1)
+                            break
+                        }
+                    }
+                    if (socketConns[ws.username].length === 0) delete socketConns[ws.username]
+                }
+                return ws.terminate();
+            } 
 
             ws.isAlive = false;
             ws.ping();
@@ -94,7 +136,6 @@ const broadCastNewSolve = async (solveDetails) => {
         return false
     }
     wss.clients.forEach((client) => {
-        console.log("hi")
         if (client.readyState === ws.OPEN && client.isAuthed === true) {
             client.send(JSON.stringify({ type: "score", data: solveDetails }));
         }
