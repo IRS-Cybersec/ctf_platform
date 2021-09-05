@@ -581,7 +581,7 @@ const deleteChall = async (req, res, next) => {
         let challenges = []
         for (let i = 0; i < req.body.chall.length; i++) {
             const currentID = ObjectID(req.body.chall[i])
-            challenges.push(currentiD)
+            challenges.push(currentID)
             const delReq = await collections.challs.findOneAndDelete({
                 _id: currentID
             }, {
