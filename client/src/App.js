@@ -187,9 +187,9 @@ class App extends React.Component {
         <Transition
           items={this.state.logined}
           native
-          from={{ opacity: 0, transform: 'translate3d(50%,0,0)', position: "fixed" }}
-          enter={{ opacity: 1, transform: 'translate3d(0%,0,0)', position: "static" }}
-          leave={{ opacity: 0, position: "fixed" }}
+          from={{ opacity: 0 }}
+          enter={{ opacity: 1 }}
+          leave={{ opacity: 0 }}
         >
           {(styles, item) => {
             if (item && !this.state.loading) {
@@ -329,7 +329,8 @@ class App extends React.Component {
                                 </div>}>
                                   <Switch>
                                     <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
-                                    <Route path='/Challenges/:category?/:challenge?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
+    
+                                    <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                     <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} handleWebSocket={this.handleWebSocket.bind(this)} transition={style} scoreboardSocket={this.state.scoreboardSocket} />} />
 
                                     <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />

@@ -121,7 +121,9 @@ class AdminSubmissions extends React.Component {
                             filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
 
                         />
-                        <Column title="Challenge" dataIndex="challenge" key="challenge"
+                        <Column render={(text, row, index) => {
+                                return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            }} title="Challenge" dataIndex="challenge" key="challenge"
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
                                     <Input

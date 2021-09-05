@@ -102,19 +102,10 @@ class ChallengesTagSort extends React.Component {
   }
 
   componentDidMount() {
-    let challenge = this.props.match.params.challenge;
-    if (typeof challenge !== "undefined") {
-      challenge = decodeURIComponent(challenge)
-      const solved = this.props.currentCategoryChallenges[0].find(element => element._id === challenge)
-      if (typeof solved !== "undefined") {
-        this.sortByTags(challenge)
-        this.loadChallengeDetails(challenge, solved.solved)
-      }
-      else {
-        message.error("Challenge '" + challenge + "' not found.")
-        this.props.history.push("/Challenges/" + this.props.category)
-        this.sortByTags()
-      }
+    if (this.props.foundChallenge !== false) {
+      this.sortByTags(this.props.foundChallenge._id)
+      this.loadChallengeDetails(this.props.foundChallenge._id, this.props.foundChallenge.solved)
+      this.props.history.push("/Challenges/" + this.props.foundChallenge._id)
     }
     else this.sortByTags()
 
@@ -152,12 +143,14 @@ class ChallengesTagSort extends React.Component {
 
           if ("requires" in currentCat[x]) {
             const requires = currentCat.find((value) => value._id === currentCat[x].requires)
-            if (requires && requires.solved) currentCat[x].requiresSolved = true
-            else if (requires) {
-              currentCat[x].requiresSolved = false
-              if ("name" in requires) currentCat[x].requiresName = requires.name
-              else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
-            } 
+            if (requires) {
+              if (requires.solved) currentCat[x].requiresSolved = true
+              else {
+                currentCat[x].requiresSolved = false
+                if ("name" in requires) currentCat[x].requiresName = requires.name
+                else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
+              }
+            }
           }
 
           if ("tags" in currentCat[x]) {
@@ -195,11 +188,13 @@ class ChallengesTagSort extends React.Component {
           }
           if ("requires" in currentCat[x]) {
             const requires = currentCat.find((value) => value._id === currentCat[x].requires)
-            if (requires && requires.solved) currentCat[x].requiresSolved = true
-            else {
-              if ("name" in requires) currentCat[x].requiresName = requires.name
-              else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
-            } 
+            if (requires) {
+              if (requires.solved) currentCat[x].requiresSolved = true
+              else {
+                if ("name" in requires) currentCat[x].requiresName = requires.name
+                else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
+              }
+            }
           }
           if ("tags" in currentCat[x]) {
             const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
@@ -225,7 +220,7 @@ class ChallengesTagSort extends React.Component {
     let challenges = orderBy(this.props.currentCategoryChallenges[0], ["points"], ["asc"])
     //console.log(tag)
     this.setState({ tag: tag, loadingTag: false, challenges: challenges })
-    
+
   }
 
   sortDifferent(sortType) {
@@ -320,7 +315,7 @@ class ChallengesTagSort extends React.Component {
   }
 
   loadChallengeDetails = async (ID, solved) => {
-    this.props.history.push("/Challenges/" + this.props.category + "/" + encodeURIComponent(ID));
+    this.props.history.push("/Challenges/" + encodeURIComponent(ID));
     await this.setState({ currentChallenge: ID, loadingChallenge: true, currentChallengeSolved: solved, tagList: this.state.tagLists })
     if (solved === true) {
       this.setState({ currentChallengeStatus: "Challenge already solved." })
@@ -668,7 +663,7 @@ class ChallengesTagSort extends React.Component {
                           <Meta
                             description={
                               <div className="card-design-body" >
-                                <LockOutlined className="disabled-style"/>
+                                <LockOutlined className="disabled-style" />
                                 <h1 className="card-design-name" >{item.name}</h1>
                                 <h1 className="card-design-points">{item.points}</h1>
                                 <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>
@@ -739,7 +734,7 @@ class ChallengesTagSort extends React.Component {
                         <Meta
                           description={
                             <div className="card-design-body">
-                              <CheckOutlined className="correct-style"/>
+                              <CheckOutlined className="correct-style" />
                               <h1 className="card-design-name">{item.name}</h1>
                               <h1 className="card-design-points">{item.points}</h1>
                               <h1 className="card-design-firstblood"><img alt="First Blood" src={require("./../assets/blood.svg").default} /> {item.firstBlood}</h1>

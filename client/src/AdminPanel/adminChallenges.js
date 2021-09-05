@@ -445,7 +445,7 @@ class AdminChallenges extends React.Component {
                     }}>
                     <Column title="Name" dataIndex="name" key="name"
                             render={(text, row, index) => {
-                                return <Link to={"/Challenges/" + row.category + "/" + row._id}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                return <Link to={"/Challenges/" + row._id}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                             }}
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
@@ -485,7 +485,7 @@ class AdminChallenges extends React.Component {
                         <Column filters={[{ text: "Visible", value: "true" }, { text: "Hidden", value: "false" }]} onFilter={(value, record) => { return value === record.visibility.props.visibility }} title="Visbility" dataIndex="visibility" key="visibility" />
                         <Column title="Required Challenge" dataIndex="requires" key="requires"
                             render={(text, row, index) => {
-                                return <Link to={"/Challenges/" + row.category + "/" + text}><a style={{ fontWeight: 700 }}>{this.state.IDNameMapping[text]}</a></Link>;
+                                return <Link to={"/Challenges/" + text}><a style={{ fontWeight: 700 }}>{this.state.IDNameMapping[text]}</a></Link>;
                             }}
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
