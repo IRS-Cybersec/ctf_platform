@@ -153,9 +153,10 @@ class ChallengesTagSort extends React.Component {
           if ("requires" in currentCat[x]) {
             const requires = currentCat.find((value) => value._id === currentCat[x].requires)
             if (requires && requires.solved) currentCat[x].requiresSolved = true
-            else {
+            else if (requires) {
               currentCat[x].requiresSolved = false
-              currentCat[x].requiresName = requires.name
+              if ("name" in requires) currentCat[x].requiresName = requires.name
+              else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
             } 
           }
 
@@ -183,7 +184,6 @@ class ChallengesTagSort extends React.Component {
     else {
 
       let found = false
-      console.log(originalData)
       for (const [key, value] of Object.entries(originalData)) {
         let currentCat = originalData[key]
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
@@ -197,8 +197,8 @@ class ChallengesTagSort extends React.Component {
             const requires = currentCat.find((value) => value._id === currentCat[x].requires)
             if (requires && requires.solved) currentCat[x].requiresSolved = true
             else {
-              currentCat[x].requiresSolved = false
-              currentCat[x].requiresName = requires.name
+              if ("name" in requires) currentCat[x].requiresName = requires.name
+              else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
             } 
           }
           if ("tags" in currentCat[x]) {
