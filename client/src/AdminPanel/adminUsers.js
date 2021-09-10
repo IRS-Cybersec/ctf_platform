@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space, InputNumber } from 'antd';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space, InputNumber, Card } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
@@ -124,7 +124,7 @@ const ChangePasswordForm = (props) => {
                     message.error({ content: "Oops. There was an issue connecting with the server" });
                 })
             }}
-            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%"}}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%" }}
         >
             <h3>New Password:</h3>
             <Form.Item
@@ -165,7 +165,7 @@ const ChangePasswordForm = (props) => {
                 <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
             </Form.Item>
             <Form.Item>
-            <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ passwordResetModal: false }) }}>Cancel</Button>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ passwordResetModal: false }) }}>Cancel</Button>
                 <Button type="primary" htmlType="submit" icon={<KeyOutlined />}>Change Password</Button>
             </Form.Item>
         </Form>
@@ -623,47 +623,47 @@ class AdminUsers extends React.Component {
                 </Table>
                 <Divider />
 
-                <div style={{ display: "flex", justifyContent: "space-around" }}>
+                <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <div>
+                    <Card>
                         <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
-                    </div>
+                    </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <div>
+                    <Card>
                         <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
-                        <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges. <br/> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
-                    </div>
+                        <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges. <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
+                    </Card>
                 </div>
 
                 <Divider />
 
-                <div style={{ display: "flex", justifyContent: "space-around" }}>
+                <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <div>
+                    <Card>
                         <h3>Profile Picture Max Upload Size:
                             <InputNumber
                                 formatter={value => `${value}B`}
                                 parser={value => value.replace('B', '')}
                                 value={this.state.uploadSize}
                                 disabled={this.state.uploadLoading}
-                                onChange={(value) => this.setState({uploadSize: value})}
+                                onChange={(value) => this.setState({ uploadSize: value })}
                                 onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
                         <p>Sets the maximum file upload size for profile pictures (in Bytes). Press <b>Enter</b> to save</p>
-                    </div>
+                    </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <div>
+                    <Card>
                         <h3>Profile Picture Upload Path
                             <Input
                                 value={this.state.uploadPath}
-                                onChange={(e) => this.setState({uploadPath: e.target.value})}
+                                onChange={(e) => this.setState({ uploadPath: e.target.value })}
                                 onPressEnter={(e) => { this.changeSetting("uploadPath", this.state.uploadPath) }} /></h3>
-                        <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br/>set for the Node process to save the file there. Press <b>Enter</b> to save</p>
-                    </div>
+                        <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br />set for the Node process to save the file there. Press <b>Enter</b> to save</p>
+                    </Card>
                 </div>
 
             </Layout>

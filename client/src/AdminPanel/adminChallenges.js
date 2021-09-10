@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber } from 'antd';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card } from 'antd';
 import { Switch as AntdSwitch } from 'antd';
 import {
     ExclamationCircleOutlined,
@@ -175,7 +175,7 @@ class AdminChallenges extends React.Component {
         })
     }
 
-    editChallengeVisibility = async(visibility, names, challenges) => {
+    editChallengeVisibility = async (visibility, names, challenges) => {
         let challengeIDs = []
         for (let i = 0; i < challenges.length; i++) {
             challengeIDs.push(challenges[i]._id)
@@ -422,7 +422,7 @@ class AdminChallenges extends React.Component {
                         <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.handleRefresh(); message.success("Challenge list refreshed.") }} />
                     </div>
                     <div style={{ display: "flex", alignItems: "center" }}>
-                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true,this.state.selectedTableKeys, this.state.selectedRows) }}>Show</Button>
+                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true, this.state.selectedTableKeys, this.state.selectedRows) }}>Show</Button>
                         <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys, this.state.selectedRows) }}>Hide</Button>
                         <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
                             confirm({
@@ -442,14 +442,14 @@ class AdminChallenges extends React.Component {
                             </div>
                         )
                     }}>
-                    <Column title="Name" dataIndex="name" key="name"
+                        <Column title="Name" dataIndex="name" key="name"
                             render={(text, row, index) => {
                                 return <Link to={"/Challenges/" + row._id}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                             }}
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
                                     <Input
-                                    autoFocus
+                                        autoFocus
                                         placeholder="Search Challenge Name"
                                         value={selectedKeys[0]}
                                         onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
@@ -489,7 +489,7 @@ class AdminChallenges extends React.Component {
                             filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                                 <div style={{ padding: 8 }}>
                                     <Input
-                                    autoFocus
+                                        autoFocus
                                         placeholder="Search Challenge Name"
                                         value={selectedKeys[0]}
                                         onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
@@ -547,28 +547,26 @@ class AdminChallenges extends React.Component {
 
                     <Divider />
 
-                    
+                    <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <Card>
+                            <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
+                            <p>Prevents users from submitting any new submissions for all challenges. Hints can still be bought</p>
+                        </Card>
 
-                    <div>
-                        <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
-                        <p>Prevents users from submitting any new submissions for all challenges. Hints can still be bought</p>
-                    </div>
-
-                    <Divider type="vertical" style={{ height: "inherit" }} />
-
-                    <div>
-                        <h3>Set Socket Limit:  <InputNumber
+                        <Divider type="vertical" style={{ height: "inherit" }} />
+                        
+                        <Card>
+                            <h3>Set Socket Limit:  <InputNumber
                                 value={this.state.maxSockets}
                                 disabled={this.state.disableLoading}
-                                onChange={(value) => this.setState({maxSockets: value})}
+                                onChange={(value) => this.setState({ maxSockets: value })}
                                 onPressEnter={(e) => { this.changeSetting("maxSockets", this.state.maxSockets) }} /></h3>
-                        <p>Sets the maximum number of socket connections allowed <b>per account</b> to connect to the live scoreboard. <br/> <b>Press "Enter" to save</b></p>
-                    </div>
+                            <p>Sets the maximum number of socket connections allowed <b>per account</b> to connect to the live scoreboard. <br /> <b>Press "Enter" to save</b></p>
+                        </Card>
 
-                    
-                </div>
+
+                    </div>
 
 
                 </div>

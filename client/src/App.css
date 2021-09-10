@@ -239,7 +239,7 @@
     overflow: hidden;
 }
 
-@media only screen and (min-width: 65ch) {
+@media (min-width: 65ch) {
     .login-page-responsive {
         width: 30vw;
         min-width: 65ch;
@@ -248,12 +248,24 @@
         width: 70vw; 
     }
 }
-@media only screen and (max-width: 65ch) {
+@media (max-width: 65ch) {
     .login-page-responsive {
         width: 100vw;
     }
     .login-banner-responsive {
         width: 0vw; 
+    }
+}
+
+
+@media (min-width: 70ch) {
+    .settings-responsive {
+        flex-direction: row;
+    }
+}
+@media (max-width: 70ch) {
+    .settings-responsive {
+        flex-direction: column;
     }
 }
 
