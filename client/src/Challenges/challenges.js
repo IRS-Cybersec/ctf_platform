@@ -4,7 +4,6 @@ import {
   FileUnknownTwoTone,
   LeftCircleOutlined,
 } from '@ant-design/icons';
-import './../App.min.css';
 import { Link } from 'react-router-dom';
 import ChallengesTagSort from "./challengesTagSort.js";
 import { Ellipsis } from 'react-spinners-css';

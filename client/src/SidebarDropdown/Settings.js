@@ -6,7 +6,6 @@ import {
     UploadOutlined,
     DeleteOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
 
 
 

@@ -11,7 +11,6 @@ import {
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
-import './../App.min.css';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './../Misc/MarkdownRenderer.js';
 

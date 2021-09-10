@@ -11,7 +11,6 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
 import { Prompt } from 'react-router';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './../Misc/MarkdownRenderer.js';

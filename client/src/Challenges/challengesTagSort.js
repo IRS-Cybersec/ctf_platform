@@ -14,7 +14,6 @@ import {
   LockOutlined,
   CheckOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
 import MarkdownRender from './../Misc/MarkdownRenderer.js';
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';

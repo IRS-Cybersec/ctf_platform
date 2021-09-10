@@ -11,7 +11,6 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
 import { Ellipsis } from 'react-spinners-css';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './../Misc/MarkdownRenderer.js';

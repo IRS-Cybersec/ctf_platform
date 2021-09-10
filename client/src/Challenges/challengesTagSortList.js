@@ -7,8 +7,6 @@ import {
   LockOutlined,
   CheckOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
-
 const { Meta } = Card;
 const { Panel } = Collapse;
 

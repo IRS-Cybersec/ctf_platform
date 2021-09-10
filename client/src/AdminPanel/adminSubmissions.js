@@ -7,7 +7,6 @@ import {
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
-import './../App.min.css';
 import { Link } from 'react-router-dom';
 
 const { Column } = Table;

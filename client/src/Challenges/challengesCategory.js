@@ -12,7 +12,6 @@ import {
   SolutionOutlined,
   LinkOutlined
 } from '@ant-design/icons';
-import './../App.min.css';
 import MarkdownRender from './MarkdownRenderer.js';
 import { orderBy } from 'lodash';
 import { Ellipsis } from 'react-spinners-css';
