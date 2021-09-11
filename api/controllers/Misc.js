@@ -48,6 +48,24 @@ const profileUpload = async (req, res, next) => {
     res.send({ success: true })
 }
 
+const downloadBackup = async (req, res, next) => {
+    const collections = Connection.collections
+    try {
+        if (res.locals.perms < 2) throw new Error('Permissions');
+        let backupData = {
+            announcements: await collections.announcements.find({}).toArray(),
+            cache: await collections.cache.find({}).toArray(),
+            challs: await collections.challs.find({}).toArray(),
+            transactions: await collections.transactions.find({}).toArray(),
+            users: await collections.users.find({}).toArray()
+        }
+        return res.send({success: true, data: backupData})
+    }
+    catch (err) {
+        next(err);
+    }
+}
+
 const about = async (req, res, next) => {
     res.send({
         success: true,
@@ -55,4 +73,4 @@ const about = async (req, res, next) => {
     });
 }
 
-module.exports = {adminSettings, profileUpload, about}
+module.exports = {adminSettings, profileUpload, about, downloadBackup}
