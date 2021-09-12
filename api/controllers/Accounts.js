@@ -18,7 +18,6 @@ const disableStates = async(req, res, next) => {
 
 const type = async (req, res, next) => {
     try {
-        console.log(res.locals.perms)
         res.send({
             success: true,
             type: res.locals.perms

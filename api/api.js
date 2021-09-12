@@ -118,6 +118,7 @@ const main = async () => {
 
 		// Misc endpoints
 		app.get('/v1/backup/', misc.downloadBackup)
+		app.post('/v1/uploadBackup/', misc.uploadBackup)
 		app.post('/v1/adminSettings/', misc.adminSettings)
 		app.get('/v1/submissions', submissions.submissions);
 		app.post('/v1/submissions/new', submissions.newSubmission);

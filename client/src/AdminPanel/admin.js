@@ -14,6 +14,7 @@ import AdminSubmissions from "./adminSubmissions.js";
 import AdminManageAnnouncements from "./adminManageAnnouncements.js";
 
 const { TabPane } = Tabs;
+const { Dragger } = Upload;
 
 class Admin extends React.Component {
   constructor(props) {
@@ -21,7 +22,10 @@ class Admin extends React.Component {
 
     this.state = {
       key: "",
-      backupLoading: false
+      backupLoading: false,
+      fileList: [],
+      noFile: true,
+      loadingUpload: false
     }
   }
   componentDidMount = () => {
@@ -60,6 +64,34 @@ class Admin extends React.Component {
     this.setState({ backupLoading: false })
   }
 
+  uploadBackup = async () => {
+    this.setState({loadingUpload: true})
+    const jsonData = await this.state.fileList[0].originFileObj.text()
+    try {
+      JSON.parse(jsonData)
+      await fetch(window.ipAddress + "/v1/uploadBackup", {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        body: jsonData
+      }).then((results) => {
+        return results.json(); //return data in JSON (since its JSON data)
+      }).then((data) => {
+        //console.log(data)
+        if (data.success === true) {
+          message.success("Uploaded backup successfully")
+        }
+  
+      }).catch((error) => {
+        console.log(error)
+        message.error({ content: "Oops. Issue connecting with the server or client error, please check console and report the error. " });
+      })
+    }
+    catch (e) {
+      message.error("Invalid json file.")
+    }
+    this.setState({loadingUpload: false, fileList: []})
+  }
+
   render() {
     return (
 
@@ -85,41 +117,25 @@ class Admin extends React.Component {
               <Divider type="vertical" style={{ height: "inherit" }} />
 
               <Card>
-                <Upload
-                  fileList={this.state.fileList}
-                  disabled={this.state.disableUpload}
-                  accept=".json"
-                  action={window.ipAddress + ""}
-                  maxCount={1}
-                  onChange={(file) => {
-                    this.setState({ fileList: file.fileList })
-                    if (file.file.status === "uploading") {
-                      this.setState({ disableUpload: true })
-                    }
-                    else if ("response" in file.file) {
-                      if (file.file.response.success) message.success("Uploaded profile picture")
-                      else {
-                        message.error("Failed to upload profile picture")
-                        if (file.file.response.error === "too-large") {
-                          message.info("Please upload a file smaller than " + file.file.response.size.toString() + "Bytes.")
-                        }
-                      }
-                      this.setState({ fileList: [], disableUpload: false })
-                    }
-                  }}
-                  headers={{ "Authorization": localStorage.getItem("IRSCTF-token") }}
-                  name="profile_pic"
-                  beforeUpload={file => {
-                    const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
-                    if (!exts.includes(file.type)) {
-                      message.error(`${file.name} is not an image file.`);
-                      return Upload.LIST_IGNORE
-                    }
-                    return true
-                  }}>
-                  <Button disabled type="primary" icon={<UploadOutlined />}>Upload Backup</Button>
-                </Upload>
-                <p>Restore and upload data stored in a backup json file. <span style={{color: "#d32029"}}><b>Warning: This <u>WILL OVERRIDE ALL EXISTING DATA</u> stored in this platform</b></span></p>
+                <div style={{ width: "30ch" }}>
+                  <Dragger
+                    fileList={this.state.fileList}
+                    disabled={this.state.loadingUpload}
+                    accept=".json"
+                    maxCount={1}
+                    onChange={(file) => {
+                      if (file.fileList.length > 0) this.setState({ noFile: false })
+                      else this.setState({ noFile: true })
+                      this.setState({ fileList: file.fileList })
+                    }}
+                    beforeUpload={(file) => {
+                      return false
+                    }}>
+                    <p>Drag and drop backup .json file</p>
+                  </Dragger>
+                  <Button type="primary" icon={<UploadOutlined />} style={{ marginTop: "3ch" }} disabled={this.state.noFile} loading={this.state.loadingUpload} onClick={this.uploadBackup}>Upload Backup</Button>
+                </div>
+                <p>Restore and upload data stored in a backup json file. <span style={{ color: "#d32029" }}><b>Warning: This <u>WILL OVERRIDE ALL EXISTING DATA</u> stored in this platform</b> (including the current account used to upload the backup). Please re-login after restoration is completed.</span></p>
               </Card>
             </div>
           </TabPane>

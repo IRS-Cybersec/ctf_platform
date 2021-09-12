@@ -40,6 +40,12 @@ const errorHandler = (err, req, res, next) => {
                     success: false,
                     error: 'out-of-range'
                 });
+            case 'NotFound':
+                res.status(401);
+                return res.send({
+                    success: false,
+                    error: 'wrong-token'
+                });
         }
         if (err.message.includes('BadSignature') || err.message == 'BadToken') {
             res.status(401);

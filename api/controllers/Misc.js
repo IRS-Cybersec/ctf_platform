@@ -2,6 +2,7 @@ const Connection = require('./../utils/mongoDB.js')
 const sharp = require('sharp');
 const sanitizeFile = require('sanitize-filename');
 const path = require('path');
+const MongoDB = require('mongodb')
 
 
 const adminSettings = async (req, res, next) => {
@@ -59,7 +60,38 @@ const downloadBackup = async (req, res, next) => {
             transactions: await collections.transactions.find({}).toArray(),
             users: await collections.users.find({}).toArray()
         }
-        return res.send({success: true, data: backupData})
+        return res.send({ success: true, data: backupData })
+    }
+    catch (err) {
+        next(err);
+    }
+}
+
+const uploadBackup = async (req, res, next) => {
+    const collections = Connection.collections
+    try {
+        //if (res.locals.perms < 2) throw new Error('Permissions');
+        let backupData = {
+            announcements: req.body.announcements.map((document) => {document._id = MongoDB.ObjectID(document._id); return document}),
+            cache: req.body.cache.map((document) => {document._id = MongoDB.ObjectID(document._id); return document}),
+            challs: req.body.challs.map((document) => {document._id = MongoDB.ObjectID(document._id);document.created = new Date(document.created); return document}),
+            transactions: req.body.transactions.map((document) => {document._id = MongoDB.ObjectID(document._id);document.timestamp = new Date(document.timestamp); return document}),
+            users: req.body.users.map((document) => {document._id = MongoDB.ObjectID(document._id); return document})
+        }
+        await collections.announcements.deleteMany({})
+        await collections.cache.deleteMany({})
+        await collections.challs.deleteMany({})
+        await collections.transactions.deleteMany({})
+        await collections.users.deleteMany({})
+
+        await collections.announcements.insertMany(backupData.announcements)
+        await collections.cache.insertMany(backupData.cache)
+        await collections.challs.insertMany(backupData.challs)
+        await collections.transactions.insertMany(backupData.transactions)
+        await collections.users.insertMany(backupData.users)
+        
+
+        return res.send({ success: true })
     }
     catch (err) {
         next(err);
@@ -73,4 +105,4 @@ const about = async (req, res, next) => {
     });
 }
 
-module.exports = {adminSettings, profileUpload, about, downloadBackup}
+module.exports = { adminSettings, profileUpload, about, downloadBackup, uploadBackup }
