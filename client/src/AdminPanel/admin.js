@@ -1,12 +1,13 @@
 import React from 'react';
-import { Button, Layout, message, Tabs, Card, Upload, Divider } from 'antd';
+import { Button, Layout, message, Tabs, Card, Upload, Divider, Modal } from 'antd';
 import {
   UserOutlined,
   AppstoreOutlined,
   BarsOutlined,
   NotificationOutlined,
   DownloadOutlined,
-  UploadOutlined
+  UploadOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import AdminUsers from "./adminUsers.js";
 import AdminChallenges from "./adminChallenges.js";
@@ -15,6 +16,7 @@ import AdminManageAnnouncements from "./adminManageAnnouncements.js";
 
 const { TabPane } = Tabs;
 const { Dragger } = Upload;
+const { confirm } = Modal;
 
 class Admin extends React.Component {
   constructor(props) {
@@ -64,7 +66,7 @@ class Admin extends React.Component {
     this.setState({ backupLoading: false })
   }
 
-  uploadBackup = async () => {
+  uploadBackup = async (close) => {
     this.setState({loadingUpload: true})
     const jsonData = await this.state.fileList[0].originFileObj.text()
     try {
@@ -89,6 +91,7 @@ class Admin extends React.Component {
     catch (e) {
       message.error("Invalid json file.")
     }
+    close()
     this.setState({loadingUpload: false, fileList: []})
   }
 
@@ -117,7 +120,7 @@ class Admin extends React.Component {
               <Divider type="vertical" style={{ height: "inherit" }} />
 
               <Card>
-                <div style={{ width: "30ch" }}>
+                <div style={{width: "50%"}}>
                   <Dragger
                     fileList={this.state.fileList}
                     disabled={this.state.loadingUpload}
@@ -131,9 +134,19 @@ class Admin extends React.Component {
                     beforeUpload={(file) => {
                       return false
                     }}>
-                    <p>Drag and drop backup .json file</p>
+                    <h4>Drag and drop backup .json file to upload.</h4><br/>
+                    <p>Then, click the Upload button</p>
                   </Dragger>
-                  <Button type="primary" icon={<UploadOutlined />} style={{ marginTop: "3ch" }} disabled={this.state.noFile} loading={this.state.loadingUpload} onClick={this.uploadBackup}>Upload Backup</Button>
+                  <Button type="primary" icon={<UploadOutlined />} style={{ marginTop: "3ch" }} disabled={this.state.noFile} loading={this.state.loadingUpload} onClick={() => {
+                    confirm({
+                      confirmLoading: this.state.loadingUpload,
+                      title: 'Are you sure you want to restore all platform data to this JSON file? This action is irreversible.',
+                      icon: <ExclamationCircleOutlined />,
+                      onOk: (close) => { this.uploadBackup(close) },
+                      onCancel: () => { },
+                  });
+                    this.uploadBackup
+                    }}>Upload Backup</Button>
                 </div>
                 <p>Restore and upload data stored in a backup json file. <span style={{ color: "#d32029" }}><b>Warning: This <u>WILL OVERRIDE ALL EXISTING DATA</u> stored in this platform</b> (including the current account used to upload the backup). Please re-login after restoration is completed.</span></p>
               </Card>

@@ -308,6 +308,7 @@ const permissions = async (req, res, next) => {
             { username: req.body.username.toLowerCase() },
             { '$set': { type: parseInt(req.body.type) } }
         )).matchedCount > 0) {
+            setPermissions(req.body.username.toLowerCase(), req.body.type)
             res.send({ success: true });
         }
         else throw new Error('NotFound');
