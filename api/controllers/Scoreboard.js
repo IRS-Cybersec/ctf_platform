@@ -17,6 +17,7 @@ const scoreboard = async (req, res, next) => {
                         _id: '$author',
                         changes: {
                             $push: {
+                                author: '$author',
                                 points: '$points',
                                 timestamp: '$timestamp'
                             }

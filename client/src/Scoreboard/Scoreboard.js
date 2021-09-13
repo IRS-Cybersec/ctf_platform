@@ -10,8 +10,7 @@ import { Link } from 'react-router-dom';
 
 const { Column } = Table;
 
-var finalScores = []
-var changes = []
+var changes = {}
 var lastChallengeID = 0
 var updating = false
 
@@ -32,16 +31,15 @@ class Scoreboard extends React.Component {
   componentDidMount = async () => {
     let scoreboardData = sessionStorage.getItem("scoreboard-data")
     if (scoreboardData === null) {
-      [finalScores, changes] = await Promise.all([this.getFinalScores(), this.getChanges()])
-      sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
+      changes = await this.getChanges()
+      sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
     }
     else {
       scoreboardData = JSON.parse(scoreboardData)
-      finalScores = scoreboardData.finalScores
       changes = scoreboardData.changes
     }
     // Render whatever data we have either: stored in sessionStorage/retrieved from Fetch for fast loading of scoreboard
-    this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
+    this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
 
     this.connectWebSocket() //Connect to socket server for live scoreboard and this will update the scoreboard with the latest data
 
@@ -116,38 +114,44 @@ class Scoreboard extends React.Component {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
         console.log("msg")
-        if (parseInt(data.data.lastChallengeID) !== lastChallengeID) { // Prevents the client from processing the same msg twice
-          updating = true
-          lastChallengeID = parseInt(data.data.lastChallengeID)
-          const payload = data.data
-          console.log(payload)
-          let found = false
-          for (let i = 0; i < finalScores.scores.length; i++) {
-            if (finalScores.scores[i].username === payload.username) {
+        updating = true
+        lastChallengeID = parseInt(data.data.lastChallengeID)
+        const payloadArray = data.data // List of transactions to update
+        console.log(payload)
 
-              finalScores.scores[i].score += payload.points
-              found = true
+        for (let y = 0; y < payloadArray.length; y++) {
+          let userFound = false
+          const payload = payloadArray[y] // Current transaction to update
+
+          userLoop:
+          for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
+
+            if (changes.users[x]._id === payload.username) { // User found
+              userFound = true
+              const currentUserChanges = changes.users[x].changes
+              let transactionFound = false
+              for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
+                if (currentUserChanges[i]._id === payload._id) {
+                  transactionFound = true
+                  currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
+                  break userLoop;
+                }
+              }
+              if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
               break
             }
           }
 
-          if (found) {
-            for (let x = 0; x < changes.users.length; x++) {
-              if (changes.users[x]._id === payload.username) {
-                changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
-                break
-              }
-            }
-          }
-          else {
+          if (!userFound) {
             // User is a new user not on the scoreboard for whatever reason
-            finalScores.scores.push({ username: payload.username, score: payload.points })
-            changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
+            changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
           }
-          sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
-          sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
-          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
         }
+
+
+        sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
+        sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
+        this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
@@ -155,40 +159,45 @@ class Scoreboard extends React.Component {
         else if (data.data === "up-to-date") this.setState({ liveUpdates: true })
         else if (data.data === "max-connections") {
           message.warn("Your account has more than the concurrent number of socket connections allowed. Disconnecting...")
-        } 
+        }
         else {
-          for (let y = 0; y < data.data.length; y++) {
-            const payload = data.data[y]
-            let found = false
-            for (let i = 0; i < finalScores.scores.length; i++) {
-              if (finalScores.scores[i].username === payload.author) {
-
-                finalScores.scores[i].score += payload.points
-                found = true
+          lastChallengeID = parseInt(data.data.lastChallengeID)
+          const payloadArray = data.data // List of transactions to update
+          console.log(payload)
+  
+          for (let y = 0; y < payloadArray.length; y++) {
+            let userFound = false
+            const payload = payloadArray[y] // Current transaction to update
+  
+            userLoop:
+            for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
+  
+              if (changes.users[x]._id === payload.username) { // User found
+                userFound = true
+                const currentUserChanges = changes.users[x].changes
+                let transactionFound = false
+                for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
+                  if (currentUserChanges[i]._id === payload._id) {
+                    transactionFound = true
+                    currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
+                    break userLoop;
+                  }
+                }
+                if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
                 break
               }
             }
-
-            if (found) {
-              for (let x = 0; x < changes.users.length; x++) {
-                if (changes.users[x]._id === payload.author) {
-                  changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp })
-                  break
-                }
-              }
-            }
-            else {
+  
+            if (!userFound) {
               // User is a new user not on the scoreboard for whatever reason
-              finalScores.scores.push({ username: payload.author, score: payload.points })
-              changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp }] })
+              changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
             }
           }
-
-
-          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), JSON.parse(JSON.stringify(finalScores)).scores)
-
-          sessionStorage.setItem("scoreboard-data", JSON.stringify({ finalScores: finalScores, changes: changes }))
-          sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
+  
+  
+          sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
+          sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
+          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
         }
       }
@@ -202,7 +211,7 @@ class Scoreboard extends React.Component {
       console.error(e)
     }
     webSocket.onclose = (e) => {
-      
+
       this.setState({ liveUpdates: false })
       if (e.code !== 1000) {
         console.log('Socket closed. Attempting to reconnect in 5 seconds', e.reason);
@@ -211,43 +220,50 @@ class Scoreboard extends React.Component {
     };
   }
 
-  sortPlotRenderData(data, scoreArray) {
-
+  sortPlotRenderData(data) {
     let formattedData = []
     let finalPoint = {}
-    let timestamp = {}
-
+    let scoreArray = []
+    let tempScoreTimeStampDict = {}
+    //Process timestamps - find the last solve timing and create scoreArray
     for (let i = 0; i < data.users.length; i++) {
-      //Process timestamps - sort by the latest date
+
       let scores2 = data.users[i].changes
 
+      // some users might have empty "changes" as they have yet to solve anything
+      // so we have to include their username first into the dictionary
+      tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: 0 }
       for (let x = 0; x < scores2.length; x++) {
-        if (data.users[i]._id in timestamp) {
-          let d1 = new Date(timestamp[data.users[i]._id])
+        if (tempScoreTimeStampDict[data.users[i]._id].timestamp !== "0") {
+          let d1 = new Date(tempScoreTimeStampDict[data.users[i]._id])
           let d2 = new Date(scores2[x].timestamp)
-          if (d1 < d2 && scores2[x].points > 0) timestamp[data.users[i]._id] = scores2[x].timestamp
+          if (d1 < d2 && scores2[x].points > 0) tempScoreTimeStampDict[data.users[i]._id].timestamp = scores2[x].timestamp
+          tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
+
         }
-        else timestamp[data.users[i]._id] = scores2[x].timestamp
+        else {
+          tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
+
+        }
       }
     }
 
     //console.log(timestamp)
     // More processing & sort by timestamp
-    for (let x = 0; x < scoreArray.length; x++) {
-      if (scoreArray[x].username in timestamp) {
-        scoreArray[x].timestamp = timestamp[scoreArray[x].username]
-      }
-      else {
-        scoreArray[x].timestamp = "0"
-      }
+    for (const username in tempScoreTimeStampDict) {
+      scoreArray.push({ username: username, timestamp: tempScoreTimeStampDict[username].timestamp, score: tempScoreTimeStampDict[username].points })
     }
     scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
 
     // Plot graph data and get top 10 scores
     let top10scores = {}
+    let top10initialScores = {}
+    let pointDict = {}
     let top10 = []
     const iterateTill = scoreArray.length > 10 ? 10 : scoreArray.length
     for (let i = 0; i < iterateTill; i++) {
+      top10initialScores[scoreArray[i].username] = 0
+      pointDict[scoreArray[i].username] = 0
       top10scores[scoreArray[i].username] = scoreArray[i].score
       top10.push(scoreArray[i].username)
     }
@@ -262,7 +278,6 @@ class Scoreboard extends React.Component {
         let pointsSoFar = 0
 
         for (let x = 0; x < scores.length; x++) {
-
           pointsSoFar += scores[x].points
           currentPoint["name"] = data.users[i]._id
           currentPoint["points"] = pointsSoFar
@@ -273,6 +288,7 @@ class Scoreboard extends React.Component {
       }
     }
 
+    // Fill position + solve time ago
     for (let x = 0; x < scoreArray.length; x++) {
 
       if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
@@ -330,9 +346,9 @@ class Scoreboard extends React.Component {
 
     formattedData = orderBy(formattedData, ["Time"], ["asc"])
     //console.log(formattedData)
-    let pointDict = {}
     let finalData = []
 
+    finalData.push(top10initialScores)
     for (let i = 0; i < formattedData.length; i++) {
 
       pointDict[formattedData[i].name] = formattedData[i].points
@@ -380,6 +396,7 @@ class Scoreboard extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       if (data.success === true) {
+        console.log(data)
         sessionStorage.setItem("lastChallengeID", data.lastChallengeID)
         return data
       }
