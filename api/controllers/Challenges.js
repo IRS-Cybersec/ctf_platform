@@ -1,13 +1,24 @@
 const Connection = require('./../utils/mongoDB.js')
 const MongoDB = require('mongodb')
-const {broadCastNewSolve} = require('./../controllers/Sockets.js')
+const { broadCastNewSolve } = require('./../controllers/Sockets.js')
+var solves = {}
 
+
+const refreshSolves = async () => {
+    const collections = Connection.collections
+    const cursor = collections.challs.find({}, {projection: {solves: 1}})
+    await cursor.forEach((doc) => {
+        solves[doc._id] = doc.solves.length
+    })
+    console.log(solves)
+    return true
+}
 const disableStates = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            states: { submissionDisabled: req.app.get("submissionDisabled"), maxSockets: req.app.get("maxSockets")  }
+            states: { submissionDisabled: req.app.get("submissionDisabled"), maxSockets: req.app.get("maxSockets") }
         });
     }
     catch (err) {
@@ -247,6 +258,9 @@ const hint = async (req, res, next) => {
                     [`hints.${req.body.id}.purchased`]: res.locals.username
                 }
             });
+            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            latestSolveSubmissionID += 1
+            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
             await collections.transactions.insertOne({
                 author: res.locals.username,
                 challenge: hints.name,
@@ -257,9 +271,6 @@ const hint = async (req, res, next) => {
                 points: -hints.hints[0].cost,
                 hint_id: parseInt(req.body.id)
             });
-            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
-            latestSolveSubmissionID += 1
-            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
             broadCastNewSolve({
                 username: res.locals.username,
@@ -269,7 +280,7 @@ const hint = async (req, res, next) => {
                 lastChallengeID: latestSolveSubmissionID
             })
         }
-       
+
         res.send({
             success: true,
             hint: hints.hints[0].hint
@@ -283,10 +294,10 @@ const hint = async (req, res, next) => {
 const submit = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name:1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
+        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
         if (!chall) throw new Error('NotFound');
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
-        if (chall.solves.includes(res.locals.username)) throw new Error('Submitted');
+        if (chall.solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
 
         //Check if the required challenge has been solved (if any)
         if ("requires" in chall) {
@@ -330,6 +341,7 @@ const submit = async (req, res, next) => {
         let solved = false;
         if (chall.flags.includes(req.body.flag)) {
             solved = true;
+            solves[chall._id] += 1 // increment no. of solves in memory first
             await insertTransaction(true);
             res.send({
                 success: true,
@@ -475,7 +487,7 @@ const edit = async (req, res, next) => {
             if (req.body[field] != undefined) {
                 if (req.body[field] === '') unsetObj[field] = "" // If the field is set to "", it means the user wants to delete this optional argument
                 else updateObj[field] = req.body[field];
-            } 
+            }
         }
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {
@@ -532,7 +544,7 @@ const editVisibility = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
         let challenges = []
-        for (let i = 0; i < req.body.challenges.length; i++) challenges.push(MongoDB.ObjectID(req.body.challenges[i])) 
+        for (let i = 0; i < req.body.challenges.length; i++) challenges.push(MongoDB.ObjectID(req.body.challenges[i]))
         if ((await collections.challs.updateMany({
             _id: {
                 $in: challenges
@@ -619,4 +631,4 @@ const deleteChall = async (req, res, next) => {
     }
 }
 
-module.exports = {disableStates, list, listCategory, listCategories, listAll, listAllCategories, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall}
+module.exports = { disableStates, list, listCategory, listCategories, listAll, listAllCategories, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, refreshSolves }

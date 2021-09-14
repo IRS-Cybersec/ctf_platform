@@ -69,6 +69,7 @@ const main = async () => {
 	if (await Connection.open()) {
 		await startCache()
 		await startupChecks.startValidation()
+		await challenges.refreshSolves()
 
 		app.post('/v1/account/login', accounts.login);
 		app.post('/v1/account/create', accounts.create);
