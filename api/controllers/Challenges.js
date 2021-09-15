@@ -8,7 +8,7 @@ const refreshSolves = async () => {
     const collections = Connection.collections
     const cursor = collections.challs.find({}, {projection: {solves: 1}})
     await cursor.forEach((doc) => {
-        solves[doc._id] = doc.solves.length
+        solves[doc._id] = doc.solves
     })
     console.log(solves)
     return true
@@ -297,8 +297,7 @@ const submit = async (req, res, next) => {
         const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
         if (!chall) throw new Error('NotFound');
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
-        if (chall.solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
-
+        
         //Check if the required challenge has been solved (if any)
         if ("requires" in chall) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
@@ -306,6 +305,7 @@ const submit = async (req, res, next) => {
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
         let Gtimestamp = new Date()
+        let latestSolveSubmissionID = 0
         async function insertTransaction(correct = false, blocked = false) {
             await collections.transactions.insertOne({
                 author: res.locals.username,
@@ -316,7 +316,8 @@ const submit = async (req, res, next) => {
                 perms: res.locals.perms,
                 points: correct ? chall.points : 0,
                 correct: correct,
-                submission: req.body.flag
+                submission: req.body.flag,
+                lastUpdatedID: latestSolveSubmissionID // used as a "last updated time" so we know if to send to the client if the client's last updatedID is less than this
             });
             if (correct && !blocked) {
                 await collections.users.updateOne({
@@ -341,15 +342,12 @@ const submit = async (req, res, next) => {
         let solved = false;
         if (chall.flags.includes(req.body.flag)) {
             solved = true;
-            solves[chall._id] += 1 // increment no. of solves in memory first
-            await insertTransaction(true);
-            res.send({
-                success: true,
-                data: 'correct'
-            });
-            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            if (solves[req.body.chall].includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
+            solves[chall._id].push(res.locals.username) // add no. of solve to memory immediately so it won't double solve
+            latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
             latestSolveSubmissionID += 1
             req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+            await insertTransaction(true);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
             broadCastNewSolve({
                 username: res.locals.username,
@@ -358,6 +356,10 @@ const submit = async (req, res, next) => {
                 perms: res.locals.perms,
                 lastChallengeID: latestSolveSubmissionID
             })
+            res.send({
+                success: true,
+                data: 'correct'
+            });
         }
         // for "double-blind" CTFs - ask me if you want to
         // else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
