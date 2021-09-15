@@ -258,13 +258,13 @@
 }
 
 
-@media (min-width: 70ch) {
-    .settings-responsive {
+@media (min-width: 80ch) {
+    .settings-responsive2 {
         flex-direction: row;
     }
 }
-@media (max-width: 70ch) {
-    .settings-responsive {
+@media (max-width: 80ch) {
+    .settings-responsive2 {
         flex-direction: column;
     }
 }

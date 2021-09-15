@@ -73,6 +73,12 @@ const CreateChallengeForm = (props) => {
                     else {
                         values.visibility = true
                     }
+                    if (values.dynamic === "false") {
+                        values.dynamic = false
+                    }
+                    else {
+                        values.dynamic = true
+                    }
                     if (typeof values.writeup !== "undefined") {
                         if (typeof values.writeupComplete === "undefined") {
                             values.writeupComplete = true
@@ -96,7 +102,11 @@ const CreateChallengeForm = (props) => {
                             "visibility": values.visibility,
                             "writeup": values.writeup,
                             "writeupComplete": values.writeupComplete,
-                            "requires": requires
+                            "requires": requires,
+                            "dynamic": values.dynamic,
+                            "initial": values.initial,
+                            "minSolves": values.minSolves,
+                            "minimum": values.minimum
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -113,7 +123,7 @@ const CreateChallengeForm = (props) => {
                         else {
                             message.error({ content: "Oops. Unknown error, please contact an admin." })
                         }
-                        
+
 
 
                     }).catch((error) => {
@@ -443,7 +453,63 @@ const CreateChallengeForm = (props) => {
 
                     </Form.Item>
                     <p>Locks this challenge until the provided challenge above has been solved.</p>
+
+                    
+                <Card>
+                    <h1>Dynamic Scoring</h1>
+                    <Form.Item
+                        name="dynamic"
+                        rules={[{ required: true, message: 'Please set whether the challenge uses dynamic scoring' }]}
+                        initialValue="false"
+                    >
+                        <Select style={{ width: "20ch" }}>
+                            <Option value="false"><span style={{ color: "#d32029" }}>Disabled</span></Option>
+                            <Option value="true"><span style={{ color: "#49aa19" }}>Enabled</span></Option>
+                        </Select>
+
+                    </Form.Item>
+
+                    <h1>Initial Points:</h1>
+                    <Form.Item
+                        name="initial"
+                        rules={[{ required: true, message: 'Please enter the initial challenge points' }, {
+                            type: 'integer',
+                            message: "Please enter a valid integer between 1-100000",
+                        },]}
+                        initialValue={500}
+                    >
+                        <InputNumber min={1} max={100000} ></InputNumber>
+                    </Form.Item>
+                    <p>Initial number of points when there are 0/1 solves on a challenge</p>
+
+                    <h1>Minimum Points:</h1>
+                    <Form.Item
+                        name="minimum"
+                        rules={[{ required: true, message: 'Please enter the minimum challenge points' }, {
+                            type: 'integer',
+                            message: "Please enter a valid integer between 0-100000",
+                        },]}
+                        initialValue={100}
+                    >
+                        <InputNumber min={0} max={100000} ></InputNumber>
+                    </Form.Item>
+                    <p>Minimum amount of points that the challenge can decay too</p>
+
+                    <h1>Solves to Minimum:</h1>
+                    <Form.Item
+                        name="minSolves"
+                        rules={[{ required: true, message: 'Please enter the solves to minimum' }, {
+                            type: 'integer',
+                            message: "Please enter a valid integer between 1-100000",
+                        },]}
+                        initialValue={50}
+                    >
+                        <InputNumber min={1} max={100000} ></InputNumber>
+                    </Form.Item>
+                    <p>Number of solves on the challenge till it decays to the minimum point.</p>
+                </Card>
                 </div>
+
             </div>
 
             <Form.Item>

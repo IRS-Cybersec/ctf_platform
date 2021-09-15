@@ -117,8 +117,6 @@ class Scoreboard extends React.Component {
         updating = true
         lastChallengeID = parseInt(data.data.lastChallengeID)
         const payloadArray = data.data // List of transactions to update
-        console.log(payload)
-
         for (let y = 0; y < payloadArray.length; y++) {
           let userFound = false
           const payload = payloadArray[y] // Current transaction to update
@@ -150,7 +148,7 @@ class Scoreboard extends React.Component {
 
 
         sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
-        sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
+        sessionStorage.setItem("lastChallengeID", payloadArray[0].lastChallengeID.toString())
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "init") {
@@ -163,8 +161,6 @@ class Scoreboard extends React.Component {
         else {
           lastChallengeID = parseInt(data.data.lastChallengeID)
           const payloadArray = data.data // List of transactions to update
-          console.log(payload)
-  
           for (let y = 0; y < payloadArray.length; y++) {
             let userFound = false
             const payload = payloadArray[y] // Current transaction to update
@@ -179,7 +175,8 @@ class Scoreboard extends React.Component {
                 for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
                   if (currentUserChanges[i]._id === payload._id) {
                     transactionFound = true
-                    currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
+                    if (deleteTransaction) currentUserChanges.splice(i, 1)
+                    else currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
                     break userLoop;
                   }
                 }
@@ -196,7 +193,7 @@ class Scoreboard extends React.Component {
   
   
           sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
-          sessionStorage.setItem("lastChallengeID", payload.lastChallengeID.toString())
+          sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
         }
@@ -235,8 +232,9 @@ class Scoreboard extends React.Component {
       tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: 0 }
       for (let x = 0; x < scores2.length; x++) {
         if (tempScoreTimeStampDict[data.users[i]._id].timestamp !== "0") {
-          let d1 = new Date(tempScoreTimeStampDict[data.users[i]._id])
+          let d1 = new Date(tempScoreTimeStampDict[data.users[i]._id].timestamp)
           let d2 = new Date(scores2[x].timestamp)
+
           if (d1 < d2 && scores2[x].points > 0) tempScoreTimeStampDict[data.users[i]._id].timestamp = scores2[x].timestamp
           tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
 
@@ -396,7 +394,6 @@ class Scoreboard extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       if (data.success === true) {
-        console.log(data)
         sessionStorage.setItem("lastChallengeID", data.lastChallengeID)
         return data
       }

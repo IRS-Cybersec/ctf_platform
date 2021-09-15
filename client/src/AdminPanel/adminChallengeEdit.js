@@ -60,11 +60,18 @@ const CreateChallengeForm = (props) => {
             initialData.visibility = "true"
         }
         // if we put only props.initialData.requires, we are merely putting a reference to props.initialData.requires, which is this array, creating a "loop"
-        
-        if (props.initialData.requires) {
-            initialData.requires = [props.IDNameMapping[props.initialData.requires], props.initialData.requires]
-            
+
+        if (props.initialData.requires) initialData.requires = [props.IDNameMapping[props.initialData.requires], props.initialData.requires]
+        if (props.initialData.dynamic === false) {
+            initialData.dynamic = "false"
         }
+        else if (props.initialData.dynamic === true) {
+            initialData.dynamic = "true"
+        }
+        else {
+            initialData.dynamic = "false"
+        }
+        console.log(initialData)
         initialData.category1 = initialData.category
         form.setFieldsValue(initialData)
         setEditorValue(initialData.description)
@@ -87,6 +94,12 @@ const CreateChallengeForm = (props) => {
                     }
                     else {
                         values.visibility = true
+                    }
+                    if (values.dynamic === "false") {
+                        values.dynamic = false
+                    }
+                    else {
+                        values.dynamic = true
                     }
                     if (typeof values.writeup !== "undefined") {
                         if (typeof values.writeupComplete === "undefined") {
@@ -113,7 +126,11 @@ const CreateChallengeForm = (props) => {
                             "visibility": values.visibility,
                             "writeup": values.writeup,
                             "writeupComplete": values.writeupComplete,
-                            "requires": requires
+                            "requires": requires,
+                            "dynamic": values.dynamic,
+                            "initial": values.initial,
+                            "minSolves": values.minSolves,
+                            "minimum": values.minimum
                         })
                     }).then((results) => {
                         return results.json(); //return data in JSON (since its JSON data)
@@ -147,7 +164,7 @@ const CreateChallengeForm = (props) => {
                 message='The challenge details you modified have not been saved. Are you sure you want to leave?'
             />
             <p><b><u>ID:</u></b> <code>{props.initialData._id}</code></p>
-            
+
 
             <h1>Challenge Name:</h1>
             <Form.Item
@@ -220,45 +237,50 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "2vw" }}>
+            <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "35vw" }}>
-                    <h1>Challenge Points:</h1>
-                    <Form.Item
-                        name="points"
-                        rules={[{ required: true, message: 'Please enter challenge points' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 1-100000",
-                        },]}
-                        initialValue={0}
-                    >
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center" }}>
 
-                        <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
-                    </Form.Item>
+                    <Card>
+                        <h1>Challenge Points:</h1>
+                        <Form.Item
+                            name="points"
+                            rules={[{ required: true, message: 'Please enter challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={0}
+                        >
 
-                    <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
-                    <Form.Item
-                        name="max_attempts"
-                        rules={[{ required: true, message: 'Please enter the maximum number of attempts' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 0-10000",
-                        },]}
-                        style={{ alignText: 'center' }}
-                        initialValue={0}
-                    >
+                            <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
+                        </Form.Item>
+                    </Card>
 
-                        <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
-                    </Form.Item>
+                    <Card>
+                        <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
+                        <Form.Item
+                            name="max_attempts"
+                            rules={[{ required: true, message: 'Please enter the maximum number of attempts' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 0-10000",
+                            },]}
+                            style={{ alignText: 'center' }}
+                            initialValue={0}
+                        >
+
+                            <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
+                        </Form.Item>
+                    </Card>
                 </div>
 
                 <Divider type="vertical" style={{ height: "inherit" }}></Divider>
 
-                <div style={{ display: "flex", flexDirection: "column", width: "35vw", marginLeft: "2vw" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
 
                             return (
-                                <div>
+                                <Card>
                                     <h1>Flags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -298,7 +320,7 @@ const CreateChallengeForm = (props) => {
                                     </Form.Item>
 
 
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
@@ -306,7 +328,7 @@ const CreateChallengeForm = (props) => {
                     <Form.List name="tags">
                         {(fields, { add, remove }) => {
                             return (
-                                <div>
+                                <Card>
                                     <h1>Tags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -342,7 +364,7 @@ const CreateChallengeForm = (props) => {
                                             <PlusOutlined /> Add Tag
                                         </Button>
                                     </Form.Item>
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
@@ -350,14 +372,15 @@ const CreateChallengeForm = (props) => {
             </div>
 
             <Divider />
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
+            <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
-                    <h1>Hints</h1>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+
                     <Form.List name="hints" >
                         {(fields, { add, remove }) => {
                             return (
-                                <div>
+                                <Card>
+                                    <h1>Hints</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
                                             <Form.Item
@@ -402,72 +425,132 @@ const CreateChallengeForm = (props) => {
                                             <PlusOutlined /> Add Hint
                                         </Button>
                                     </Form.Item>
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
 
-                    <h1>Writeup Link (Optional)</h1>
-                    <Form.Item
-                        name="writeup"
-                        rules={[
-                            {
-                                type: 'url',
-                                message: "Please enter a valid link",
-                            }]}
-                    >
-
-                        <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
-                    </Form.Item>
-                    <div style={{ display: "flex", alignContent: "center" }}>
-                        <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                    <Card>
+                        <h1>Writeup Link (Optional)</h1>
                         <Form.Item
-                            name="writeupComplete"
+                            name="writeup"
+                            rules={[
+                                {
+                                    type: 'url',
+                                    message: "Please enter a valid link",
+                                }]}
                         >
-                            <Switch defaultChecked />
+
+                            <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
                         </Form.Item>
-                    </div>
+                        <div style={{ display: "flex", alignContent: "center" }}>
+                            <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                            <Form.Item
+                                name="writeupComplete"
+                            >
+                                <Switch defaultChecked />
+                            </Form.Item>
+                        </div>
+                    </Card>
 
-                    <h1>Visibility</h1>
-                    <Form.Item
-                        name="visibility"
-                        rules={[{ required: true, message: 'Please set the challenge visibility' }]}
-                        initialValue="false"
-                    >
-                        <Select style={{ width: "10vw" }}>
-                            <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
-                            <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
-                        </Select>
+                    <Card>
+                        <h1>Visibility</h1>
+                        <Form.Item
+                            name="visibility"
+                            rules={[{ required: true, message: 'Please set the challenge visibility' }]}
+                            initialValue="false"
+                        >
+                            <Select style={{ width: "20ch" }}>
+                                <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                                <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
+                            </Select>
 
-                    </Form.Item>
+                        </Form.Item>
+                    </Card>
 
                 </div>
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
 
-                <div style={{ width: "40%", display: "flex", flexDirection: "column", marginLeft: "3%" }}>
-                    <h1>Challenge Required: </h1>
-                    <Form.Item
-                        name="requires"
-                    >
-                        {/*
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    <Card>
+                        <h1>Challenge Required: </h1>
+                        <Form.Item
+                            name="requires"
+                        >
+                            {/*
                         The issue with this is that displayRender is supposed to return an array, 
                         but setting a value causes it to become a string and error out
                         */}
-                        <Cascader
-                            options={finalSortedChalls}
-                            allowClear
-                            showSearch
-                            placeholder="Select an existing challenge" />
+                            <Cascader
+                                options={finalSortedChalls}
+                                allowClear
+                                showSearch
+                                placeholder="Select an existing challenge" />
 
-                    </Form.Item>
-                    <p>Locks this challenge until the provided challenge above has been solved.</p>
+                        </Form.Item>
+                        <p>Locks this challenge until the provided challenge above has been solved.</p>
+                    </Card>
+
+                    <Card>
+                        <h1>Dynamic Scoring</h1>
+                        <Form.Item
+                            name="dynamic"
+                            rules={[{ required: true, message: 'Please set whether the challenge uses dynamic scoring' }]}
+                            initialValue="false"
+                        >
+                            <Select style={{ width: "20ch" }}>
+                                <Option value="false"><span style={{ color: "#d32029"  }}>Disabled</span></Option>
+                                <Option value="true"><span style={{ color: "#49aa19"}}>Enabled</span></Option>
+                            </Select>
+
+                        </Form.Item>
+
+                        <h1>Initial Points:</h1>
+                        <Form.Item
+                            name="initial"
+                            rules={[{ required: true, message: 'Please enter the initial challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={500}
+                        >
+                            <InputNumber min={1} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Initial number of points when there are 0/1 solves on a challenge</p>
+
+                        <h1>Minimum Points:</h1>
+                        <Form.Item
+                            name="minimum"
+                            rules={[{ required: true, message: 'Please enter the minimum challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 0-100000",
+                            },]}
+                            initialValue={100}
+                        >
+                            <InputNumber min={0} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Minimum amount of points that the challenge can decay too</p>
+
+                        <h1>Solves to Minimum:</h1>
+                        <Form.Item
+                            name="minSolves"
+                            rules={[{ required: true, message: 'Please enter the solves to minimum' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={50}
+                        >
+                            <InputNumber min={1} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Number of solves on the challenge till it decays to the minimum point.</p>
+                    </Card>
                 </div>
             </div>
 
             <Form.Item>
-                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexDirection: "row", marginTop: "3ch" }}>
                     <div>
                         <Button style={{ marginBottom: "1.5vh", marginRight: "2vw", backgroundColor: "#d4b106", borderColor: "", color: "white" }} onClick={() => { props.previewChallenge(form.getFieldsValue()) }}>Preview</Button>
                         <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Challenge</Button>

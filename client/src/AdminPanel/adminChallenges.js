@@ -244,20 +244,24 @@ class AdminChallenges extends React.Component {
 
 
 
-    deleteChallenge = async (close, challenges) => {
+    deleteChallenge = async (close, names, challenges) => {
+        let challengeIDs = []
+        for (let i = 0; i < challenges.length; i++) {
+            challengeIDs.push(challenges[i]._id)
+        }
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
             body: JSON.stringify({
-                "chall": challenges,
+                "chall": challengeIDs,
             })
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             //console.log(data)
             if (data.success === true) {
-                message.success({ content: "Deleted challenges (" + challenges.join(", ") + ") successfully" })
+                message.success({ content: "Deleted challenges (" + names.join(", ") + ") successfully" })
                 this.handleRefresh()
 
             }
@@ -429,7 +433,7 @@ class AdminChallenges extends React.Component {
                                 confirmLoading: this.state.disableEditButtons,
                                 title: 'Are you sure you want to delete the challenge(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
                                 icon: <ExclamationCircleOutlined />,
-                                onOk: (close) => { this.deleteChallenge(close.bind(this), this.state.selectedTableKeys) },
+                                onOk: (close) => { this.deleteChallenge(close.bind(this), this.state.selectedTableKeys, this.state.selectedRows) },
                                 onCancel: () => { },
                             });
                         }}>Delete Challenges</Button>

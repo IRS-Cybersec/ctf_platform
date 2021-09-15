@@ -1,16 +1,15 @@
 const Connection = require('./../utils/mongoDB.js')
 const MongoDB = require('mongodb')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
-var solves = {}
+var challengeCache = {}
 
 
-const refreshSolves = async () => {
+const createChallengeCache = async () => {
     const collections = Connection.collections
-    const cursor = collections.challs.find({}, {projection: {solves: 1}})
+    const cursor = collections.challs.find({}, { projection: { solves: 1 } })
     await cursor.forEach((doc) => {
-        solves[doc._id] = doc.solves
+        challengeCache[doc._id] = { solves: doc.solves }
     })
-    console.log(solves)
     return true
 }
 const disableStates = async (req, res, next) => {
@@ -246,11 +245,6 @@ const hint = async (req, res, next) => {
         if (!hints.hints[0]) throw new Error('OutOfRange');
         let Gtimestamp = new Date()
         if (!hints.hints[0].purchased.includes(res.locals.username)) {
-            await collections.users.updateOne({
-                username: res.locals.username
-            }, {
-                $inc: { score: -hints.hints[0].cost }
-            });
             await collections.challs.updateOne({
                 _id: MongoDB.ObjectID(req.body.chall)
             }, {
@@ -261,24 +255,29 @@ const hint = async (req, res, next) => {
             let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
             latestSolveSubmissionID += 1
             req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
-            await collections.transactions.insertOne({
+            let insertDoc = {
                 author: res.locals.username,
                 challenge: hints.name,
-                challengeID: req.body.chall,
+                challengeID: MongoDB.ObjectID(req.body.chall),
                 type: 'hint',
                 timestamp: Gtimestamp,
                 perms: res.locals.perms,
                 points: -hints.hints[0].cost,
-                hint_id: parseInt(req.body.id)
-            });
+                hint_id: parseInt(req.body.id),
+                lastChallengeID: latestSolveSubmissionID
+            }
+            let transactionsCache = req.app.get("transactionsCache")
+            await collections.transactions.insertOne(insertDoc);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            broadCastNewSolve({
+            transactionsCache.push(insertDoc)
+            broadCastNewSolve([{
+                _id: insertDoc._id,
                 username: res.locals.username,
                 timestamp: Gtimestamp,
                 points: -hints.hints[0].cost,
                 perms: res.locals.perms,
                 lastChallengeID: latestSolveSubmissionID
-            })
+            }])
         }
 
         res.send({
@@ -294,43 +293,15 @@ const hint = async (req, res, next) => {
 const submit = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, _id: 0 } });
+        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1 } });
         if (!chall) throw new Error('NotFound');
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
-        
+
         //Check if the required challenge has been solved (if any)
         if ("requires" in chall) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
-        }
-        let Gtimestamp = new Date()
-        let latestSolveSubmissionID = 0
-        async function insertTransaction(correct = false, blocked = false) {
-            await collections.transactions.insertOne({
-                author: res.locals.username,
-                challenge: chall.name,
-                challengeID: MongoDB.ObjectID(req.body.chall),
-                timestamp: Gtimestamp,
-                type: blocked ? 'blocked_submission' : 'submission',
-                perms: res.locals.perms,
-                points: correct ? chall.points : 0,
-                correct: correct,
-                submission: req.body.flag,
-                lastUpdatedID: latestSolveSubmissionID // used as a "last updated time" so we know if to send to the client if the client's last updatedID is less than this
-            });
-            if (correct && !blocked) {
-                await collections.users.updateOne({
-                    username: res.locals.username.toLowerCase()
-                }, {
-                    $inc: { score: chall.points }
-                });
-                await collections.challs.updateOne({
-                    _id: MongoDB.ObjectID(req.body.chall)
-                }, {
-                    $push: { solves: res.locals.username.toLowerCase() }
-                });
-            }
         }
         if (chall.max_attempts != 0) {
             if (await collections.transactions.countDocuments({
@@ -339,23 +310,88 @@ const submit = async (req, res, next) => {
                 type: 'submission'
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }
+        let Gtimestamp = new Date()
+        let latestSolveSubmissionID = 0
+        let calculatedPoints = 0
+        let gotDecay = false
+        let transactionDocumentsUpdated = []
         let solved = false;
-        if (chall.flags.includes(req.body.flag)) {
-            solved = true;
-            if (solves[req.body.chall].includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
-            solves[chall._id].push(res.locals.username) // add no. of solve to memory immediately so it won't double solve
-            latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
-            latestSolveSubmissionID += 1
-            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
-            await insertTransaction(true);
-            await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            broadCastNewSolve({
+        async function insertTransaction(correct = false) {
+            let transactionsCache = req.app.get("transactionsCache")
+            let insertDocument = {
+                author: res.locals.username,
+                challenge: chall.name,
+                challengeID: MongoDB.ObjectID(req.body.chall),
+                timestamp: Gtimestamp,
+                type: 'submission',
+                perms: res.locals.perms,
+                points: correct ? calculatedPoints : 0,
+                correct: correct,
+                submission: req.body.flag,
+                lastChallengeID: latestSolveSubmissionID // used as a "last updated time" so we know if to send to the client if the client's last updatedID is less than this
+            }
+            await collections.transactions.insertOne(insertDocument);
+            transactionDocumentsUpdated.push({
+                _id: insertDocument._id,
                 username: res.locals.username,
                 timestamp: Gtimestamp,
-                points: chall.points,
+                points: calculatedPoints,
                 perms: res.locals.perms,
                 lastChallengeID: latestSolveSubmissionID
             })
+            if (correct) {
+                await collections.challs.updateOne({
+                    _id: MongoDB.ObjectID(req.body.chall)
+                }, {
+                    $push: { solves: res.locals.username.toLowerCase() }
+                });
+
+                if (gotDecay) {
+                    await collections.transactions.updateMany({ challengeID: MongoDB.ObjectID(req.body.chall), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
+                    for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
+                        if (transactionsCache[i].challengeID == req.body.chall && transactionsCache[i].correct == true) {
+                            transactionsCache[i].points = calculatedPoints
+                            transactionsCache[i].lastChallengeID = latestSolveSubmissionID
+                            transactionDocumentsUpdated.push({
+                                _id: transactionsCache[i]._id,
+                                username: transactionsCache[i].author,
+                                timestamp: transactionsCache[i].timestamp,
+                                points: transactionsCache[i].points,
+                                perms: transactionsCache[i].perms,
+                                lastChallengeID: latestSolveSubmissionID
+                            })
+                        }
+                    }
+                }
+            }
+            transactionsCache.push(insertDocument)
+            req.app.set("transactionsCache", transactionsCache)
+        }
+
+
+        if (chall.flags.includes(req.body.flag)) {
+            solved = true;
+            if (challengeCache[req.body.chall].solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
+            challengeCache[req.body.chall].solves.push(res.locals.username) // add no. of solve to memory immediately so it won't double solve
+            latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            latestSolveSubmissionID += 1
+            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+
+            // Calculate score decay if dynamic scoring
+            if (chall.dynamic === true) {
+                calculatedPoints = (((chall.minimum - chall.initial) / (chall.minSolves ** 2)) * (challengeCache[chall._id].solves.length ** 2)) + chall.initial
+                calculatedPoints = Math.ceil(calculatedPoints)
+                if (calculatedPoints < chall.minimum) calculatedPoints = chall.minimum
+
+                if (calculatedPoints < chall.points) {
+                    gotDecay = true // mark that there is decay so we need to update all solve transaction documents later
+                }
+            }
+            else calculatedPoints = chall.points // Static score, use score in document
+
+            await insertTransaction(true);
+            await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
+            broadCastNewSolve(transactionDocumentsUpdated)
             res.send({
                 success: true,
                 data: 'correct'
@@ -415,6 +451,10 @@ const newChall = async (req, res, next) => {
             solves: [],
             max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
             visibility: req.body.visibility ? true : false,
+            dynamic: req.body.dynamic,
+            minimum: req.body.minimum,
+            initial: req.body.initial,
+            minSolves: req.body.minSolves
         };
         if (req.body.tags) doc.tags = req.body.tags;
         if (req.body.hints) {
@@ -443,8 +483,9 @@ const newChall = async (req, res, next) => {
         // 		}
         // 	}
         // }
-
+        
         await collections.challs.insertOne(doc);
+        challengeCache[doc._id] = {solves: []}
         res.send({ success: true });
     }
     catch (err) {
@@ -484,7 +525,7 @@ const edit = async (req, res, next) => {
 
         let updateObj = {};
         let unsetObj = {};
-        const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete', 'requires'];
+        const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete', 'requires', 'dynamic', 'initial', 'minSolves', 'minimum'];
         for (field of editables) {
             if (req.body[field] != undefined) {
                 if (req.body[field] === '') unsetObj[field] = "" // If the field is set to "", it means the user wants to delete this optional argument
@@ -594,10 +635,10 @@ const deleteChall = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         let challenges = []
         for (let i = 0; i < req.body.chall.length; i++) {
-            const currentID = ObjectID(req.body.chall[i])
+            const currentID = req.body.chall[i]
             challenges.push(currentID)
             const delReq = await collections.challs.findOneAndDelete({
-                _id: currentID
+                _id: MongoDB.ObjectID(currentID)
             }, {
                 solves: 1,
                 points: 1,
@@ -607,22 +648,15 @@ const deleteChall = async (req, res, next) => {
             if (!delReq.ok) throw new Error('Unknown');
             if (delReq.value === null) throw new Error('NotFound');
 
-            await collections.transactions.deleteMany({ challengeID: challenges });
-            await collections.users.updateMany({
-                username: { $in: delReq.value.solves }
-            }, {
-                $inc: { score: -delReq.value.points }
-            });
-            if (delReq.value.hints) {
-                for (hint of delReq.value.hints) {
-                    await collections.users.updateMany({
-                        username: { $in: hint.purchased }
-                    }, {
-                        $inc: { score: hint.cost }
-                    });
-                }
-            }
+            delete challengeCache[currentID]
+            
+            await collections.transactions.deleteMany({ challengeID: MongoDB.ObjectID(currentID) });
         }
+        let transactionsCache = req.app.get("transactionsCache")
+        for (let i = 0; i < transactionsCache.length; i++) {
+            if (challenges.includes(transactionsCache[i]._id)) transactionsCache.splice(i, 1)
+        }
+        req.app.set("transactionsCache", transactionsCache)
 
         res.send({
             success: true
@@ -633,4 +667,4 @@ const deleteChall = async (req, res, next) => {
     }
 }
 
-module.exports = { disableStates, list, listCategory, listCategories, listAll, listAllCategories, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, refreshSolves }
+module.exports = { disableStates, list, listCategory, listCategories, listAll, listAllCategories, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, createChallengeCache }

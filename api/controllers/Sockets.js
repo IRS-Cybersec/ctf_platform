@@ -42,12 +42,12 @@ const startup = async (server, appVar) => {
                 }
                 // Check if any other clients of the same username are connected, and if so, disconnect them
                 socket.isAuthed = true
-                
+
                 const maxSockets = app.get("maxSockets")
                 let socketNumber = 0
                 if (permsObject.username in socketConns) {
                     if (socketConns[permsObject.username].length >= maxSockets) {
-                        const removeSocket = socketConns[permsObject.username].splice(0, socketConns[permsObject.username].length-maxSockets+1)
+                        const removeSocket = socketConns[permsObject.username].splice(0, socketConns[permsObject.username].length - maxSockets + 1)
                         for (let i = 0; i < removeSocket.length; i++) {
                             removeSocket[i].send(JSON.stringify({ type: "init", data: "max-connections" }))
                             removeSocket[i].close(1000)
@@ -61,31 +61,31 @@ const startup = async (server, appVar) => {
                 }
                 socket.username = permsObject.username
                 socket.id = socketNumber
-                /*
-                let numConnections = 0
-                await wss.clients.forEach((ws) => {
-                    if (ws.username === permsObject.username) {
-                        numConnections += 1
-                        if (numConnections >= maxSockets) {
-                            ws.send(JSON.stringify({ type: "init", data: "max-connections" }))
-                            ws.close(1000)
-                        }
-                    }
-                })*/
-                
-
 
                 const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
                 if (payload.lastChallengeID < latestSolveSubmissionID) {
-                    let challengesToBeSent = collections.transactions.find({}, { projection: { _id: 0, perms: 1, author: 1, timestamp: 1, points: 1 } }).sort({ $natural: -1 }).limit(app.get("latestSolveSubmissionID") - payload.lastChallengeID);
+                    const transactionCache = app.get("transactionsCache")
                     let finalChallenges = []
                     if (app.get("adminShowDisable")) {
-                        await challengesToBeSent.forEach((doc) => {
-                            if (doc.perms !== 2) finalChallenges.push(doc)
-                        })
+                        for (let i = 0; i < transactionCache.length; i++) {
+                            try { // compatibility for older transaction records
+                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && transactionCache[i].perms !== 2) {
+                                    finalChallenges.push({ _id: transactionCache[i]._id, perms: transactionCache[i].perms, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                }
+                            }
+                            catch (e) { }
+
+                        }
                     }
                     else {
-                        finalChallenges = await challengesToBeSent.toArray()
+                        for (let i = 0; i < transactionCache.length; i++) {
+                            try {
+                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
+                                    finalChallenges.push({ _id: transactionCache[i]._id, perms: transactionCache[i].perms, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                }
+                            }
+                            catch (e) {}
+                        }
                     }
                     socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                 }
@@ -119,7 +119,7 @@ const startup = async (server, appVar) => {
                     if (socketConns[ws.username].length === 0) delete socketConns[ws.username]
                 }
                 return ws.terminate();
-            } 
+            }
 
             ws.isAlive = false;
             ws.ping();
