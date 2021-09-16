@@ -384,7 +384,7 @@ const submit = async (req, res, next) => {
                 calculatedPoints = Math.ceil(calculatedPoints)
                 if (calculatedPoints < chall.minimum) calculatedPoints = chall.minimum
 
-                if (calculatedPoints < chall.points) {
+                if (calculatedPoints !== chall.points) {
                     gotDecay = true // mark that there is decay so we need to update all solve transaction documents later
                 }
             }
