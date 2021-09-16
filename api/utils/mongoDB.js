@@ -5,7 +5,7 @@ class Connection {
     static async open() {
 
         if (this.db) return true
-        await mongoDB.MongoClient.connect("mongodb://localhost:27017", {
+        const status = await mongoDB.MongoClient.connect("mongodb://localhost:27017", {
             useNewUrlParser: true,
             useUnifiedTopology: true
         }).then(async (client) => {
@@ -21,12 +21,13 @@ class Connection {
             this.db = db
             this.collections = collections
             console.info("MongoDB connected successfully!")
+            return true
         }).catch((error) => {
             console.error(error)
             console.error("Error connecting to MongoDB")
             return false
         })
-        return true
+        return status
     }
 
 }

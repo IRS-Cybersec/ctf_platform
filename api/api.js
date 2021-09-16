@@ -137,6 +137,7 @@ const main = async () => {
 	}
 	else {
 		console.info("Error: MongoDB failed to connect, stopping...")
+		process.exit(0)
 	}
 }
 main()
