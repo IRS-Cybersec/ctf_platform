@@ -122,20 +122,16 @@ class App extends React.Component {
   }
 
   // Callback function for Login component to set token and perms
-  handleLogin(receivedToken, permissions, remember) {
+  handleLogin = (receivedToken, permissions, remember) => {
     const username = receivedToken.split(".")[0]
+    if (remember === true) localStorage.setItem('IRSCTF-token', receivedToken)
+    else sessionStorage.setItem("IRSCTF-token", receivedToken)
+    window.IRSCTFToken = receivedToken
 
-    const store = async () => {
-      if (remember === true) localStorage.setItem('IRSCTF-token', receivedToken)
-      else sessionStorage.setItem("IRSCTF-token", receivedToken)
-      window.IRSCTFToken = receivedToken
+    this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
+    message.success({ content: "Logged In! Welcome back " + username })
 
-      this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
-      message.success({ content: "Logged In! Welcome back " + username })
-    }
-
-    store()
-
+    this.obtainScore(username)
 
   }
 

@@ -477,6 +477,7 @@ const newChall = async (req, res, next) => {
         if (req.body.requires) {
             doc.requires = MongoDB.ObjectID(req.body.requires)
         }
+        if (req.body.dynamic === true) req.body.points = req.body.initial
         // if (req.body.files) {
         // 	for (file of req.body.files) {
         // 		if (typeof file.url != 'string' || typeof file.name != 'string') {

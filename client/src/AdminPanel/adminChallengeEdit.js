@@ -67,6 +67,7 @@ const CreateChallengeForm = (props) => {
         }
         else if (props.initialData.dynamic === true) {
             initialData.dynamic = "true"
+            props.setState({dynamic: true})
         }
         else {
             initialData.dynamic = "false"
@@ -252,7 +253,7 @@ const CreateChallengeForm = (props) => {
                             initialValue={0}
                         >
 
-                            <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
+                            <InputNumber disabled={props.state.dynamic} min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
                         </Form.Item>
                     </Card>
 
@@ -497,10 +498,10 @@ const CreateChallengeForm = (props) => {
                         <h1>Dynamic Scoring</h1>
                         <Form.Item
                             name="dynamic"
-                            rules={[{ required: true, message: 'Please set whether the challenge uses dynamic scoring' }]}
+                            rules={[{ required: props.state.dynamic, message: 'Please set whether the challenge uses dynamic scoring' }]}
                             initialValue="false"
                         >
-                            <Select style={{ width: "20ch" }}>
+                            <Select style={{ width: "20ch" }} onSelect={(option) => { option === "false" ? props.setState({dynamic: false}) : props.setState({dynamic: true})}}>
                                 <Option value="false"><span style={{ color: "#d32029"  }}>Disabled</span></Option>
                                 <Option value="true"><span style={{ color: "#49aa19"}}>Enabled</span></Option>
                             </Select>
@@ -510,39 +511,39 @@ const CreateChallengeForm = (props) => {
                         <h1>Initial Points:</h1>
                         <Form.Item
                             name="initial"
-                            rules={[{ required: true, message: 'Please enter the initial challenge points' }, {
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the initial challenge points' }, {
                                 type: 'integer',
                                 message: "Please enter a valid integer between 1-100000",
                             },]}
                             initialValue={500}
                         >
-                            <InputNumber min={1} max={100000} ></InputNumber>
+                            <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
                         </Form.Item>
                         <p>Initial number of points when there are 0/1 solves on a challenge</p>
 
                         <h1>Minimum Points:</h1>
                         <Form.Item
                             name="minimum"
-                            rules={[{ required: true, message: 'Please enter the minimum challenge points' }, {
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the minimum challenge points' }, {
                                 type: 'integer',
                                 message: "Please enter a valid integer between 0-100000",
                             },]}
                             initialValue={100}
                         >
-                            <InputNumber min={0} max={100000} ></InputNumber>
+                            <InputNumber disabled={!props.state.dynamic} min={0} max={100000} ></InputNumber>
                         </Form.Item>
                         <p>Minimum amount of points that the challenge can decay too</p>
 
                         <h1>Solves to Minimum:</h1>
                         <Form.Item
                             name="minSolves"
-                            rules={[{ required: true, message: 'Please enter the solves to minimum' }, {
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the solves to minimum' }, {
                                 type: 'integer',
                                 message: "Please enter a valid integer between 1-100000",
                             },]}
                             initialValue={50}
                         >
-                            <InputNumber min={1} max={100000} ></InputNumber>
+                            <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
                         </Form.Item>
                         <p>Number of solves on the challenge till it decays to the minimum point.</p>
                     </Card>
