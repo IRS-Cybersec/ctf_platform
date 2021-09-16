@@ -85,6 +85,7 @@ const listCategory = async (req, res, next) => {
             }
         }, {
             $project: {
+                _id: "$_id",
                 name: '$name',
                 points: '$points',
                 solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
@@ -532,6 +533,39 @@ const edit = async (req, res, next) => {
                 else updateObj[field] = req.body[field];
             }
         }
+        
+        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            latestSolveSubmissionID += 1
+            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        let calculatedPoints = 0
+        if (updateObj.dynamic === true) {
+            calculatedPoints = (((updateObj.minimum - updateObj.initial) / (updateObj.minSolves ** 2)) * (challengeCache[req.body.id].solves.length ** 2)) + updateObj.initial
+            calculatedPoints = Math.ceil(calculatedPoints)
+            if (calculatedPoints < updateObj.minimum) calculatedPoints = chall.minimum
+            updateObj.points = calculatedPoints
+        }
+        else {
+            calculatedPoints = updateObj.points
+        }
+        let transactionsCache = req.app.get("transactionsCache")
+        let transactionDocumentsUpdated = []
+        await collections.transactions.updateMany({ challengeID: MongoDB.ObjectID(req.body.id), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
+                    for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
+                        if (transactionsCache[i].challengeID == req.body.id && transactionsCache[i].correct == true) {
+                            transactionsCache[i].points = calculatedPoints
+                            transactionsCache[i].lastChallengeID = latestSolveSubmissionID
+                            transactionDocumentsUpdated.push({
+                                _id: transactionsCache[i]._id,
+                                username: transactionsCache[i].author,
+                                timestamp: transactionsCache[i].timestamp,
+                                points: transactionsCache[i].points,
+                                perms: transactionsCache[i].perms,
+                                lastChallengeID: latestSolveSubmissionID
+                            })
+                        }
+                    }
+                    req.app.set("transactionsCache", transactionsCache)
+                    broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {
                 if (hint.cost == undefined) throw new Error('MissingHintCost');
