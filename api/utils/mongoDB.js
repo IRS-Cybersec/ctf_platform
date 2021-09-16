@@ -20,6 +20,15 @@ class Connection {
             }
             this.db = db
             this.collections = collections
+            const collectionList = Object.keys(this.collections)
+            const dbCollections = await db.listCollections().toArray()
+            for (const collectionName of collectionList){
+                if (!dbCollections.some(c => c.name === collectionName)){
+                    console.info('Creating collection ' + collectionName + ' as it does not exist')
+                    const tempDoc = await this.collections[collectionName].insertOne({'temp':'doc'})
+                    await this.collections[collectionName].deleteOne({'_id': tempDoc.insertedId})
+                }
+            }
             console.info("MongoDB connected successfully!")
             return true
         }).catch((error) => {
