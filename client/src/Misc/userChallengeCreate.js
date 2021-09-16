@@ -153,7 +153,7 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://katex.org/" target="_blank" rel="noreferrer">Math Using KaTeX</a>):</h1>
+            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a>):</h1>
             <Form.Item
                 name="description"
                 rules={[{ required: true, message: 'Please enter a description' }]}

@@ -11,7 +11,7 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined
 } from '@ant-design/icons';
-import { Prompt } from 'react-router';
+import { Prompt } from 'react-router-dom';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownRender from './../Misc/MarkdownRenderer.js';
 
@@ -191,7 +191,7 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://katex.org/" target="_blank" rel="noreferrer">Math Using KaTeX</a>):</h1>
+            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a>):</h1>
             <Form.Item
                 name="description"
                 rules={[{ required: true, message: 'Please enter a description' }]}
@@ -212,10 +212,12 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
+            <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "40%" }}>
-                    <h1>Challenge Points:</h1>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                
+                <Card>
+                <h1>Challenge Points:</h1>
                     <Form.Item
                         name="points"
                         rules={[{ required: true, message: 'Please enter challenge points' }, {
@@ -227,7 +229,9 @@ const CreateChallengeForm = (props) => {
 
                         <InputNumber min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
                     </Form.Item>
+                    </Card>
 
+                    <Card>
                     <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
                     <Form.Item
                         name="max_attempts"
@@ -241,15 +245,16 @@ const CreateChallengeForm = (props) => {
 
                         <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
                     </Form.Item>
+                    </Card>
                 </div>
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
-                <div style={{ display: "flex", flexDirection: "column", width: "40%", marginLeft: "3%" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                     <Form.List name="flags" >
                         {(fields, { add, remove }) => {
                             return (
-                                <div>
+                                <Card>
                                     <h1>Flags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -289,7 +294,7 @@ const CreateChallengeForm = (props) => {
                                     </Form.Item>
 
 
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
@@ -297,7 +302,7 @@ const CreateChallengeForm = (props) => {
                     <Form.List name="tags">
                         {(fields, { add, remove }) => {
                             return (
-                                <div>
+                                <Card>
                                     <h1>Tags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -334,7 +339,7 @@ const CreateChallengeForm = (props) => {
                                             <PlusOutlined /> Add Tag
                                         </Button>
                                     </Form.Item>
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
@@ -344,14 +349,15 @@ const CreateChallengeForm = (props) => {
             <Divider />
 
 
-            <div style={{ display: "flex", flexDirection: "row", justifyItems: "space-evenly", marginLeft: "3%" }}>
+            <div className="settings-responsive2" style={{ display: "flex",  justifyContent: "space-around" }}>
 
-                <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
-                    <h1>Hints</h1>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    
                     <Form.List name="hints" >
                         {(fields, { add, remove }) => {
                             return (
-                                <div>
+                                <Card>
+                                <h1>Hints</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
                                             <Form.Item
@@ -396,11 +402,12 @@ const CreateChallengeForm = (props) => {
                                             <PlusOutlined /> Add Hint
                                         </Button>
                                     </Form.Item>
-                                </div>
+                                </Card>
                             );
                         }}
                     </Form.List>
 
+                    <Card>
                     <h1>Writeup Link (Optional)</h1>
                     <Form.Item
                         name="writeup"
@@ -421,25 +428,29 @@ const CreateChallengeForm = (props) => {
                             <Switch defaultChecked />
                         </Form.Item>
                     </div>
+                    </Card>
 
+                    <Card>
                     <h1>Visibility</h1>
                     <Form.Item
                         name="visibility"
                         rules={[{ required: true, message: 'Please set the challenge visibility' }]}
                         initialValue="false"
                     >
-                        <Select style={{ width: "10vw" }}>
+                        <Select style={{ width: "20ch" }}>
                             <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
                             <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
                         </Select>
 
                     </Form.Item>
-
+                    </Card>
                 </div>
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
-                <div style={{ width: "40%", display: "flex", flexDirection: "column", marginLeft: "3%" }}>
+                <div style={{display: "flex", flexDirection: "column" }}>
+
+                <Card>
                     <h1>Challenge Required: </h1>
                     <Form.Item
                         name="requires"
@@ -453,7 +464,7 @@ const CreateChallengeForm = (props) => {
 
                     </Form.Item>
                     <p>Locks this challenge until the provided challenge above has been solved.</p>
-
+                    </Card>
                     
                 <Card>
                     <h1>Dynamic Scoring</h1>
