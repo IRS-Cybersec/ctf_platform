@@ -111,7 +111,7 @@ class Admin extends React.Component {
             <h1>Welcome to Sieberrsec CTF Platform's admin panel.</h1>
             <h1>Click on any of the tabs above to manage different parts of the portal.</h1>
 
-            <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
+            <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
               <Card>
                 <Button type='primary' onClick={this.downloadBackup} loading={this.state.backupLoading}><DownloadOutlined /> Download Backup</Button>
                 <p>Download all the data stored in the platform's database. Data can be uploaded onto a different platform/a later date to restore all the data</p>

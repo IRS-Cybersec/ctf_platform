@@ -623,7 +623,7 @@ class AdminUsers extends React.Component {
                 </Table>
                 <Divider />
 
-                <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
+                <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <Card>
                         <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
@@ -640,7 +640,7 @@ class AdminUsers extends React.Component {
 
                 <Divider />
 
-                <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
+                <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <Card>
                         <h3>Profile Picture Max Upload Size:

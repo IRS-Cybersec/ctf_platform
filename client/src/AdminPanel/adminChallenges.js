@@ -551,7 +551,7 @@ class AdminChallenges extends React.Component {
 
                     <Divider />
 
-                    <div className="settings-responsive" style={{ display: "flex", justifyContent: "space-around" }}>
+                    <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                         <Card>
                             <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
