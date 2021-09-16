@@ -82,7 +82,7 @@ class App extends React.Component {
     // Handles "remember me" logins
     this.setState({ current: this.props.location.pathname.split("/")[1] })
     if (!this.state.token) {
-      const token = localStorage.getItem("IRSCTF-token")
+      let token = localStorage.getItem("IRSCTF-token")
       if (token === null) token = sessionStorage.getItem("IRSCTF-token")
       const key = "login"
 
