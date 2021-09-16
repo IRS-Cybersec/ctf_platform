@@ -15,6 +15,7 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 - "**Categories**" for better organization of challenges into different "events"
 - **Sorting of challenges** by their tags
 - **Announcements** with markdown support
+- **Dynamic Scoring** for challenges
 - **Markdown supported Challenge Descriptions** that allow you to add **code blocks with syntax highlighting, math** and more
 - **Live Scoreboard** that is relatively light on the server
 - **Writeup links** per challenge (along with the option to only release writeups after submitting the flag)
