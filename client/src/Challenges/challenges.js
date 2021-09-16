@@ -67,7 +67,7 @@ class Challenges extends React.Component {
   fetchCategories = async () => {
     await fetch(window.ipAddress + "/v1/challenge/list", {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then(async (data) => {
@@ -258,7 +258,7 @@ class Challenges extends React.Component {
                   )}
 
                   {this.state.currentCategory && (
-                    <ChallengesTagSort match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                    <ChallengesTagSort obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                   )}
                 </animated.div>)
               }

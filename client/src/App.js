@@ -68,7 +68,7 @@ class App extends React.Component {
         if (webSocket !== false && webSocket.readyState !== 3) {
           console.log("closed")
           webSocket.close(1000)
-          this.setState({scoreboardSocket: false})
+          this.setState({ scoreboardSocket: false })
         }
 
       }
@@ -83,14 +83,16 @@ class App extends React.Component {
     this.setState({ current: this.props.location.pathname.split("/")[1] })
     if (!this.state.token) {
       const token = localStorage.getItem("IRSCTF-token")
+      if (token === null) token = sessionStorage.getItem("IRSCTF-token")
       const key = "login"
 
       if (token !== null) {
+        window.IRSCTFToken = token
         message.loading({ content: "Attempting to restore session...", key, duration: 0 })
         // Get permissions from server
-        await fetch(window.ipAddress + "/v1/account/type", {
+        fetch(window.ipAddress + "/v1/account/type", {
           method: 'get',
-          headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+          headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
           return results.json(); //return data in JSON (since its JSON data)
         }).then(async (data) => {
@@ -99,7 +101,7 @@ class App extends React.Component {
             this.setState({ permissions: data.type, token: token, username: username, logined: true }, this.setState({ loading: false }))
             message.success({ content: "Session restored. Welcome back " + username, key, duration: 2.5 })
 
-            this.obtainScore()
+            this.obtainScore(username)
           }
           else {
             //Might be a fake token since server does not have it, exit
@@ -124,15 +126,11 @@ class App extends React.Component {
     const username = receivedToken.split(".")[0]
 
     const store = async () => {
-      if (remember === true) {
-        await localStorage.setItem('IRSCTF-token', receivedToken)
+      if (remember === true) localStorage.setItem('IRSCTF-token', receivedToken)
+      else sessionStorage.setItem("IRSCTF-token", receivedToken)
+      window.IRSCTFToken = receivedToken
 
-      }
-      else {
-        await sessionStorage.setItem("IRSCTF-token", receivedToken)
-      }
-
-      await this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
+      this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
       message.success({ content: "Logged In! Welcome back " + username })
     }
 
@@ -151,23 +149,17 @@ class App extends React.Component {
     message.info({ content: "Logged out. See you next time :D!" })
   }
 
-  obtainScore() {
-    fetch(window.ipAddress + "/v1/scores/" + localStorage.getItem("IRSCTF-token").split(".")[0], {
+  obtainScore(username) {
+    fetch(window.ipAddress + "/v1/userPoints/" + username, {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
-
-      if (data.success === true && data.score !== "hidden") {
+      if (data.success === true) {
         this.setState({ userScore: data.score })
       }
-      else if (data.success === true) {
-        this.setState({ userScore: "Hidden" })
-      }
-      else {
-        message.error({ content: "Oops. Unknown error" })
-      }
+
 
 
     }).catch((error) => {
@@ -177,7 +169,7 @@ class App extends React.Component {
   }
 
   handleWebSocket(webSocket) {
-    this.setState({scoreboardSocket: webSocket})
+    this.setState({ scoreboardSocket: webSocket })
   }
 
 
@@ -189,7 +181,7 @@ class App extends React.Component {
           native
           from={{ opacity: 0 }}
           enter={{ opacity: 1 }}
-          leave={{ opacity: 0 }}
+          leave={{ opacity: 0, display: "none" }}
         >
           {(styles, item) => {
             if (item && !this.state.loading) {
@@ -248,7 +240,7 @@ class App extends React.Component {
 
                         <Menu
                           selectedKeys={[this.state.current]}
-                          onSelect={(selection) => { this.setState({ current: selection.key }); this.obtainScore() }}
+                          onSelect={(selection) => { this.setState({ current: selection.key }) }}
                           mode="inline"
                           theme="dark"
 
@@ -329,7 +321,7 @@ class App extends React.Component {
                                 </div>}>
                                   <Switch>
                                     <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
-    
+
                                     <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                     <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} handleWebSocket={this.handleWebSocket.bind(this)} transition={style} scoreboardSocket={this.state.scoreboardSocket} />} />
 

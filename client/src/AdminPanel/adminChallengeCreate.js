@@ -89,7 +89,7 @@ const CreateChallengeForm = (props) => {
                     if (values.requires && values.requires.length > 0) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
-                        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                         body: JSON.stringify({
                             "name": values.name,
                             "category": category,

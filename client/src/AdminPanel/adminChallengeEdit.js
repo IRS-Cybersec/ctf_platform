@@ -112,7 +112,7 @@ const CreateChallengeForm = (props) => {
                     if (values.requires && values.requires.length > 0) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
-                        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
                         body: JSON.stringify({
                             "id": props.initialData._id,
                             "name": values.name,
@@ -622,7 +622,7 @@ class AdminChallengeEdit extends React.Component {
         this.setState({ loading: true })
         fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(id) + "/detailed", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken}
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {

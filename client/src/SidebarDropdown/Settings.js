@@ -21,7 +21,7 @@ const ChangePasswordForm = (props) => {
 
                 fetch(window.ipAddress + "/v1/account/password", {
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
                     body: JSON.stringify({
                         "password": values.oldPass,
                         "new_password": values.newPassword,
@@ -111,7 +111,7 @@ const DeleteAccountForm = (props) => {
 
                 fetch(window.ipAddress + "/v1/account/delete", {
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
                     body: JSON.stringify({
                         "password": values.password
                     })
@@ -214,7 +214,7 @@ class Settings extends React.Component {
                                         this.setState({ fileList: [], disableUpload: false })
                                     }
                                 }}
-                                headers={{ "Authorization": localStorage.getItem("IRSCTF-token") }}
+                                headers={{ "Authorization": window.IRSCTFToken}}
                                 name="profile_pic"
                                 beforeUpload={file => {
                                     const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]

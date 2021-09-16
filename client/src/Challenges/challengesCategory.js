@@ -120,7 +120,7 @@ class ChallengesCategory extends React.Component {
   handleBuyHint(close, id, chall) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
       body: JSON.stringify({
         "id": parseInt(id),
         "chall": chall,
@@ -157,7 +157,7 @@ class ChallengesCategory extends React.Component {
     else {
       fetch(window.ipAddress + "/v1/challenge/hint", {
         method: 'post',
-        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         body: JSON.stringify({
           "id": parseInt(id),
           "chall": chall,
@@ -188,7 +188,7 @@ class ChallengesCategory extends React.Component {
     document.getElementById(name).style.pointerEvents = "none"
     fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(name), {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
@@ -274,7 +274,7 @@ class ChallengesCategory extends React.Component {
 
     fetch(window.ipAddress + "/v1/challenge/submit", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
       body: JSON.stringify({
         "flag": values.flag,
         "chall": this.state.currentChallenge,

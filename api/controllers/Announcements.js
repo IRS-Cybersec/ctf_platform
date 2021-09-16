@@ -6,7 +6,7 @@ const listVersion = async (req, res, next) => {
     try {
         //Check announcements version to determine if it needs update
         let version = req.app.get("announcements")
-        if (parseInt(req.params.version) < version) {
+        if (parseInt(req.params.version) !== version) {
             res.send({
                 success: true,
                 data: await collections.announcements.find(null, null).toArray(),

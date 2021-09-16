@@ -1,4 +1,15 @@
 const Connection = require('./../utils/mongoDB.js')
+var userCache = {}
+
+const userUpdateCache = async () => {
+    const collections = Connection.collections
+    const cursor = collections.users.find({})
+    cursor.forEach((doc) => {
+        if ("updateID" in doc) userCache[doc.username] = doc.updateID
+        else userCache[doc.username] = 0
+        
+    })
+}
 
 const scoreboard = async (req, res, next) => {
     const collections = Connection.collections
@@ -32,31 +43,20 @@ const scoreboard = async (req, res, next) => {
     }
 }
 
-const scores = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        //Check if adminShowDisable is enabled, then don't return admin scores
-        let payload = null
-        if (req.app.get("adminShowDisable")) payload = { type: { $ne: 2 } }
-
-        res.send({
-            success: true,
-            scores: await collections.users.find(payload, { projection: { username: 1, score: 1, _id: 0 } }).toArray()
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
 const userScoreboard = async (req, res, next) => {
-    const collections = Connection.collections
     try {
-        const scores = await collections.transactions.find({ points: { '$ne': 0 }, author: req.params.username }, { projection: { points: 1, timestamp: 1, challenge: 1, type: 1, _id: 0 } }).toArray();
-        if (scores[0] && scores[0].type === 2 && app.get("adminShowDisable")) return res.send({ success: true, scores: [] })
+        let transactionsCache = req.app.get("transactionsCache")
+        let scores = []
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
+            
+            if (current.points !== 0 && current.author === req.params.username) scores.push({points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID})
+        }
+        if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, scores: [], hidden: true })
         res.send({
             success: true,
-            scores: scores
+            scores: scores,
+            hidden: false
         });
     }
     catch (err) {
@@ -65,20 +65,24 @@ const userScoreboard = async (req, res, next) => {
     }
 }
 
-const userScore = async (req, res, next) => {
-    const collections = Connection.collections
+const userPoints = async (req, res, next) => {
     try {
-        const score = (await collections.users.findOne({ username: req.params.username }, { projection: { score: 1, type: 1, _id: 0 } }));
-        if (score === null) throw new Error('NotFound');
-        if (score.type === 2 && req.app.get("adminShowDisable")) return res.send({ success: true, score: "hidden" })
+        let transactionsCache = req.app.get("transactionsCache")
+        let score = 0
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
+            if (current.points !== 0 && current.author === req.params.username) score += current.points
+        }
+        if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, score: "Hidden", hidden: true })
         res.send({
             success: true,
-            score: score.score
+            score: score,
+            hidden: false
         });
     }
     catch (err) {
+        console.error(err)
         next(err);
     }
 }
-
-module.exports = { scoreboard, scores, userScoreboard, userScore }
+module.exports = { scoreboard, userScoreboard, userPoints}

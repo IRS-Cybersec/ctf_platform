@@ -162,7 +162,7 @@ class AdminManageAnnouncements extends React.Component {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/announcements/list/-1", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -186,7 +186,7 @@ class AdminManageAnnouncements extends React.Component {
         this.setState({ modalLoading: true })
         await fetch(window.ipAddress + "/v1/announcements/create", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "title": values.title,
                 "content": values.content,
@@ -219,7 +219,7 @@ class AdminManageAnnouncements extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/announcements/delete", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "ids": ids
             })
@@ -250,7 +250,7 @@ class AdminManageAnnouncements extends React.Component {
     editAnnouncementOpen = (id) => {
         fetch(window.ipAddress + "/v1/announcements/get/" + id.toString(), {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             //console.log(results)
             return results.json(); //return data in JSON (since its JSON data)
@@ -274,7 +274,7 @@ class AdminManageAnnouncements extends React.Component {
         this.setState({ modalLoading: true })
         await fetch(window.ipAddress + "/v1/announcements/edit", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "id": id,
                 "title": values.title,

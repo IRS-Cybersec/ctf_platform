@@ -65,7 +65,7 @@ const CreateChallengeForm = (props) => {
                     }
                     await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
-                        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
                         body: JSON.stringify({
                             "name": values.name,
                             "category": category,
@@ -447,7 +447,7 @@ class UserChallengeCreate extends React.Component {
     componentDidMount = () => {
         fetch(window.ipAddress + "/v1/challenge/list_categories", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then(async (data) => {

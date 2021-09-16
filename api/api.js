@@ -114,9 +114,8 @@ const main = async () => {
 
 		// Scoreboard endpoints
 		app.get('/v1/scoreboard', scoreboard.scoreboard);
-		app.get('/v1/scores', scoreboard.scores);
 		app.get('/v1/scoreboard/:username', scoreboard.userScoreboard);
-		app.get('/v1/scores/:username', scoreboard.userScore);
+		app.get('/v1/userPoints/:username', scoreboard.userPoints);
 
 		// Misc endpoints
 		app.get('/v1/backup/', misc.downloadBackup)

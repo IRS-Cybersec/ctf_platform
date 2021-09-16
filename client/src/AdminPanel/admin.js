@@ -41,7 +41,7 @@ class Admin extends React.Component {
     this.setState({ backupLoading: true })
     await fetch(window.ipAddress + "/v1/backup", {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
@@ -73,7 +73,7 @@ class Admin extends React.Component {
       JSON.parse(jsonData)
       await fetch(window.ipAddress + "/v1/uploadBackup", {
         method: 'post',
-        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         body: jsonData
       }).then((results) => {
         return results.json(); //return data in JSON (since its JSON data)

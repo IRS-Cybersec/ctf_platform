@@ -102,7 +102,7 @@ const ChangePasswordForm = (props) => {
 
                 fetch(window.ipAddress + "/v1/account/adminChangePassword", {
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
                         "password": values.newPassword,
                         "username": props.username,
@@ -209,7 +209,7 @@ class AdminUsers extends React.Component {
         this.setState({ disableLoading: true })
         await fetch(window.ipAddress + "/v1/account/disableStates", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -232,7 +232,7 @@ class AdminUsers extends React.Component {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/account/list", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -257,7 +257,7 @@ class AdminUsers extends React.Component {
         this.setState({ modalLoading: true })
         await fetch(window.ipAddress + "/v1/account/permissions", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 "username": this.state.username,
                 "type": this.state.permissionChangeTo
@@ -288,7 +288,7 @@ class AdminUsers extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/account/delete", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 "users": users,
             })
@@ -324,7 +324,7 @@ class AdminUsers extends React.Component {
         this.setState({ modalLoading: true })
         fetch(window.ipAddress + "/v1/account/create", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', 'Authorization': window.IRSCTFToken },
             body: JSON.stringify({
                 "username": values.username,
                 "password": values.password,
@@ -374,7 +374,7 @@ class AdminUsers extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 disable: value,
                 setting: setting
@@ -419,7 +419,7 @@ class AdminUsers extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 disable: value,
                 setting: setting

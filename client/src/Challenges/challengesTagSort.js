@@ -255,7 +255,7 @@ class ChallengesTagSort extends React.Component {
   handleBuyHint(close, id, challID) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
       body: JSON.stringify({
         "id": parseInt(id),
         "chall": challID,
@@ -293,7 +293,7 @@ class ChallengesTagSort extends React.Component {
     else {
       fetch(window.ipAddress + "/v1/challenge/hint", {
         method: 'post',
-        headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         body: JSON.stringify({
           "id": parseInt(id),
           "chall": challID,
@@ -304,6 +304,7 @@ class ChallengesTagSort extends React.Component {
         //console.log(data)
         if (data.success === true) {
           this.setState({ hintModal: true, hintContent: data.hint })
+          this.props.obtainScore()
         }
       }).catch((error) => {
         console.log(error)
@@ -325,7 +326,7 @@ class ChallengesTagSort extends React.Component {
     //document.getElementById(name).style.pointerEvents = "none"
     await fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(ID), {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
@@ -417,7 +418,7 @@ class ChallengesTagSort extends React.Component {
 
     fetch(window.ipAddress + "/v1/challenge/submit", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
       body: JSON.stringify({
         "flag": values.flag,
         "chall": this.state.currentChallenge,
@@ -437,7 +438,7 @@ class ChallengesTagSort extends React.Component {
           const refresh = async () => {
             await this.setState({ challengeModal: false })
             this.props.history.push("/Challenges/" + this.props.category)
-            await this.props.handleRefresh(true)
+            await this.props.handleRefresh()
             console.log(this.props.currentCategoryChallenges)
             this.sortByTags()
           }

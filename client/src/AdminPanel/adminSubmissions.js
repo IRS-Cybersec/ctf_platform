@@ -30,7 +30,7 @@ class AdminSubmissions extends React.Component {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/submissions", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {

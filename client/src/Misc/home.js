@@ -30,7 +30,7 @@ class Home extends React.Component {
     }
     await fetch(window.ipAddress + "/v1/announcements/list/" + announcementVersion.toString(), {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {

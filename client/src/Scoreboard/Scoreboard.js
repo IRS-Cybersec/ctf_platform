@@ -175,8 +175,7 @@ class Scoreboard extends React.Component {
                 for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
                   if (currentUserChanges[i]._id === payload._id) {
                     transactionFound = true
-                    if (deleteTransaction) currentUserChanges.splice(i, 1)
-                    else currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
+                    currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
                     break userLoop;
                   }
                 }
@@ -201,7 +200,7 @@ class Scoreboard extends React.Component {
     }
     webSocket.onopen = (e) => {
       const ID = sessionStorage.getItem("lastChallengeID")
-      webSocket.send(JSON.stringify({ type: "init", data: { auth: localStorage.getItem("IRSCTF-token"), lastChallengeID: parseInt(ID) } }))
+      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: parseInt(ID) } }))
       this.props.handleWebSocket(webSocket)
     }
     webSocket.onerror = (e) => {
@@ -366,7 +365,7 @@ class Scoreboard extends React.Component {
     this.setState({ loadingGraph: true, loadingTable: true })
     const finalData = await fetch(window.ipAddress + "/v1/scores", {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
@@ -389,7 +388,7 @@ class Scoreboard extends React.Component {
   getChanges = async () => {
     const finalData = await fetch(window.ipAddress + "/v1/scoreboard", {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {

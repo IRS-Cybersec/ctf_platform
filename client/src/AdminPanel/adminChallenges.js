@@ -81,7 +81,7 @@ class AdminChallenges extends React.Component {
 
         await Promise.all([fetch(window.ipAddress + "/v1/challenge/list_categories", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -101,7 +101,7 @@ class AdminChallenges extends React.Component {
 
             , fetch(window.ipAddress + "/v1/challenge/list_all_categories", {
                 method: 'get',
-                headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+                headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             }).then((results) => {
                 return results.json(); //return data in JSON (since its JSON data)
             }).then((data) => {
@@ -150,7 +150,7 @@ class AdminChallenges extends React.Component {
 
         fetch(window.ipAddress + "/v1/challenge/edit/category", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "visibility": visbility,
                 "category": categories,
@@ -183,7 +183,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "visibility": visibility,
                 "challenges": challengeIDs,
@@ -212,7 +212,7 @@ class AdminChallenges extends React.Component {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/challenge/list_all", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -252,7 +252,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 "chall": challengeIDs,
             })
@@ -320,7 +320,7 @@ class AdminChallenges extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 disable: value,
                 setting: setting
@@ -352,7 +352,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableLoading: true })
         await fetch(window.ipAddress + "/v1/challenge/disableStates", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -379,7 +379,7 @@ class AdminChallenges extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": localStorage.getItem("IRSCTF-token") },
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
                 disable: value,
                 setting: setting
