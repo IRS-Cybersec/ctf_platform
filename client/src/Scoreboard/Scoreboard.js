@@ -290,9 +290,10 @@ class Scoreboard extends React.Component {
     // Fill position + solve time ago
     for (let x = 0; x < scoreArray.length; x++) {
 
+      scoreArray[x].position = String(x + 1) + "."
       if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
         //console.log(scoreArray[x])
-        scoreArray[x].position = String(x + 1) + "."
+        
         const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
         let minutes = Math.ceil(dateTime / 60)
         let hours = 0

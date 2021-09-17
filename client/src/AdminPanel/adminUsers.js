@@ -592,7 +592,6 @@ class AdminUsers extends React.Component {
                         onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
-                    <Column title="Score" dataIndex="score" key="score" sorter={(a, b) => a.score - b.score} />
                     <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column
                         title=""
