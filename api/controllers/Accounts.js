@@ -74,8 +74,7 @@ const create = async (req, res, next) => {
             username: req.body.username.toLowerCase(),
             email: req.body.email.toLowerCase(),
             password: await argon2.hash(req.body.password),
-            type: 0,
-            score: 0
+            type: 0
         });
         res.send({ success: true });
     }

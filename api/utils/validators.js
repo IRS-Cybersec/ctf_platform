@@ -4,8 +4,7 @@ const users = {
         'username',
         'email',
         'password',
-        'type',
-        'score'
+        'type'
       ],
       properties: {
         username: {
@@ -22,9 +21,6 @@ const users = {
           minimum: 0,
           maximum: 2,
           exclusiveMaximum: false
-        },
-        score: {
-          bsonType: 'int'
         }
       }
     }
@@ -72,6 +68,15 @@ const transactions = {
         hint_id: {
           bsonType: 'int',
           minimum: 0
+        },
+        challengeID: {
+          bsonType: 'objectId'
+        },
+        perms: {
+          bsonType: 'int'
+        },
+        lastChallengeID: {
+          bsonType: 'int'
         }
       }
     }
