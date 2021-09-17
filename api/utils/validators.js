@@ -69,9 +69,6 @@ const transactions = {
           bsonType: 'int',
           minimum: 0
         },
-        challengeID: {
-          bsonType: 'objectId'
-        },
         perms: {
           bsonType: 'int'
         },
