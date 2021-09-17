@@ -240,9 +240,9 @@ class Scoreboard extends React.Component {
           tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
 
         }
-        else {
-          tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
-
+        else  {
+          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points }
+          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
         }
       }
     }

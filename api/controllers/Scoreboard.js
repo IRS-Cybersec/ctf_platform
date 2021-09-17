@@ -1,40 +1,25 @@
-const Connection = require('./../utils/mongoDB.js')
-var userCache = {}
-
-const userUpdateCache = async () => {
-    const collections = Connection.collections
-    const cursor = collections.users.find({})
-    cursor.forEach((doc) => {
-        if ("updateID" in doc) userCache[doc.username] = doc.updateID
-        else userCache[doc.username] = 0
-        
-    })
-}
-
 const scoreboard = async (req, res, next) => {
-    const collections = Connection.collections
     try {
         let payload = {}
+        let changes = {}
+        let finalData = []
         if (req.app.get("adminShowDisable")) payload = { perms: { $ne: 2 } }
+
+        let transactionsCache = req.app.get("transactionsCache")
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
+            const document = {points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID}
+            
+            if (current.author in changes) changes[current.author].changes.push(document)
+            else changes[current.author] = {_id: current.author, changes: [document]}
+        }
+        for (username in changes) {
+            finalData.push(changes[username])
+        }
 
         res.send({
             success: true,
-            users: await collections.transactions.aggregate([
-                {
-                    $match: payload
-                },
-                {
-                    $group: {
-                        _id: '$author',
-                        changes: {
-                            $push: {
-                                _id: '$_id',
-                                points: '$points',
-                                timestamp: '$timestamp'
-                            }
-                        }
-                    }
-                }]).toArray(),
+            users: finalData,
             lastChallengeID: req.app.get("latestSolveSubmissionID")
         });
     }
