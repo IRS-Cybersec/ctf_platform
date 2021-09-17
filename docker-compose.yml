@@ -3,7 +3,6 @@ services:
   mongodb:
     image: "mongo"
     container_name: "mongodb"
-    command: -vv
     ports: 
       - "27017:27017"
   web-api:
