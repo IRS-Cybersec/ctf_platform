@@ -13,8 +13,12 @@ services:
       - "20001:20001"
     links: 
       - "mongodb"
+    depends_on: 
+      - "mongodb"
   web-client:
     build:
       dockerfile: Dockerfile-client
     ports: 
-      - "3000:3000"
+      - "20002:20002"
+    depends_on: 
+      - "web-api"
