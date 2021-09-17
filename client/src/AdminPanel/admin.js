@@ -51,7 +51,7 @@ class Admin extends React.Component {
         const downloadAnchorNode = document.createElement('a');
         const date = new Date()
         downloadAnchorNode.setAttribute("href", downloadData);
-        downloadAnchorNode.setAttribute("download", date.toISOString().slice(0, -15) + "-Backup.json");
+        downloadAnchorNode.setAttribute("download", date.toISOString() + "-Backup.json");
         document.body.appendChild(downloadAnchorNode); // required for firefox
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
@@ -81,6 +81,9 @@ class Admin extends React.Component {
         //console.log(data)
         if (data.success === true) {
           message.success("Uploaded backup successfully")
+        }
+        else {
+          message.error("Failed to upload backup. Please check the API logs for any errors.")
         }
   
       }).catch((error) => {
