@@ -53,12 +53,15 @@ const userScoreboard = async (req, res, next) => {
 const userPoints = async (req, res, next) => {
     try {
         let transactionsCache = req.app.get("transactionsCache")
+        let adminShowDisable = req.app.get("adminShowDisable")
         let score = 0
         for (let i = 0; i < transactionsCache.length; i++) {
             const current = transactionsCache[i]
-            if (current.points !== 0 && current.author === req.params.username) score += current.points
+            if (current.points !== 0 && current.author === req.params.username) {
+                score += current.points
+                if (adminShowDisable && current.perms === 2) return res.send({ success: true, score: "Hidden", hidden: true })
+            } 
         }
-        if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, score: "Hidden", hidden: true })
         res.send({
             success: true,
             score: score,

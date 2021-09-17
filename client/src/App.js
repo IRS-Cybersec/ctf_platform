@@ -131,7 +131,7 @@ class App extends React.Component {
     this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
     message.success({ content: "Logged In! Welcome back " + username })
 
-    this.obtainScore(username)
+    this.obtainScore()
 
   }
 
@@ -145,8 +145,8 @@ class App extends React.Component {
     message.info({ content: "Logged out. See you next time :D!" })
   }
 
-  obtainScore(username) {
-    fetch(window.ipAddress + "/v1/userPoints/" + username, {
+  obtainScore() {
+    fetch(window.ipAddress + "/v1/userPoints/" + this.state.username, {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {

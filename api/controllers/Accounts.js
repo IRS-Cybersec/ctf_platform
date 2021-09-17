@@ -1,4 +1,4 @@
-const { checkPermissions, deletePermissions, setPermissions } = require('./../utils/permissionUtils.js')
+const { checkPermissions, deletePermissions, setPermissions, signer } = require('./../utils/permissionUtils.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
 const argon2 = require('argon2');
