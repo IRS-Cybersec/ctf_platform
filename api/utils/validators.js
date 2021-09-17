@@ -51,6 +51,7 @@ const transactions = {
             'hint',
             'blocked_submission',
             'challenge_update',
+            'initial_register'
           ]
         },
         points: {

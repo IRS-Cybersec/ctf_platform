@@ -189,6 +189,8 @@ class Scoreboard extends React.Component {
               changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
             }
           }
+
+          console.log(changes)
   
   
           sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))

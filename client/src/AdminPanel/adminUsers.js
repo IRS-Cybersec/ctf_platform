@@ -334,7 +334,7 @@ class AdminUsers extends React.Component {
             //console.log(results)
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            //console.log(data)
+            console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created user " + values.username + " successfully!" })
                 this.setState({ modalLoading: false, createUserModal: false })
