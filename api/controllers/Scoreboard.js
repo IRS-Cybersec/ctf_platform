@@ -37,7 +37,9 @@ const userScoreboard = async (req, res, next) => {
             
             if (current.points !== 0 && current.author === req.params.username) scores.push({points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID})
         }
+        if (scores.length === 0) throw new Error('NotFound');
         if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, scores: [], hidden: true })
+        
         res.send({
             success: true,
             scores: scores,
@@ -45,7 +47,6 @@ const userScoreboard = async (req, res, next) => {
         });
     }
     catch (err) {
-        console.error(err)
         next(err);
     }
 }
@@ -69,7 +70,6 @@ const userPoints = async (req, res, next) => {
         });
     }
     catch (err) {
-        console.error(err)
         next(err);
     }
 }

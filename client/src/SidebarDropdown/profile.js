@@ -88,7 +88,7 @@ class Profile extends React.Component {
                         //Current record is a hint
                         if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
                         else currentDS.challenge = currentStuff.challenge
-                        if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID 
+                        if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID
                         currentDS.score = currentStuff.points
                         //console.log(currentStuff.timestamp)
                         const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
@@ -150,9 +150,16 @@ class Profile extends React.Component {
 
             }
             else {
+                if (data.error === "not-found") {
+                    message.error("The user '" + username + "' was not found")
+                    console.error(data.error)
+                }
+                else {
+                    message.error("Something went wrong looking up " + username)
+                    console.error(data.error)
+                }
                 this.setState({ targetUser: "", userScore: 0 })
-                message.error("Something went wrong looking up " + username)
-                console.error(data.error)
+
             }
         }).catch((error) => {
             console.log(error);
@@ -173,10 +180,10 @@ class Profile extends React.Component {
                 )}
                 {
                     !this.state.targetUser && !this.state.loading && (
-                        <Layout style={{ height: "100%", width: "100%" }}>
+                        <div style={{ height: "100%", width: "100%" }}>
                             <br /><br /><br />
-                            <Empty>Unable to find this user</Empty>
-                        </Layout>
+                            <Empty><h4>We were unable to find this user :c</h4></Empty>
+                        </div>
                     )
                 }
                 {

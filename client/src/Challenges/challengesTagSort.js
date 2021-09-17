@@ -436,14 +436,10 @@ class ChallengesTagSort extends React.Component {
               'Congratulations on solving "' + this.state.viewingChallengeDetails.name + '".',
             duration: 0
           });
-          const refresh = async () => {
-            await this.setState({ challengeModal: false })
+            this.setState({ challengeModal: false })
             this.props.history.push("/Challenges/" + this.props.category)
-            await this.props.handleRefresh()
-            console.log(this.props.currentCategoryChallenges)
+             this.props.handleRefresh()
             this.sortByTags()
-          }
-          refresh()
 
         }
         else {
