@@ -353,7 +353,13 @@ const submit = async (req, res, next) => {
                     }
                 }
                 await collections.transactions.insertOne(insertDocument); 
-                transactionDocumentsUpdated.push(insertDocument) // mongoDB will add the _id field to insertDocument automatically
+                transactionDocumentsUpdated.push({
+                    _id: insertDocument._id,
+                    username: res.locals.username,
+                    timestamp: Gtimestamp,
+                    points: calculatedPoints,
+                    lastChallengeID: latestSolveSubmissionID
+                }) // mongoDB will add the _id field to insertDocument automatically
             }
             else await collections.transactions.insertOne(insertDocument);
 
