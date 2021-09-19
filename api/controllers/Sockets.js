@@ -3,7 +3,7 @@ var app = null
 var collections = null
 var socketConns = {}
 const ws = require('ws')
-const { checkPermissions } = require('./../utils/permissionUtils.js')
+const { checkPermissions, checkUsernamePerms } = require('./../utils/permissionUtils.js')
 const Connection = require('./../utils/mongoDB.js')
 
 
@@ -69,8 +69,8 @@ const startup = async (server, appVar) => {
                     if (app.get("adminShowDisable")) {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try { // compatibility for older transaction records
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && transactionCache[i].perms !== 2) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, perms: transactionCache[i].perms, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
                                 }
                             }
                             catch (e) { }
@@ -81,7 +81,7 @@ const startup = async (server, appVar) => {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try {
                                 if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, perms: transactionCache[i].perms, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
                                 }
                             }
                             catch (e) {}
@@ -132,8 +132,10 @@ const startup = async (server, appVar) => {
 }
 
 const broadCastNewSolve = async (solveDetails) => {
-    if (app.get("adminShowDisable") && solveDetails.perms === 2) {
-        return false
+    if (app.get("adminShowDisable")) {
+        for (let i = 0; i < solveDetails.length; i++) {
+            if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
+        }
     }
     wss.clients.forEach((client) => {
         if (client.readyState === ws.OPEN && client.isAuthed === true) {

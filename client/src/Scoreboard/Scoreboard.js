@@ -186,7 +186,7 @@ class Scoreboard extends React.Component {
               changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
             }
           }
-          
+
           window.scoreboardData = changes
           window.lastChallengeID =  data.lastChallengeID
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
