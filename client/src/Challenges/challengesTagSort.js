@@ -271,6 +271,7 @@ class ChallengesTagSort extends React.Component {
           <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, challID, true) }}>Hint {id + 1} - Purchased</Button>
         )
         this.setState({ hintModal: true, hintContent: data.hint, challengeHints: challengeHints })
+        this.props.obtainScore()
         close()
       }
     }).catch((error) => {
@@ -435,14 +436,10 @@ class ChallengesTagSort extends React.Component {
               'Congratulations on solving "' + this.state.viewingChallengeDetails.name + '".',
             duration: 0
           });
-          const refresh = async () => {
-            await this.setState({ challengeModal: false })
+            this.setState({ challengeModal: false })
             this.props.history.push("/Challenges/" + this.props.category)
-            await this.props.handleRefresh()
-            console.log(this.props.currentCategoryChallenges)
+             this.props.handleRefresh()
             this.sortByTags()
-          }
-          refresh()
 
         }
         else {

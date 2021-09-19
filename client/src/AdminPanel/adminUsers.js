@@ -334,7 +334,7 @@ class AdminUsers extends React.Component {
             //console.log(results)
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            //console.log(data)
+            console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created user " + values.username + " successfully!" })
                 this.setState({ modalLoading: false, createUserModal: false })
@@ -592,7 +592,6 @@ class AdminUsers extends React.Component {
                         onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
-                    <Column title="Score" dataIndex="score" key="score" sorter={(a, b) => a.score - b.score} />
                     <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column
                         title=""

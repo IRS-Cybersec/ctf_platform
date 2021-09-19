@@ -341,7 +341,7 @@ const submit = async (req, res, next) => {
 
                 if (gotDecay) {
                     await collections.transactions.updateMany({ challengeID: MongoDB.ObjectID(req.body.chall), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
-                    for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
+                    for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache (in memory)
                         if (transactionsCache[i].challengeID == req.body.chall && transactionsCache[i].correct == true) {
                             transactionsCache[i].points = calculatedPoints
                             transactionsCache[i].lastChallengeID = latestSolveSubmissionID
@@ -356,15 +356,8 @@ const submit = async (req, res, next) => {
                         }
                     }
                 }
-                await collections.transactions.insertOne(insertDocument);
-                transactionDocumentsUpdated.push({
-                    _id: insertDocument._id,
-                    username: res.locals.username,
-                    timestamp: Gtimestamp,
-                    points: calculatedPoints,
-                    perms: res.locals.perms,
-                    lastChallengeID: latestSolveSubmissionID
-                })
+                await collections.transactions.insertOne(insertDocument); 
+                transactionDocumentsUpdated.push(insertDocument) // mongoDB will add the _id field to insertDocument automatically
             }
             else await collections.transactions.insertOne(insertDocument);
 
@@ -373,6 +366,7 @@ const submit = async (req, res, next) => {
             req.app.set("transactionsCache", transactionsCache)
         }
 
+        // update latestSolveSubmissionID to reflect that there is a new transaction
         latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
@@ -396,7 +390,7 @@ const submit = async (req, res, next) => {
 
             await insertTransaction(true);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            broadCastNewSolve(transactionDocumentsUpdated)
+            broadCastNewSolve(transactionDocumentsUpdated) // send list of updated transaction records via live update
             res.send({
                 success: true,
                 data: 'correct'
@@ -538,7 +532,6 @@ const edit = async (req, res, next) => {
                 else updateObj[field] = req.body[field];
             }
         }
-
         let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)

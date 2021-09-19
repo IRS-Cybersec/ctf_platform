@@ -189,6 +189,8 @@ class Scoreboard extends React.Component {
               changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
             }
           }
+
+          console.log(changes)
   
   
           sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
@@ -238,9 +240,9 @@ class Scoreboard extends React.Component {
           tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
 
         }
-        else {
-          tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
-
+        else  {
+          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points }
+          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
         }
       }
     }
@@ -288,9 +290,10 @@ class Scoreboard extends React.Component {
     // Fill position + solve time ago
     for (let x = 0; x < scoreArray.length; x++) {
 
+      scoreArray[x].position = String(x + 1) + "."
       if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
         //console.log(scoreArray[x])
-        scoreArray[x].position = String(x + 1) + "."
+        
         const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
         let minutes = Math.ceil(dateTime / 60)
         let hours = 0

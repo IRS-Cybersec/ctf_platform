@@ -1,4 +1,5 @@
 const { checkPermissions, deletePermissions, setPermissions, signer } = require('./../utils/permissionUtils.js')
+const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
 const argon2 = require('argon2');
 
@@ -74,12 +75,40 @@ const create = async (req, res, next) => {
             username: req.body.username.toLowerCase(),
             email: req.body.email.toLowerCase(),
             password: await argon2.hash(req.body.password),
-            type: 0,
-            score: 0
+            type: 0
         });
+        const latestSolveSubmissionID = req.app.get("latestSolveSubmissionID") + 1
+        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        const GTimestamp = new Date()
+        let insertDoc = {
+            author: req.body.username.toLowerCase(),
+            challenge: 'Registered',
+            challengeID: null,
+            timestamp: GTimestamp,
+            type: 'initial_register',
+            perms: 0,
+            points: 0,
+            correct: true,
+            submission: '',
+            lastChallengeID: latestSolveSubmissionID
+        }
+        let transactionsCache = req.app.get("transactionsCache")
+        transactionsCache.push(insertDoc)
+        req.app.set("transactionsCache", transactionsCache)
+        await collections.transactions.insertOne(insertDoc)
+        // Send out to scoreboards that there is a new user
+        broadCastNewSolve([{
+            _id: insertDoc._id,
+            username: req.body.username.toLowerCase(),
+            timestamp: GTimestamp,
+            points: 0,
+            perms: 0,
+            lastChallengeID: latestSolveSubmissionID
+        }])
         res.send({ success: true });
     }
     catch (err) {
+        console.log(err)
         if (err.message == 'BadEmail') {
             res.send({
                 success: false,
@@ -149,7 +178,7 @@ const deleteAccount = async (req, res, next) => {
         if (req.body.users) {
             if (!Array.isArray(req.body.users)) throw new Error('Validation');
             const usersToDelete = req.body.users;
-            if (usersToDelete.includes(username)) return res.send({ success: false, error: 'delete_self' })
+            if (usersToDelete.includes(res.locals.username)) return res.send({ success: false, error: 'delete_self' })
             if (res.locals.perms < 2) {
                 res.status(403);
                 res.send({
@@ -183,7 +212,7 @@ const deleteAccount = async (req, res, next) => {
             });
             await collections.challs.deleteMany({ author: { $in: usersToDelete } });
             await collections.transactions.deleteMany({ author: { $in: usersToDelete } });
-            usersToDelete.forEach(username => { if (permissions.includes(username)) deletePermissions(username) })
+            usersToDelete.forEach(username => { deletePermissions(username) })
 
             res.send({ success: true });
         }
@@ -214,7 +243,7 @@ const deleteAccount = async (req, res, next) => {
             });
             await collections.challs.deleteMany({ author: userToDelete });
             await collections.transactions.deleteMany({ author: userToDelete });
-            if (permissions.includes(username)) deletePermissions(username);
+            deletePermissions(username);
             res.send({ success: true });
         }
 
