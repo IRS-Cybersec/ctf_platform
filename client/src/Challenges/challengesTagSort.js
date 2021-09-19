@@ -255,7 +255,7 @@ class ChallengesTagSort extends React.Component {
   handleBuyHint(close, id, challID) {
     fetch(window.ipAddress + "/v1/challenge/hint", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
       body: JSON.stringify({
         "id": parseInt(id),
         "chall": challID,
@@ -294,7 +294,7 @@ class ChallengesTagSort extends React.Component {
     else {
       fetch(window.ipAddress + "/v1/challenge/hint", {
         method: 'post',
-        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         body: JSON.stringify({
           "id": parseInt(id),
           "chall": challID,
@@ -327,7 +327,7 @@ class ChallengesTagSort extends React.Component {
     //document.getElementById(name).style.pointerEvents = "none"
     await fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(ID), {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
@@ -419,7 +419,7 @@ class ChallengesTagSort extends React.Component {
 
     fetch(window.ipAddress + "/v1/challenge/submit", {
       method: 'post',
-      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
       body: JSON.stringify({
         "flag": values.flag,
         "chall": this.state.currentChallenge,
@@ -436,10 +436,10 @@ class ChallengesTagSort extends React.Component {
               'Congratulations on solving "' + this.state.viewingChallengeDetails.name + '".',
             duration: 0
           });
-            this.setState({ challengeModal: false })
-            this.props.history.push("/Challenges/" + this.props.category)
-             this.props.handleRefresh()
-            this.sortByTags()
+          this.setState({ challengeModal: false })
+          this.props.history.push("/Challenges/" + this.props.category)
+          this.props.handleRefresh()
+          this.sortByTags()
 
         }
         else {
@@ -617,10 +617,9 @@ class ChallengesTagSort extends React.Component {
         </span>
 
         <Divider />
-        {this.state.tag && this.state.selectedTags.length > 0 && (
+        {this.state.tag && this.state.selectedTags.length > 0 ? (
           <ChallengesTagSortList tag={this.state.tag} selectedTags={this.state.selectedTags} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
-        )}
-        {this.state.selectedTags.length === 0 && (
+        ) : (
           <List
             grid={{
               xs: 1,
