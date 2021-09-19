@@ -32,12 +32,16 @@ const userScoreboard = async (req, res, next) => {
     try {
         let transactionsCache = req.app.get("transactionsCache")
         let scores = []
+        let found = false
         for (let i = 0; i < transactionsCache.length; i++) {
             const current = transactionsCache[i]
             
-            if (current.points !== 0 && current.author === req.params.username) scores.push({points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID})
+            if (current.author === req.params.username) {
+                found = true
+                if (current.points !== 0) scores.push({points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID})
+            } 
         }
-        if (scores.length === 0) throw new Error('NotFound');
+        if (!found) throw new Error('NotFound');
         if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, scores: [], hidden: true })
         
         res.send({
