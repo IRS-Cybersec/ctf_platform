@@ -11,7 +11,6 @@ import { Link } from 'react-router-dom';
 const { Column } = Table;
 
 var changes = {}
-var lastChallengeID = 0
 var updating = false
 
 class Scoreboard extends React.Component {
@@ -29,16 +28,15 @@ class Scoreboard extends React.Component {
   }
 
   componentDidMount = async () => {
-    let scoreboardData = sessionStorage.getItem("scoreboard-data")
-    if (scoreboardData === null) {
+    let scoreboardData = window.scoreboardData
+    if (typeof scoreboardData === "undefined") {
       changes = await this.getChanges()
-      sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
+      window.scoreboardData = changes
     }
     else {
-      scoreboardData = JSON.parse(scoreboardData)
-      changes = scoreboardData.changes
+      changes = scoreboardData
     }
-    // Render whatever data we have either: stored in sessionStorage/retrieved from Fetch for fast loading of scoreboard
+    // Render whatever data we have either: stored in global window/retrieved from Fetch for fast loading of scoreboard
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
 
     this.connectWebSocket() //Connect to socket server for live scoreboard and this will update the scoreboard with the latest data
@@ -113,7 +111,6 @@ class Scoreboard extends React.Component {
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
-        console.log("msg")
         updating = true
         lastChallengeID = parseInt(data.data.lastChallengeID)
         const payloadArray = data.data // List of transactions to update
@@ -147,8 +144,8 @@ class Scoreboard extends React.Component {
         }
 
 
-        sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
-        sessionStorage.setItem("lastChallengeID", payloadArray[0].lastChallengeID.toString())
+        window.scoreboardData = changes
+        window.lastChallengeID = payloadArray[0].lastChallengeID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "init") {
@@ -164,10 +161,10 @@ class Scoreboard extends React.Component {
           for (let y = 0; y < payloadArray.length; y++) {
             let userFound = false
             const payload = payloadArray[y] // Current transaction to update
-  
+
             userLoop:
             for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
-  
+
               if (changes.users[x]._id === payload.username) { // User found
                 userFound = true
                 const currentUserChanges = changes.users[x].changes
@@ -183,25 +180,22 @@ class Scoreboard extends React.Component {
                 break
               }
             }
-  
+
             if (!userFound) {
               // User is a new user not on the scoreboard for whatever reason
               changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
             }
           }
-
-          console.log(changes)
-  
-  
-          sessionStorage.setItem("scoreboard-data", JSON.stringify({ changes: changes }))
-          sessionStorage.setItem("lastChallengeID", data.lastChallengeID.toString())
+          
+          window.scoreboardData = changes
+          window.lastChallengeID =  data.lastChallengeID
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
         }
       }
     }
     webSocket.onopen = (e) => {
-      const ID = sessionStorage.getItem("lastChallengeID")
+      const ID = window.lastChallengeID
       webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: parseInt(ID) } }))
       this.props.handleWebSocket(webSocket)
     }
@@ -240,7 +234,7 @@ class Scoreboard extends React.Component {
           tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
 
         }
-        else  {
+        else {
           if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points }
           else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
         }
@@ -293,7 +287,7 @@ class Scoreboard extends React.Component {
       scoreArray[x].position = String(x + 1) + "."
       if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
         //console.log(scoreArray[x])
-        
+
         const dateTime = Math.abs(new Date() - new Date(scoreArray[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
         let minutes = Math.ceil(dateTime / 60)
         let hours = 0
@@ -396,7 +390,7 @@ class Scoreboard extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       if (data.success === true) {
-        sessionStorage.setItem("lastChallengeID", data.lastChallengeID)
+        window.lastChallengeID =  data.lastChallengeID
         return data
       }
       else {
