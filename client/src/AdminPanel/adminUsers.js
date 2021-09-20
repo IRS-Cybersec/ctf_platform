@@ -480,7 +480,6 @@ class AdminUsers extends React.Component {
                     visible={this.state.createUserModal}
                     footer={null}
                     onCancel={() => { this.setState({ createUserModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
                 >
 
                     <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
@@ -491,7 +490,6 @@ class AdminUsers extends React.Component {
                     visible={this.state.passwordResetModal}
                     footer={null}
                     onCancel={() => { this.setState({ passwordResetModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
                 >
 
                     <ChangePasswordForm username={this.state.username} setState={this.setState.bind(this)}></ChangePasswordForm>
