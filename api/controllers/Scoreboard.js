@@ -9,7 +9,7 @@ const scoreboard = async (req, res, next) => {
         if (req.app.get("adminShowDisable")) {
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                const document = { points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
+                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
 
                 if (checkUsernamePerms(current.author) !== 2) {
                     if (current.author in changes) changes[current.author].changes.push(document)
@@ -21,7 +21,7 @@ const scoreboard = async (req, res, next) => {
         else {
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                const document = { points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
+                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
 
 
                 if (current.author in changes) changes[current.author].changes.push(document)

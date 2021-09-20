@@ -123,6 +123,7 @@ const main = async () => {
 		app.post('/v1/adminSettings/', misc.adminSettings)
 		app.get('/v1/submissions', submissions.submissions);
 		app.post('/v1/submissions/new', submissions.newSubmission);
+		app.post('/v1/submissions/edit', submissions.editSubmission);
 		app.post('/v1/submissions/delete', submissions.deleteSubmission);
 		app.get('/v1/about', misc.about);
 		app.post('/v1/profile/upload', misc.profileUpload)

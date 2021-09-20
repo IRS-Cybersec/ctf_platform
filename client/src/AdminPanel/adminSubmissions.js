@@ -7,7 +7,8 @@ import {
     FileOutlined,
     UserOutlined,
     DeleteOutlined,
-    ExclamationCircleOutlined
+    ExclamationCircleOutlined,
+    EditOutlined
 } from '@ant-design/icons';
 import { orderBy } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
@@ -165,6 +166,165 @@ const CreateT = (props) => {
     );
 };
 
+const EditT = (props) => {
+    const [isHint, setIsHint] = useState(false)
+    const [isNonZero, setNonZero] = useState(false)
+    const [correctValue, setCorrectValue] = useState(true)
+    const [form] = Form.useForm();
+
+    
+
+    if (typeof form.getFieldValue("author") === "undefined") {
+        let initialData = JSON.parse(JSON.stringify(props.initialData))
+        initialData.challenge = ["", [props.initialData.challenge, props.initialData.challengeID]]
+        if (initialData.type === "hint") setIsHint(true)
+        if (initialData.points !== 0) setNonZero(true)
+        form.setFieldsValue(initialData)
+    }
+    
+
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                // must use correctValue state value instead
+                await fetch(window.ipAddress + "/v1/submissions/edit", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "id": props.initialData._id,
+                        "author": values.author,
+                        "challenge": values.challenge[1][0],
+                        "challengeID": values.challenge[1][1],
+                        "type": values.type,
+                        "points": values.points,
+                        "correct": correctValue,
+                        "submission": values.submission,
+                        "hint_id": values.hint_id
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Edited transaction successfully!" })
+                        setNonZero(false)
+                        setCorrectValue(false)
+                        setIsHint(false)
+                        props.setState({ editTModal: false })
+                        props.refresh()
+                        form.resetFields()
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error" })
+                    }
+
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+            }}
+        >
+            <h4>Select an Account</h4>
+            <Form.Item
+                name="author"
+                rules={[{ required: true, message: 'Please enter an author' }]}
+            >
+                <Input allowClear prefix={<UserOutlined />} placeholder="Account which this transaction will belong to" />
+            </Form.Item>
+
+            <h4>Select a Challenge</h4>
+            <Form.Item
+                name="challenge"
+                rules={[{ required: true, message: 'Please select a challenge' }]}
+            >
+                <Cascader
+                    options={props.challengeList}
+                    allowClear
+                    showSearch
+                    placeholder="Select an existing challenge which this transaction will belong to" />
+            </Form.Item>
+
+            <h4>Select a Type</h4>
+            <Form.Item
+                name="type"
+                rules={[{ required: true, message: 'Please select the type of transaction' }]}
+                initialValue="submission"
+            >
+                <Select onSelect={(type) => { type === "hint" ? setIsHint(true) : setIsHint(false) }}>
+                    <Option value="submission">Submission</Option>
+                    <Option value="hint">Hint</Option>
+                    <Option value="blocked_submission">Blocked Submission</Option>
+                </Select>
+
+            </Form.Item>
+
+            <h4>Input Amount of Points</h4>
+            <Form.Item
+                name="points"
+                rules={[{ required: true, message: 'Please input the amount of points' }]}
+                initialValue={0}
+            >
+                <InputNumber onChange={(value) => {
+                    if (value !== 0) {
+                        setNonZero(true)
+                        setCorrectValue(true)
+                    }
+                    else setNonZero(false)
+                }} min={-100000} max={100000} ></InputNumber>
+
+            </Form.Item>
+
+            {!isHint ?
+                <div>
+
+
+                    <h4>Choose whether this is a "Correct" submission</h4>
+                    <Form.Item
+                        name="correct"
+                        rules={[{ required: true, message: 'Please select whether it is correct' }]}
+                        initialValue={true}
+                        valuePropName={correctValue}
+                    >
+                        <Select value={correctValue} onSelect={(value) => setCorrectValue(value)} disabled={isNonZero}>
+                            <Option value={true}>Correct</Option>
+                            <Option value={false}>Wrong</Option>
+                        </Select>
+
+                    </Form.Item>
+
+                    <h4>Enter a Submission</h4>
+                    <Form.Item
+                        name="submission"
+                        rules={[{ required: true, message: 'Please enter a submission' }]}
+                    >
+                        <Input allowClear placeholder="The user's flag input" />
+                    </Form.Item>
+                </div>
+                :
+                <div>
+                    <h4>Enter a hint ID (hint number of the challenge from <code>1-n</code>)</h4>
+                    <Form.Item
+                        name="hint_id"
+                        rules={[{ required: true, message: 'Please enter a hint ID' }]}
+                        initialValue={1}
+                    >
+                        <InputNumber min={-100000} max={100000}></InputNumber>
+
+                    </Form.Item>
+                </div>}
+
+
+            <Form.Item>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ editTModal: false }) }}>Cancel</Button>
+                    <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Edit Transaction</Button>
+                </div>
+            </Form.Item>
+        </Form>
+    );
+};
+
 class AdminSubmissions extends React.Component {
     constructor(props) {
         super(props);
@@ -175,7 +335,9 @@ class AdminSubmissions extends React.Component {
             createTModal: false,
             challengeList: [],
             selectedTableKeys: [],
-            disableEditButtons: true
+            disableEditButtons: true,
+            editTModal: false,
+            initialData: {}
         }
     }
 
@@ -324,6 +486,17 @@ class AdminSubmissions extends React.Component {
                     <CreateT refresh={this.refresh.bind(this)} challengeList={this.state.challengeList} setState={this.setState.bind(this)}></CreateT>
                 </Modal>
 
+                <Modal
+                    title="Edit Transaction"
+                    visible={this.state.editTModal}
+                    footer={null}
+                    destroyOnClose
+                    onCancel={() => { this.setState({ editTModal: false }) }}
+                >
+
+                    <EditT initialData={this.state.initialData} refresh={this.refresh.bind(this)} challengeList={this.state.challengeList} setState={this.setState.bind(this)}></EditT>
+                </Modal>
+
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", height: "2ch" }}>
                         <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<FileOutlined />} onClick={() => { this.setState({ createTModal: true }) }}>Create New Transaction</Button>
@@ -419,6 +592,13 @@ class AdminSubmissions extends React.Component {
                     <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
                     <Column title="Flag Submitted" dataIndex="submission" key="submission" />
                     <Column title="Correct" dataIndex="correct" key="correct" filters={[{ text: "True", value: "True" }, { text: "False", value: "False" }]} onFilter={(value, record) => { return value === record.correct }} />
+                    <Column
+                        title=""
+                        key="edit"
+                        render={(text, record) => (
+                            <Button icon={<EditOutlined />} onClick={() => { this.setState({ editTModal: true, initialData: record }) }}> Edit</Button>
+                        )}
+                    />
                 </Table>
             </Layout >
         );
