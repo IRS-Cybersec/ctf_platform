@@ -586,7 +586,7 @@ class AdminSubmissions extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.challenge.includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.challenge.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Type" dataIndex="type" key="type" filters={[{ text: "Submission", value: "submission" }, { text: "Hint", value: "hint" }, { text: "Blocked Submission", value: "blocked_submission" }, { text: "Initial Register", value: "initial_register" }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
