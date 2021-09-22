@@ -225,6 +225,8 @@ const EditT = (props) => {
                 })
             }}
         >
+            <p><b><u>ID:</u></b> <code>{props.initialData._id}</code></p>
+
             <h4>Select an Account</h4>
             <Form.Item
                 name="author"
@@ -365,6 +367,7 @@ class AdminSubmissions extends React.Component {
                     if ("correct" in data.submissions[i]) {
                         if (data.submissions[i].correct === true) data.submissions[i].correct = "True"
                         else data.submissions[i].correct = "False"
+                        data.submissions[i].hint_id = "N/A"
                     }
                     else {
                         data.submissions[i].correct = "N/A"
@@ -528,7 +531,6 @@ class AdminSubmissions extends React.Component {
                         </div>
                     )
                 }}>
-                    <Column title="Transaction ID" dataIndex="_id" key="_id" />
                     <Column title="Time" dataIndex="timestamp" key="timestamp" />
                     <Column title="Submittor" dataIndex="author" key="author" render={(text, row, index) => {
                         return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
@@ -587,6 +589,31 @@ class AdminSubmissions extends React.Component {
                             </div>
                         )}
                         onFilter={(value, record) => record.challenge.toLowerCase().includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
+                    <Column title="Hint ID" dataIndex="hint_id" key="hint_id" filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Hint ID"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.hint_id == parseInt(value)}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Type" dataIndex="type" key="type" filters={[{ text: "Submission", value: "submission" }, { text: "Hint", value: "hint" }, { text: "Blocked Submission", value: "blocked_submission" }, { text: "Initial Register", value: "initial_register" }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
