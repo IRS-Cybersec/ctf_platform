@@ -69,7 +69,7 @@ const startCache = async () => {
 const main = async () => {
 	if (await Connection.open()) {
 		await startCache()
-		await startupChecks.startValidation()
+		await startupChecks.startValidation(app)
 		await challenges.createChallengeCache()
 
 		app.post('/v1/account/login', accounts.login);
