@@ -19,5 +19,7 @@ services:
       context: ./client
     ports: 
       - 127.0.0.1:20002:20002
+    links:
+      - "web-api"
     depends_on: 
       - "web-api"

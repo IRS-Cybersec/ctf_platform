@@ -5,8 +5,7 @@
   <meta charset="utf-8" />
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
   <script>
-    window.production = false
-    window.ipAddress = window.production ? "https://api.irscybersec.tk" : "http://de.irscybersec.tk:20001"
+    window.ipAddress = "/api"
 
     const startEruda = () => {
       var src = '//cdn.jsdelivr.net/npm/eruda';
@@ -14,7 +13,7 @@
         document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
     }
 
-    if (!window.production) startEruda()
+    if (process.env.NODE_ENV === "development") startEruda()
 
 
   </script>
