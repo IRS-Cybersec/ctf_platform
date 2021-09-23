@@ -33,7 +33,7 @@ const Oops = lazy(() => import("./Misc/oops.js"));
 const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
 var ctfxVersion = "1.0.0"
-
+window.ipAddress = process.env.NODE_ENV === "development" ? "" : "/api"
 
 class App extends React.Component {
   constructor(props) {
