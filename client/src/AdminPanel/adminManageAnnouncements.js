@@ -231,7 +231,7 @@ class AdminManageAnnouncements extends React.Component {
             if (data.success === true) {
                 message.success({ content: "Deleted announcements [" + ids.join(', ') + "] successfully!" })
                 this.fillTableData()
-
+                this.setState({ selectedTableKeys: [] })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -243,8 +243,6 @@ class AdminManageAnnouncements extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         close()
-        this.setState({ selectedTableKeys: [] })
-
     }
 
     editAnnouncementOpen = (id) => {

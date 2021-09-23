@@ -72,7 +72,6 @@ const CreateChallengeForm = (props) => {
         else {
             initialData.dynamic = "false"
         }
-        console.log(initialData)
         initialData.category1 = initialData.category
         form.setFieldsValue(initialData)
         setEditorValue(initialData.description)

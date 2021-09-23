@@ -1,9 +1,10 @@
 const Connection = require('./mongoDB.js')
 const validators = require('./validators.js')
+const crypto = require('crypto');
+const argon2 = require('argon2');
 
-const startValidation = async () => {
+const startValidation = async (app) => {
     const collections = Connection.collections
-    const db = Connection.db
 
      // (1) Insert Validation
      try {
@@ -33,7 +34,49 @@ const startValidation = async () => {
         console.log("Transcations indexes created")
     }
 
+    await createDefaultAdminAccount(collections.users, collections.transactions, app);
+
     return true
 }
+
+async function createDefaultAdminAccount(userCollection, transactionColl, app) {
+    const adminAccount = await userCollection.findOne({type: 2});
+
+    if (adminAccount === null){    
+        console.log("No admin account found, so one will be created.");
+        const adminUser = crypto.randomBytes(8).toString('hex');
+        const adminPassword = crypto.randomBytes(64).toString('hex');
+        const adminEmail = adminUser + "@localhost";
+        console.log("Admin Account Username: " + adminUser);
+        console.log("Admin Account Password: " + adminPassword);
+        console.log("Admin Account Email: " + adminEmail);
+
+        await userCollection.insertOne({
+            username: adminUser,
+            email: adminEmail,
+            password: await argon2.hash(adminPassword),
+            type: 2
+        });
+        let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+        if (isNaN(latestSolveSubmissionID)) latestSolveSubmissionID = 1
+        else latestSolveSubmissionID += 1
+        let insertDoc = {
+            author: adminUser.toLowerCase(),
+            challenge: 'Registered',
+            challengeID: null,
+            timestamp: new Date(),
+            type: 'initial_register',
+            points: 0,
+            correct: true,
+            submission: '',
+            lastChallengeID: latestSolveSubmissionID
+        }
+        let transactionsCache = app.get("transactionsCache")
+        transactionsCache.push(insertDoc)
+        app.set("transactionsCache", transactionsCache)
+        await transactionColl.insertOne(insertDoc)
+
+    }
+};
 
 module.exports = {startValidation}

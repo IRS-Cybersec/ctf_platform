@@ -228,9 +228,7 @@ class Challenges extends React.Component {
                                   hoverable
                                   type="inner"
                                   bordered={true}
-                                  bodyStyle={{ backgroundColor: "#262626" }}
-                                  className="card-design"
-                                  style={{ overflow: "hidden" }}
+                                  className="card-design hover"
                                   cover={<img style={{ overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
                                 >
                                   <Meta

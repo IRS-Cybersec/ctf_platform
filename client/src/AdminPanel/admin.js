@@ -174,7 +174,7 @@ class Admin extends React.Component {
             <AdminChallenges history={this.props.history} location={this.props.location}></AdminChallenges>
           </TabPane>
           <TabPane
-            tab={<span><BarsOutlined />Submissions</span>}
+            tab={<span><BarsOutlined />Transactions</span>}
             key="Submissions"
           >
             <AdminSubmissions></AdminSubmissions>

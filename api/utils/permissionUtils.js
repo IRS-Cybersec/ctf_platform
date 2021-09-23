@@ -16,12 +16,17 @@ const checkPermissions = async (token) => {
     }
 }
 
-const setPermissions = async(username, perms) => {
+const checkUsernamePerms = (username) => {
+    if (username in permissions) return permissions[username]
+    else return false
+}
+
+const setPermissions = (username, perms) => {
     permissions[username] = perms
 }
 
-const deletePermissions = async(username) => {
+const deletePermissions = (username) => {
     delete permissions[username]
 }
 
-module.exports = {checkPermissions, setPermissions, deletePermissions, signer}
+module.exports = {checkPermissions, setPermissions, deletePermissions, signer, checkUsernamePerms}
