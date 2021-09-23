@@ -7,8 +7,7 @@ services:
       - "27017:27017"
   web-api:
     build:
-      context: .
-      dockerfile: Dockerfile-api
+      context: ./api
     ports:
       - "20001:20001"
     links: 
@@ -17,8 +16,7 @@ services:
       - "mongodb"
   web-client:
     build:
-      context: .
-      dockerfile: Dockerfile-client
+      context: ./client
     ports: 
       - "20002:20002"
     depends_on: 

@@ -1,9 +1,9 @@
 FROM node:latest
 WORKDIR /usr/src/app
-COPY api/package*.json ./
+COPY package*.json ./
 
 RUN npm ci --only=production
-COPY api .
+COPY . .
 RUN npm install pm2 -g
 
 

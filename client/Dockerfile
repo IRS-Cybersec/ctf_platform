@@ -1,9 +1,9 @@
 FROM node:latest
 WORKDIR /usr/src/app
-COPY client/package*.json ./
+COPY package*.json ./
 
 RUN npm ci
-COPY client .
+COPY . .
 RUN npm run build
 RUN npm install -g serve
 
