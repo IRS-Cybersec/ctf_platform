@@ -4,12 +4,12 @@ services:
     image: "mongo"
     container_name: "mongodb"
     ports: 
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
   web-api:
     build:
       context: ./api
     ports:
-      - "20001:20001"
+      - "127.0.0.1:20001:20001"
     links: 
       - "mongodb"
     depends_on: 
@@ -18,6 +18,6 @@ services:
     build:
       context: ./client
     ports: 
-      - "20002:20002"
+      - 127.0.0.1:20002:20002
     depends_on: 
       - "web-api"
