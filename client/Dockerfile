@@ -19,6 +19,8 @@ RUN rm -rf ./*
 COPY --from=builder /usr/src/app/build .
 COPY nginx.conf /etc/nginx/nginx.conf
 
+COPY default.webp /usr/share/nginx/static/profile/default.webp 
+
 EXPOSE 20005
 # Containers run nginx with global directives and daemon off
 CMD ["nginx", "-g", "daemon off;"]

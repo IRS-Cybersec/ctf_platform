@@ -192,7 +192,7 @@ class Profile extends React.Component {
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <div style={{ display: "flex" }}>
                                     <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                                        <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={"https://api.irscybersec.tk/uploads/profile/" + this.state.targetUser + ".webp"} />
+                                        <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={"/static/profile/" + this.state.targetUser + ".webp"} />
                                         <h1 style={{ fontSize: "5ch" }}>{this.state.targetUser}</h1>
                                     </div>
                                     <div>
