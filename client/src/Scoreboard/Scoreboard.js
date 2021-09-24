@@ -107,7 +107,8 @@ class Scoreboard extends React.Component {
   }
 
   connectWebSocket() {
-    let webSocket = new WebSocket(process.env.NODE_ENV ? "ws://" + window.location.hostname + "/api/" : "ws://localhost:20001" )
+    const proto = window.location.protocol === "http:" ? "ws://" : "wss://"
+    let webSocket = new WebSocket(process.env.NODE_ENV === "development" ? proto + "localhost:20001/" : proto + window.location.hostname + "/api/" )
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
