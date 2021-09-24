@@ -10,7 +10,7 @@ import {
     EyeOutlined,
     EyeInvisibleOutlined,
     RedoOutlined,
-    SearchOutlined
+    SearchOutlined,
 } from '@ant-design/icons';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
@@ -527,7 +527,7 @@ class AdminChallenges extends React.Component {
                             title=""
                             key="edit"
                             render={(text, record) => (
-                                <Button icon={<EditOutlined />} onClick={() => { this.setState({ editChallenge: true, id: record._id }, this.props.history.push("/Admin/Challenges/Edit")) }}> Edit</Button>
+                                <Button icon={<EditOutlined />} onClick={() => { this.setState({ editChallenge: true, id: record._id }); this.props.history.push("/Admin/Challenges/Edit") }}> Edit</Button>
                             )}
                         />
                     </Table>

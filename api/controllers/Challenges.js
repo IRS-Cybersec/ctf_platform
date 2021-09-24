@@ -262,7 +262,6 @@ const hint = async (req, res, next) => {
                 challengeID: MongoDB.ObjectID(req.body.chall),
                 type: 'hint',
                 timestamp: Gtimestamp,
-                perms: res.locals.perms,
                 points: -hints.hints[0].cost,
                 hint_id: parseInt(req.body.id),
                 lastChallengeID: latestSolveSubmissionID
@@ -276,7 +275,6 @@ const hint = async (req, res, next) => {
                 username: res.locals.username,
                 timestamp: Gtimestamp,
                 points: -hints.hints[0].cost,
-                perms: res.locals.perms,
                 lastChallengeID: latestSolveSubmissionID
             }])
         }
@@ -325,7 +323,6 @@ const submit = async (req, res, next) => {
                 challengeID: MongoDB.ObjectID(req.body.chall),
                 timestamp: Gtimestamp,
                 type: 'submission',
-                perms: res.locals.perms,
                 points: correct ? calculatedPoints : 0,
                 correct: correct,
                 submission: req.body.flag,
@@ -350,14 +347,19 @@ const submit = async (req, res, next) => {
                                 username: transactionsCache[i].author,
                                 timestamp: transactionsCache[i].timestamp,
                                 points: transactionsCache[i].points,
-                                perms: transactionsCache[i].perms,
                                 lastChallengeID: latestSolveSubmissionID
                             })
                         }
                     }
                 }
                 await collections.transactions.insertOne(insertDocument); 
-                transactionDocumentsUpdated.push(insertDocument) // mongoDB will add the _id field to insertDocument automatically
+                transactionDocumentsUpdated.push({
+                    _id: insertDocument._id,
+                    username: res.locals.username,
+                    timestamp: Gtimestamp,
+                    points: calculatedPoints,
+                    lastChallengeID: latestSolveSubmissionID
+                }) // mongoDB will add the _id field to insertDocument automatically
             }
             else await collections.transactions.insertOne(insertDocument);
 
@@ -557,7 +559,6 @@ const edit = async (req, res, next) => {
                     username: transactionsCache[i].author,
                     timestamp: transactionsCache[i].timestamp,
                     points: transactionsCache[i].points,
-                    perms: transactionsCache[i].perms,
                     lastChallengeID: latestSolveSubmissionID
                 })
             }
