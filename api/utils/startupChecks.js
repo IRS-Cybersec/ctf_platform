@@ -2,6 +2,8 @@ const Connection = require('./mongoDB.js')
 const validators = require('./validators.js')
 const crypto = require('crypto');
 const argon2 = require('argon2');
+var fs = require('fs');
+const { ENOENT } = require('constants');
 
 const startValidation = async (app) => {
     const collections = Connection.collections
@@ -35,7 +37,7 @@ const startValidation = async (app) => {
     }
 
     await createDefaultAdminAccount(collections.users, collections.transactions, app);
-
+    await loadConfigFile(collections.cache);
     return true
 }
 
@@ -78,5 +80,19 @@ async function createDefaultAdminAccount(userCollection, transactionColl, app) {
 
     }
 };
+
+async function loadConfigFile(cacheCollection) {
+    try {
+        const configData = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+        await cacheCollection.updateOne({}, { $set: configData }, { upsert: true });
+        console.log("Added "+ Object.keys(configData).length + " field(s) to cache")
+    } catch (e) {
+        if (e instanceof ENOENT) {
+            return;
+        } else {
+            throw e;
+        }
+    }
+}
 
 module.exports = {startValidation}
