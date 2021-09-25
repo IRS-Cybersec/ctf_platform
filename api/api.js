@@ -18,7 +18,7 @@ const authenticated = require('./middlewares/authentication.js')
 const app = express();
 let server = app.listen(20001, () => console.info('Web server started'));
 
-app.use(express.json());
+app.use(express.json({limit: "30mb"}));
 app.use(fileUpload());
 app.use(mongoSanitize());
 app.use(cors());
@@ -34,7 +34,8 @@ const startCache = async () => {
 		uploadSize: 512000,
 		latestSolveSubmissionID: 0,
 		maxSockets: 5,
-		uploadPath: "/var/www/ctf_platform/static/uploads/profile"
+		uploadPath: "/var/www/ctf_platform/static/uploads/profile",
+		categoryMeta: {}
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -99,7 +100,7 @@ const main = async () => {
 		app.get('/v1/challenge/list/:category', challenges.listCategory);
 		app.get('/v1/challenge/list_categories', challenges.listCategories);
 		app.get('/v1/challenge/list_all', challenges.listAll);
-		app.get('/v1/challenge/list_all_categories', challenges.listAllCategories);
+		app.get('/v1/challenge/listCategoryInfo', challenges.listCategoryInfo);
 		app.get('/v1/challenge/show/:chall', challenges.show);
 		app.get('/v1/challenge/show/:chall/detailed', challenges.showDetailed);
 		app.post('/v1/challenge/hint', challenges.hint);
@@ -108,6 +109,7 @@ const main = async () => {
 		app.post('/v1/challenge/edit', challenges.edit);
 		app.post('/v1/challenge/edit/visibility', challenges.editVisibility);
 		app.post('/v1/challenge/edit/category', challenges.editCategory);
+		app.post('/v1/challenge/edit/categoryVisibility', challenges.editCategoryVisibility);
 		app.post('/v1/challenge/delete', challenges.deleteChall);
 
 		// Announcement endpoints

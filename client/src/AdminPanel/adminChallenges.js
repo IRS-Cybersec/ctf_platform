@@ -14,7 +14,6 @@ import {
 } from '@ant-design/icons';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
-import { difference } from "lodash";
 import { Ellipsis } from 'react-spinners-css';
 import { Switch, Route, Link } from 'react-router-dom';
 
@@ -76,10 +75,10 @@ class AdminChallenges extends React.Component {
 
     handleCategoryData = async () => {
         this.setState({ transferDisabled: true })
-        let visibleCat = []
+        let invisible = []
         let allCat = []
 
-        await Promise.all([fetch(window.ipAddress + "/v1/challenge/list_categories", {
+        const categoryMeta = await fetch(window.ipAddress + "/v1/challenge/listCategoryInfo", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
         }).then((results) => {
@@ -87,7 +86,7 @@ class AdminChallenges extends React.Component {
         }).then((data) => {
 
             if (data.success === true) {
-                visibleCat = data.categories
+                return data.categories
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -99,34 +98,10 @@ class AdminChallenges extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
 
-            , fetch(window.ipAddress + "/v1/challenge/list_all_categories", {
-                method: 'get',
-                headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
-            }).then((results) => {
-                return results.json(); //return data in JSON (since its JSON data)
-            }).then((data) => {
-
-                if (data.success === true) {
-                    allCat = data.categories
-                }
-                else {
-                    message.error({ content: "Oops. Unknown error" })
-                }
-
-
-            }).catch((error) => {
-                console.log(error)
-                message.error({ content: "Oops. There was an issue connecting with the server" });
-            })
-        ])
-
-        let invisible = difference(allCat, visibleCat)
-        /*console.log(invisible)
-        console.log(allCat)
-        console.log(visibleCat)*/
-
-        for (let i = 0; i < allCat.length; i++) {
-            allCat[i] = { "key": allCat[i] }
+        // handle visibility manager
+        for (const cat in categoryMeta) {
+            allCat.push({ "key": cat })
+            if (categoryMeta[cat].visibility === false) invisible.push(cat)
         }
         this.setState({ targetKeys: invisible, allCat: allCat, transferDisabled: false })
     }
@@ -146,13 +121,12 @@ class AdminChallenges extends React.Component {
         this.setState({ selectedKeys: [...sourceSelectedKeys, ...targetSelectedKeys] })
     }
 
-    editCategoryVisibility(visbility, categories) {
-
-        fetch(window.ipAddress + "/v1/challenge/edit/category", {
+    editCategoryVisibility(visibility, categories) {
+        fetch(window.ipAddress + "/v1/challenge/edit/categoryVisibility", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
             body: JSON.stringify({
-                "visibility": visbility,
+                "visibility": visibility,
                 "category": categories,
             })
         }).then((results) => {
@@ -537,6 +511,7 @@ class AdminChallenges extends React.Component {
                         <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
                     </div>
 
+                    <h3>Category Visibility <EyeOutlined /></h3>
                     <Transfer
                         dataSource={this.state.allCat}
                         titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}

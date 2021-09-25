@@ -28,26 +28,37 @@ const disableStates = async (req, res, next) => {
 const list = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        let aggregation = [{
-            $match: { visibility: true }
-        }, {
-            $group: {
-                _id: '$category',
-                challenges: {
-                    $push: {
-                        _id: "$_id",
-                        name: '$name',
-                        points: '$points',
-                        solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
-                        firstBlood: { $arrayElemAt: ['$solves', 0] },
-                        tags: '$tags',
-                        requires: '$requires'
+        let challenges = []
+        if (res.locals.perms < 2) {
+            challenges = await collections.challs.aggregate([{
+                $match: { visibility: true }
+            }, {
+                $group: {
+                    _id: '$category',
+                    challenges: {
+                        $push: {
+                            _id: "$_id",
+                            name: '$name',
+                            points: '$points',
+                            solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
+                            firstBlood: { $arrayElemAt: ['$solves', 0] },
+                            tags: '$tags',
+                            requires: '$requires'
+                        }
                     }
                 }
+            }]).toArray();
+
+            const categoryMeta = req.app.get("categoryMeta")
+            for (let i = 0; i < challenges.length; i++) {
+                if (challenges[i]._id in categoryMeta) {
+                    if (categoryMeta[challenges[i]._id].visibility === false) challenges.splice(i, 1) // remove categories that are hidden
+                    else challenges[i].meta = categoryMeta[challenges[i]._id]
+                }
             }
-        }];
-        if (res.locals.perms >= 2) {
-            aggregation = [{
+        }
+        else {
+            challenges = await collections.challs.aggregate([{
                 $group: {
                     _id: '$category',
                     challenges: {
@@ -63,11 +74,19 @@ const list = async (req, res, next) => {
                         }
                     }
                 }
-            }];
+            }]).toArray();
+
+            const categoryMeta = req.app.get("categoryMeta")
+            for (let i = 0; i < challenges.length; i++) {
+                if (challenges[i]._id in categoryMeta) {
+                    challenges[i].meta = categoryMeta[challenges[i]._id]
+                }
+            }
         }
+
         res.send({
             success: true,
-            challenges: await collections.challs.aggregate(aggregation).toArray()
+            challenges: challenges
         });
     }
     catch (err) {
@@ -119,6 +138,32 @@ const listCategories = async (req, res, next) => {
     }
 }
 
+const listCategoryInfo = async (req, res, next) => {
+    const collections = Connection.collections
+    try {
+        if (res.locals.perms < 2) throw new Error('Permissions');
+        const categoryMeta = req.app.get("categoryMeta")
+        let newCategoryMeta = {}
+        const categories = await collections.challs.distinct('category')
+        // this copies over category meta data ONLY if the category still exists in the categories of the challenge list
+        // hence, categories inside categoryMeta which no longer exist inside challenge list are deleted
+        // categories inside the challenge list but not in categoryMeta are given a new object
+        for (let i = 0; i < categories.length; i++) {
+            if (categories[i] in categoryMeta) newCategoryMeta[categories[i]] = categoryMeta[categories[i]]
+            else newCategoryMeta[categories[i]] = { visibility: true }
+        }
+        await collections.cache.updateOne({}, { '$set': { categoryMeta: newCategoryMeta } })
+        req.app.set("categoryMeta", newCategoryMeta)
+        res.send({
+            success: true,
+            categories: newCategoryMeta
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+
 const listAll = async (req, res, next) => {
     const collections = Connection.collections
     try {
@@ -133,19 +178,8 @@ const listAll = async (req, res, next) => {
     }
 }
 
-const listAllCategories = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        res.send({
-            success: true,
-            categories: await collections.challs.distinct('category')
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
+
+
 
 const show = async (req, res, next) => {
     const collections = Connection.collections
@@ -153,19 +187,16 @@ const show = async (req, res, next) => {
         const filter = res.locals.perms == 2 ? { _id: MongoDB.ObjectID(req.params.chall) } : { visibility: true, _id: MongoDB.ObjectID(req.params.chall) };
         let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
 
+
+        if (!chall) throw new Error('NotFound')
+        const categoryMeta = req.app.get("categoryMeta")
+        if (chall.category in categoryMeta && res.locals.perms < 2) {
+            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
+        }
         if ("requires" in chall && res.locals.perms < 2) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
-        }
-
-        if (!chall) {
-            res.status(400);
-            res.send({
-                success: false,
-                error: 'notfound'
-            });
-            return;
         }
         if (chall.hints != undefined)
             chall.hints.forEach(hint => {
@@ -234,15 +265,22 @@ const hint = async (req, res, next) => {
                 name: 1,
                 hints: { $slice: [req.body.id, 1] },
                 requires: 1,
+                category: 1,
                 _id: 1
             }
         }));
-        if ("requires" in hints) {
+
+        if (!hints) throw new Error('NotFound');
+        const categoryMeta = req.app.get("categoryMeta")
+        if (hints.category in categoryMeta && res.locals.perms < 2) {
+            if (categoryMeta[hints.category].visibility === false) throw new Error('NotFound')
+        }
+        if ("requires" in hints && res.locals.perms < 2) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(hints.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
             if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
-        if (!hints) throw new Error('NotFound');
+
         if (!hints.hints[0]) throw new Error('OutOfRange');
         let Gtimestamp = new Date()
         if (!hints.hints[0].purchased.includes(res.locals.username)) {
@@ -292,11 +330,16 @@ const hint = async (req, res, next) => {
 const submit = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1 } });
+        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1, category: 1 } });
         if (!chall) throw new Error('NotFound');
+        const categoryMeta = req.app.get("categoryMeta")
+        if (chall.category in categoryMeta) {
+            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
+        }
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
 
         //Check if the required challenge has been solved (if any)
+
         if ("requires" in chall) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
@@ -352,7 +395,7 @@ const submit = async (req, res, next) => {
                         }
                     }
                 }
-                await collections.transactions.insertOne(insertDocument); 
+                await collections.transactions.insertOne(insertDocument);
                 transactionDocumentsUpdated.push({
                     _id: insertDocument._id,
                     username: res.locals.username,
@@ -642,15 +685,30 @@ const editCategory = async (req, res, next) => {
         if (!Array.isArray(req.body.category)) throw new Error('Validation');
         let updateObj = {};
         if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
-        if (req.body.new_name != undefined) updateObj.category = req.body.new_name;
-        if ((await collections.challs.updateMany({
-            category: {
-                $in: req.body.category
-            }
-        }, {
-            $set: updateObj
-        })).matchedCount > 0) res.send({ success: true });
-        else throw new Error('NotFound');
+    }
+    catch (err) {
+        if (err.message == 'Validation')
+            res.send({
+                success: false,
+                error: 'validation'
+            });
+        else next(err);
+    }
+}
+
+const editCategoryVisibility = async (req, res, next) => {
+    const collections = Connection.collections
+    try {
+        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (!Array.isArray(req.body.category) || req.body.visibility === undefined) throw new Error('Validation');
+        let categoryMeta = req.app.get("categoryMeta")
+        for (let i = 0; i < req.body.category.length; i++) {
+            categoryMeta[req.body.category[i]].visibility = req.body.visibility
+        }
+        req.app.set("categoryMeta", categoryMeta)
+        await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
+        res.send({ success: true })
+
     }
     catch (err) {
         if (err.message == 'Validation')
@@ -700,4 +758,4 @@ const deleteChall = async (req, res, next) => {
     }
 }
 
-module.exports = { disableStates, list, listCategory, listCategories, listAll, listAllCategories, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, createChallengeCache }
+module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, createChallengeCache, editCategoryVisibility }
