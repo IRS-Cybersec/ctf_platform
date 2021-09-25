@@ -48,7 +48,12 @@ const startCache = async () => {
 	}
 
 	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
-	if (checkCache === null) await createCache() //First time set-up: (1) Create Cache 
+	if (checkCache === null) {
+		await createCache() //First time set-up: (1) Create Cache 
+		for (const key in cache) {
+			app.set(key, cache[key])
+		}
+	} 
 	else {
 		// Add any missing cache values
 		for (const key in cache) {
