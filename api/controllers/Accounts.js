@@ -86,7 +86,6 @@ const create = async (req, res, next) => {
             challengeID: null,
             timestamp: GTimestamp,
             type: 'initial_register',
-            perms: 0,
             points: 0,
             correct: true,
             submission: '',
