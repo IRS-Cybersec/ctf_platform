@@ -14,6 +14,8 @@ services:
       - "mongodb"
     depends_on: 
       - "mongodb"
+    volumes:
+      - profile_files:/usr/share/nginx/static/profile
   web-client:
     build:
       context: ./client
