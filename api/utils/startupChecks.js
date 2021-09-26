@@ -3,7 +3,6 @@ const validators = require('./validators.js')
 const crypto = require('crypto');
 const argon2 = require('argon2');
 var fs = require('fs');
-const { ENOENT } = require('constants');
 
 const startValidation = async (app) => {
     const collections = Connection.collections
@@ -87,7 +86,7 @@ async function loadConfigFile(cacheCollection) {
         await cacheCollection.updateOne({}, { $set: configData }, { upsert: true });
         console.log("Added "+ Object.keys(configData).length + " field(s) to cache")
     } catch (e) {
-        if (e instanceof ENOENT) {
+        if (e.code === "ENOENT") {
             return;
         } else {
             throw e;

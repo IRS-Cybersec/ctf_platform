@@ -2,14 +2,10 @@ const Connection = require('./mongoDB.js')
 const RD = require('reallydangerous');
 const crypto = require('crypto');
 let signer = null;
-new RD.Signer(process.env.SECRET, process.env.SALT);
 let permissions = {};
 
 const checkPermissions = async (token) => {
 
-    if (signer === null) {
-        signer = await getSigner(Connection.collections.cache)
-    }
     const username = signer.unsign(token);
 
     if (username in permissions) return { type: permissions[username], username: username };
@@ -34,7 +30,8 @@ const deletePermissions = (username) => {
     delete permissions[username]
 }
 
-async function getSigner(cacheCollection) {
+async function getSigner() {
+    const cacheCollection = Connection.collections.cache
     const cacheResult = await cacheCollection.findOne({});
     let changeRequired = false;
     if (cacheResult['SECRET'] == null) {
@@ -53,8 +50,8 @@ async function getSigner(cacheCollection) {
         await cacheCollection.updateOne({}, { $set: cacheResult }, { upsert: true });
     }
 
-    return new RD.Signer(cacheResult['SECRET'], cacheResult['SALT']);
+    signer = new RD.Signer(cacheResult['SECRET'], cacheResult['SALT']);
 
 }
 
-module.exports = { checkPermissions, setPermissions, deletePermissions, signer, checkUsernamePerms }
+module.exports = { checkPermissions, setPermissions, deletePermissions, signer, checkUsernamePerms, getSigner }
