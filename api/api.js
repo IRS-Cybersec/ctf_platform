@@ -14,6 +14,7 @@ const scoreboard = require('./controllers/Scoreboard.js')
 const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
+const { createSigner } = require('./utils/permissionUtils.js')
 
 const app = express();
 let server = app.listen(20001, () => console.info('Web server started'));
@@ -54,7 +55,7 @@ const startCache = async () => {
 		for (const key in cache) {
 			app.set(key, cache[key])
 		}
-	} 
+	}
 	else {
 		// Add any missing cache values
 		for (const key in cache) {
@@ -77,6 +78,7 @@ const main = async () => {
 		await startCache()
 		await startupChecks.startValidation(app)
 		await challenges.createChallengeCache()
+		await createSigner()
 
 		app.post('/v1/account/login', accounts.login);
 		app.post('/v1/account/create', accounts.create);
