@@ -81,6 +81,7 @@ const list = async (req, res, next) => {
                 if (challenges[i]._id in categoryMeta) {
                     challenges[i].meta = categoryMeta[challenges[i]._id]
                 }
+                else challenges[i].meta = { visibility: true }
             }
         }
 

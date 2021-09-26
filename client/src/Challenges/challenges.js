@@ -61,9 +61,6 @@ class Challenges extends React.Component {
 
       solvedStats.percentage = Math.round((solvedStats.solved / solvedStats.challenges) * 100)
       data[x].challenges = solvedStats
-      if (!("meta" in data[x])) {
-        data[x].meta = { visibility: true }
-      }
     }
 
     return data;
