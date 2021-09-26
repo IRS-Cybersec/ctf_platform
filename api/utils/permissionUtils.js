@@ -30,7 +30,11 @@ const deletePermissions = (username) => {
     delete permissions[username]
 }
 
-async function getSigner() {
+const signToken = (username) => {
+    return signer.sign(username)
+}
+
+const createSigner = async () => {
     const cacheCollection = Connection.collections.cache
     const cacheResult = await cacheCollection.findOne({});
     let changeRequired = false;
@@ -51,7 +55,6 @@ async function getSigner() {
     }
 
     signer = new RD.Signer(cacheResult['SECRET'], cacheResult['SALT']);
-
 }
 
-module.exports = { checkPermissions, setPermissions, deletePermissions, signer, checkUsernamePerms, getSigner }
+module.exports = { checkPermissions, setPermissions, deletePermissions, signToken, checkUsernamePerms, createSigner }

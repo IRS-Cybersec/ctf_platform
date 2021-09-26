@@ -1,4 +1,4 @@
-const { checkPermissions, deletePermissions, setPermissions, signer } = require('./../utils/permissionUtils.js')
+const { checkPermissions, deletePermissions, setPermissions, signToken } = require('./../utils/permissionUtils.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
 const argon2 = require('argon2');
@@ -39,7 +39,7 @@ const login = async (req, res, next) => {
             res.send({
                 success: true,
                 permissions: user.type,
-                token: signer.sign(req.body.username.toLowerCase())
+                token: signToken(req.body.username.toLowerCase())
             });
         }
         else throw new Error('WrongDetails');
