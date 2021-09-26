@@ -3,7 +3,7 @@ FROM node:latest AS builder
 WORKDIR /usr/src/app
 COPY package*.json ./
 
-RUN npm i
+RUN npm ci --only=production
 COPY . .
 RUN npm run build
 
