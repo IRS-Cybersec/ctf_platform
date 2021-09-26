@@ -32,8 +32,8 @@ const Admin = lazy(() => import("./AdminPanel/admin.js"));
 const Oops = lazy(() => import("./Misc/oops.js"));
 const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
-var ctfxVersion = "1.0.0"
 window.ipAddress = process.env.NODE_ENV === "development" ? "http://localhost:20001" : "/api"
+var ctfxVersion = "1.1"
 
 class App extends React.Component {
   constructor(props) {

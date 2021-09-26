@@ -204,7 +204,10 @@ class Settings extends React.Component {
                                         this.setState({ disableUpload: true })
                                     }
                                     else if ("response" in file.file) {
-                                        if (file.file.response.success) message.success("Uploaded profile picture")
+                                        if (file.file.response.success) {
+                                            message.success("Uploaded profile picture")
+                                            message.success("Reload the page to see your shiny new picture :)!")
+                                        } 
                                         else {
                                             message.error("Failed to upload profile picture")
                                             if (file.file.response.error === "too-large") {
