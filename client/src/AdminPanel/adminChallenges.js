@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card } from 'antd';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card, Select, Form } from 'antd';
 import { Switch as AntdSwitch } from 'antd';
 import {
     ExclamationCircleOutlined,
@@ -19,8 +19,65 @@ import { Switch, Route, Link } from 'react-router-dom';
 
 const { Column } = Table;
 const { confirm } = Modal;
+const { Option } = Select;
+
+const EditCategoryForm = (props) => {
+    const [form] = Form.useForm();
+
+    let initialData = JSON.parse(JSON.stringify(props.initialData))
+    initialData.name = props.initialData.name
+    form.setFieldsValue(initialData)
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                await fetch(window.ipAddress + "/v1/challenge/edit", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "name": props.initialData.name,
+                        "new_name": values.name,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
+                        props.handleEditChallBack()
+                        setEditorValue("")
+                        form.resetFields()
+                    }
+                    else if (data.error === "exists") {
+                        message.warn("A challenge with an existing name exists")
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error" })
+                    }
 
 
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+                props.setState({ editLoading: false })
+            }}
+        >
+            <p><b><u>Editing</u></b> <code>{props.initialData.name}</code></p>
+
+
+            <h1>Category Name:</h1>
+            <Form.Item
+                name="name"
+                rules={[{ required: true, message: 'Please enter a category name' }]}
+            >
+                <Input allowClear placeholder="Category name" />
+            </Form.Item>
+
+            <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Category</Button>
+
+        </Form>
+    );
+};
 
 class AdminChallenges extends React.Component {
     constructor(props) {
@@ -44,7 +101,10 @@ class AdminChallenges extends React.Component {
             submissionDisabled: false,
             selectedRows: [],
             IDNameMapping: {},
-            maxSockets: 0
+            maxSockets: 0,
+            categoryMeta: {},
+            categoryOptions: [],
+            currentEditCategory: false
         }
     }
 
@@ -80,30 +140,25 @@ class AdminChallenges extends React.Component {
 
         const categoryMeta = await fetch(window.ipAddress + "/v1/challenge/listCategoryInfo", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-
-            if (data.success === true) {
-                return data.categories
-            }
-            else {
-                message.error({ content: "Oops. Unknown error" })
-            }
-
-
+            if (data.success === true) return data.categories
+            else message.error({ content: "Oops. Unknown error" })
         }).catch((error) => {
             console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
 
         // handle visibility manager
+        let categoryOptions = []
         for (const cat in categoryMeta) {
             allCat.push({ "key": cat })
+            categoryOptions.push((<Option value={cat}>{cat}</Option>))
             if (categoryMeta[cat].visibility === false) invisible.push(cat)
         }
-        this.setState({ targetKeys: invisible, allCat: allCat, transferDisabled: false })
+        this.setState({ targetKeys: invisible, allCat: allCat, transferDisabled: false, categoryMeta: categoryMeta, categoryOptions: categoryOptions })
     }
 
     handleChange = (nextTargetKeys, direction, moveKeys) => {
@@ -124,7 +179,7 @@ class AdminChallenges extends React.Component {
     editCategoryVisibility(visibility, categories) {
         fetch(window.ipAddress + "/v1/challenge/edit/categoryVisibility", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 "visibility": visibility,
                 "category": categories,
@@ -157,7 +212,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/edit/visibility", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 "visibility": visibility,
                 "challenges": challengeIDs,
@@ -186,7 +241,7 @@ class AdminChallenges extends React.Component {
         this.setState({ loading: true })
         await fetch(window.ipAddress + "/v1/challenge/list_all", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -226,7 +281,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableEditButtons: true })
         await fetch(window.ipAddress + "/v1/challenge/delete", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 "chall": challengeIDs,
             })
@@ -294,7 +349,7 @@ class AdminChallenges extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 disable: value,
                 setting: setting
@@ -326,7 +381,7 @@ class AdminChallenges extends React.Component {
         this.setState({ disableLoading: true })
         await fetch(window.ipAddress + "/v1/challenge/disableStates", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
@@ -353,7 +408,7 @@ class AdminChallenges extends React.Component {
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
             body: JSON.stringify({
                 disable: value,
                 setting: setting
@@ -373,6 +428,15 @@ class AdminChallenges extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         this.setState({ uploadLoading: false })
+    }
+
+    openCategoryEditor = async (category) => {
+        const catMeta = this.state.categoryMeta[category]
+        this.setState({
+            currentEditCategory: {
+                name: category
+            }
+        })
     }
 
 
@@ -511,18 +575,34 @@ class AdminChallenges extends React.Component {
                         <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
                     </div>
 
-                    <h3>Category Visibility <EyeOutlined /></h3>
-                    <Transfer
-                        dataSource={this.state.allCat}
-                        titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}
-                        targetKeys={this.state.targetKeys}
-                        selectedKeys={this.state.selectedKeys}
-                        onChange={this.handleChange}
-                        onSelectChange={this.handleSelectChange}
-                        render={item => item.key}
-                        pagination
-                        disabled={this.state.transferDisabled}
-                    />
+                    <Card>
+                        <h3>Category Meta Information Editor<EyeOutlined /></h3>
+                        <p>Select a category to edit info such as Name, Cover Pictures etc.</p>
+
+                        <Select style={{ width: "30ch" }} onChange={this.openCategoryEditor.bind(this)}>
+                            {this.state.categoryOptions}
+                        </Select>
+
+                        {this.state.currentEditCategory && (
+                            <div style={{padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px"}}>
+                                <EditCategoryForm initialData={this.state.currentEditCategory}/>
+                            </div>
+                        )}
+                    </Card>
+                    <Card>
+                        <h3>Category Visibility <EyeOutlined /></h3>
+                        <Transfer
+                            dataSource={this.state.allCat}
+                            titles={[<span style={{ color: "#49aa19" }}>Visible Categories <EyeOutlined /></span>, <span style={{ color: "#d32029" }} >Hidden Categories <EyeInvisibleOutlined /></span>]}
+                            targetKeys={this.state.targetKeys}
+                            selectedKeys={this.state.selectedKeys}
+                            onChange={this.handleChange}
+                            onSelectChange={this.handleSelectChange}
+                            render={item => item.key}
+                            pagination
+                            disabled={this.state.transferDisabled}
+                        />
+                    </Card>
 
                     <Divider />
 
@@ -534,7 +614,7 @@ class AdminChallenges extends React.Component {
                         </Card>
 
                         <Divider type="vertical" style={{ height: "inherit" }} />
-                        
+
                         <Card>
                             <h3>Set Socket Limit:  <InputNumber
                                 value={this.state.maxSockets}
