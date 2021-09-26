@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:latest AS builder
+FROM node:lts-bullseye AS builder
 WORKDIR /usr/src/app
 COPY package*.json ./
 
@@ -8,8 +8,8 @@ COPY . .
 RUN npm run build
 
 # Stage 2
-#pull the latest nginx base image
-FROM nginx:latest
+#pull the latest (stable) nginx base image
+FROM nginx:stable
 #copies React to the container directory
 # Set working directory to nginx resources directory
 WORKDIR /usr/share/nginx/html
