@@ -5,6 +5,8 @@ services:
     container_name: "mongodb"
     ports: 
       - "127.0.0.1:27017:27017"
+    volumes: 
+      - db_data:/data/db
   web-api:
     build:
       context: ./api
@@ -29,3 +31,4 @@ services:
       - profile_files:/usr/share/nginx/static/profile
 volumes:
     profile_files:
+    db_data:

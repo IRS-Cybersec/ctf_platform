@@ -78,6 +78,7 @@ const uploadBackup = async (req, res, next) => {
             transactions: req.body.transactions.map((document) => {document._id = MongoDB.ObjectID(document._id);document.timestamp = new Date(document.timestamp); return document}),
             users: req.body.users.map((document) => {document._id = MongoDB.ObjectID(document._id); return document})
         }
+        
         await collections.announcements.deleteMany({})
         await collections.cache.deleteMany({})
         await collections.challs.deleteMany({})
@@ -89,6 +90,8 @@ const uploadBackup = async (req, res, next) => {
         await collections.challs.insertMany(backupData.challs)
         await collections.transactions.insertMany(backupData.transactions)
         await collections.users.insertMany(backupData.users)
+
+        req.app.set("transactionsCache", backupData.transactions)
         
 
         return res.send({ success: true })

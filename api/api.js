@@ -14,11 +14,12 @@ const scoreboard = require('./controllers/Scoreboard.js')
 const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
+const { createSigner } = require('./utils/permissionUtils.js')
 
 const app = express();
 let server = app.listen(20001, () => console.info('Web server started'));
 
-app.use(express.json());
+app.use(express.json({limit: "30mb"}));
 app.use(fileUpload());
 app.use(mongoSanitize());
 app.use(cors());
@@ -48,7 +49,12 @@ const startCache = async () => {
 	}
 
 	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
-	if (checkCache === null) await createCache() //First time set-up: (1) Create Cache 
+	if (checkCache === null) {
+		await createCache() //First time set-up: (1) Create Cache 
+		for (const key in cache) {
+			app.set(key, cache[key])
+		}
+	}
 	else {
 		// Add any missing cache values
 		for (const key in cache) {
@@ -71,6 +77,7 @@ const main = async () => {
 		await startCache()
 		await startupChecks.startValidation(app)
 		await challenges.createChallengeCache()
+		await createSigner()
 
 		app.post('/v1/account/login', accounts.login);
 		app.post('/v1/account/create', accounts.create);
@@ -94,7 +101,7 @@ const main = async () => {
 		app.get('/v1/challenge/list/:category', challenges.listCategory);
 		app.get('/v1/challenge/list_categories', challenges.listCategories);
 		app.get('/v1/challenge/list_all', challenges.listAll);
-		app.get('/v1/challenge/list_all_categories', challenges.listAllCategories);
+		app.get('/v1/challenge/listCategoryInfo', challenges.listCategoryInfo);
 		app.get('/v1/challenge/show/:chall', challenges.show);
 		app.get('/v1/challenge/show/:chall/detailed', challenges.showDetailed);
 		app.post('/v1/challenge/hint', challenges.hint);
@@ -103,6 +110,7 @@ const main = async () => {
 		app.post('/v1/challenge/edit', challenges.edit);
 		app.post('/v1/challenge/edit/visibility', challenges.editVisibility);
 		app.post('/v1/challenge/edit/category', challenges.editCategory);
+		app.post('/v1/challenge/edit/categoryVisibility', challenges.editCategoryVisibility);
 		app.post('/v1/challenge/delete', challenges.deleteChall);
 
 		// Announcement endpoints

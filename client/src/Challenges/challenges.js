@@ -3,6 +3,7 @@ import { Layout, Card, List, Progress, message, Button, Select } from 'antd';
 import {
   FileUnknownTwoTone,
   LeftCircleOutlined,
+  EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import ChallengesTagSort from "./challengesTagSort.js";
@@ -42,6 +43,7 @@ class Challenges extends React.Component {
   }
 
   parseCategories(data) {
+    //iterate through categories
     for (let x = 0; x < data.length; x++) {
       let currentCategory = data[x].challenges
       let solvedStats = {
@@ -50,6 +52,7 @@ class Challenges extends React.Component {
         percentage: 0
       }
 
+      //iterate through each category's challenges
       for (let y = 0; y < currentCategory.length; y++) {
         if (currentCategory[y].solved === true) {
           solvedStats.solved += 1
@@ -67,14 +70,14 @@ class Challenges extends React.Component {
   fetchCategories = async () => {
     await fetch(window.ipAddress + "/v1/challenge/list", {
       method: 'get',
-      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
     }).then(async (data) => {
       if (data.success === true) {
 
         let originalData = JSON.parse(JSON.stringify(data.challenges))
-        const newData = await this.parseCategories(data.challenges) //this statement changes the object data
+        const newData = this.parseCategories(data.challenges) //this statement changes the object data
 
         //convert array to dict
 
@@ -88,7 +91,7 @@ class Challenges extends React.Component {
         const mongoID = /^[a-f\d]{24}$/i
         if (typeof categoryChall !== "undefined") {
           categoryChall = decodeURIComponent(categoryChall)
-          if (mongoID.test(categoryChall)) { 
+          if (mongoID.test(categoryChall)) {
             if (typeof categoryChall !== "undefined") {
               const challenge = categoryChall
               let foundChallenge = false
@@ -102,18 +105,17 @@ class Challenges extends React.Component {
                   }
                 }
               }
-              console.log([this.state.originalData[foundChallenge.category]])
               if (foundChallenge) {
-                this.setState({ currentCategory: foundChallenge.category, currentCategoryChallenges: [this.state.originalData[foundChallenge.category]], foundChallenge: foundChallenge })
+                this.setState({ currentCategory: foundChallenge.category, currentCategoryChallenges: [originalDataDictionary[foundChallenge.category]], foundChallenge: foundChallenge })
               }
               else message.error("Challenge with ID '" + challenge + "' not found.")
             }
-          } 
+          }
           else {
-            if (categoryChall in this.state.originalData) this.setState({ currentCategory: categoryChall, currentCategoryChallenges: [this.state.originalData[categoryChall]] })
+            if (categoryChall in originalDataDictionary) this.setState({ currentCategory: categoryChall, currentCategoryChallenges: [originalDataDictionary[categoryChall]] })
             else message.error("Category '" + categoryChall + "' not found.")
-            
-          } 
+
+          }
         }
 
       }
@@ -233,14 +235,21 @@ class Challenges extends React.Component {
                                 >
                                   <Meta
                                     title={
-                                      <div id="Title" style={{ display: "flex", color: "#f5f5f5", flexDirection: "row", alignContent: "center", alignItems: "center" }}>
-                                        <h1 style={{ color: "white", fontSize: "2.5ch", width: "40ch", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
-                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-                                          <h2 style={{ fontSize: "2.5ch", marginLeft: "1vw", color: "#faad14", fontWeight: 700 }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
-                                          <Progress type="circle" percent={item.challenges.percentage} width="7ch" strokeColor={{
-                                            '0%': '#177ddc',
-                                            '100%': '#49aa19',
-                                          }} style={{ marginLeft: "1vw", fontSize: "2ch" }} />
+                                      <div style={{ display: "flex", flexDirection: "column", textAlign: "center" }}>
+                                        <div id="Title" style={{ display: "flex", color: "#f5f5f5", alignItems: "center", marginBottom: "2ch"}}>
+                                          <h1 style={{ color: "white", fontSize: "2.5ch", width: "40ch", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
+                                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
+                                            <h2 style={{ fontSize: "2.5ch", marginLeft: "1vw", color: "#faad14", fontWeight: 700 }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
+                                            <Progress type="circle" percent={item.challenges.percentage} width="7ch" strokeColor={{
+                                              '0%': '#177ddc',
+                                              '100%': '#49aa19',
+                                            }} style={{ marginLeft: "1vw", fontSize: "2ch" }} />
+                                          </div>
+                                        </div>
+                                        <div>
+                                          {item.meta.visibility === false && (
+                                            <h4 style={{ color: "#d9d9d9" }}>Hidden Category <EyeInvisibleOutlined /></h4>
+                                          )}
                                         </div>
                                       </div>
                                     }
