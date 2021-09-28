@@ -5,6 +5,8 @@ COPY package*.json ./
 
 RUN npm ci --only=production
 COPY . .
+# Reduces the (frankly insane) amount of RAM this build takes
+ENV GENERATE_SOURCEMAP=false
 RUN npm run build
 
 # Stage 2
