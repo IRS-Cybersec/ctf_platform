@@ -32,7 +32,7 @@ const Admin = lazy(() => import("./AdminPanel/admin.js"));
 const Oops = lazy(() => import("./Misc/oops.js"));
 const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
-window.ipAddress = window.location.protocol + "//" + window.location.hostname + "/api"
+window.ipAddress = window.location.origin + "/api"
 var ctfxVersion = "1.1"
 
 class App extends React.Component {
