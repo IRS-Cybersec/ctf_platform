@@ -16,6 +16,9 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
     permissions:
       contents: read
       packages: write
