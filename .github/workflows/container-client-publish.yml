@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Create and publishes the client files as a Docker image
+name: Publishes the client files to GHCR
 
 on:
   push:
