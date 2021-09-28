@@ -1,0 +1,35 @@
+version: "3.7"
+services:
+  ctf-mongodb:
+    image: "mongo"
+    container_name: "ctf-mongodb"
+    ports: 
+      - "127.0.0.1:27017:27017"
+    volumes: 
+      - db_data:/data/db
+  ctf-web-api:
+    build:
+      context: ./api
+    container_name: "ctf-web-api"
+    ports:
+      - "127.0.0.1:20001:20001"
+    depends_on: 
+      - "ctf-mongodb"
+    volumes:
+      - profile_files:/usr/share/nginx/static/profile
+  ctf-web-client:
+    build:
+      context: ./client
+    container_name: "ctf-web-client"
+    ports: 
+      - 127.0.0.1:20002:20002
+    depends_on: 
+      - "ctf-web-api"
+    volumes:
+      - profile_files:/usr/share/nginx/static/profile
+volumes:
+    profile_files:
+    db_data:
+networks:
+  default:
+    name: ctf_platform_network

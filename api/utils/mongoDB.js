@@ -5,7 +5,7 @@ class Connection {
     static async open() {
 
         if (this.db) return true
-        const status = await mongoDB.MongoClient.connect("mongodb://localhost:27017", {
+        const status = await mongoDB.MongoClient.connect("mongodb://ctf-mongodb:27017", {
             useNewUrlParser: true,
             useUnifiedTopology: true
         }).then(async (client) => {

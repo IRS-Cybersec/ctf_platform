@@ -107,7 +107,8 @@ class Scoreboard extends React.Component {
   }
 
   connectWebSocket() {
-    let webSocket = new WebSocket(window.production ? "wss://api.irscybersec.tk" : "ws://localhost:20001")
+    const proto = window.location.protocol === "http:" ? "ws:" : "wss:"
+    let webSocket = new WebSocket(proto + "//" + window.location.host +  "/api/" )
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
@@ -509,7 +510,7 @@ class Scoreboard extends React.Component {
               <Column title="Position" dataIndex="position" key="position" />
               <Column title="Username" dataIndex="username" key="username"
                 render={(text, row, index) => {
-                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"https://api.irscybersec.tk/uploads/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
                 }}
               />
               <Column title="Score" dataIndex="score" key="score" />

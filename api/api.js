@@ -35,8 +35,7 @@ const startCache = async () => {
 		uploadSize: 512000,
 		latestSolveSubmissionID: 0,
 		maxSockets: 5,
-		uploadPath: "/var/www/ctf_platform/static/uploads/profile",
-		categoryMeta: {}
+		uploadPath: "/usr/share/nginx/static/profile"
 	}
 	const collections = Connection.collections
 	createCache = async () => {
