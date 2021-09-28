@@ -2,7 +2,7 @@ version: "3.7"
 services:
   mongodb:
     image: "mongo"
-    container_name: "ctf_mongodb"
+    container_name: "ctf-mongodb"
     ports: 
       - "127.0.0.1:27017:27017"
     volumes: 
@@ -10,23 +10,21 @@ services:
   web-api:
     build:
       context: ./api
-    container_name: "ctf_web_api"
+    container_name: "ctf-web-api"
     ports:
       - "127.0.0.1:20001:20001"
     depends_on: 
-      - "ctf_mongodb"
+      - "ctf-mongodb"
     volumes:
       - profile_files:/usr/share/nginx/static/profile
   web-client:
     build:
       context: ./client
-    container_name: "ctf_web_client"
+    container_name: "ctf-web-client"
     ports: 
       - 127.0.0.1:20002:20002
-    links:
-      - "ctf_web_api"
     depends_on: 
-      - "ctf_web_api"
+      - "ctf-web-api"
     volumes:
       - profile_files:/usr/share/nginx/static/profile
 volumes:
