@@ -21,7 +21,7 @@ Password: 123
 Username: root
 Password: toor
 ```
-_Please exercise caution and do not use any person emails/passwords/usernames/any other info_
+_Please exercise caution and do not use any personal emails/passwords/usernames/any other info_
 
 ## Features 🎆
 - "**Categories**" 🗄️ for better organization of challenges into different "events"
