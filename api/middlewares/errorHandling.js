@@ -46,6 +46,12 @@ const errorHandler = (err, req, res, next) => {
                     success: false,
                     error: 'wrong-token'
                 });
+            case 'AdminHidden':
+                res.status(401);
+                return res.send({
+                    success: false,
+                    error: 'admin-hidden'
+                });
         }
         if (err.message.includes('BadSignature') || err.message == 'BadToken') {
             res.status(401);

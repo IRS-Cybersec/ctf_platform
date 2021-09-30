@@ -331,11 +331,19 @@ const hint = async (req, res, next) => {
 const submit = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1, category: 1 } });
+        const chall = await collections.challs.findOne({ _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1, category: 1, visibility: 1 } });
         if (!chall) throw new Error('NotFound');
+        if (chall.visibility === false) {
+            if (res.locals.perms === 2) throw new Error('AdminHidden')
+            else throw new Error('NotFound');
+        }
+
         const categoryMeta = req.app.get("categoryMeta")
         if (chall.category in categoryMeta) {
-            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
+            if (categoryMeta[chall.category].visibility === false) {
+                if (res.locals.perms === 2) throw new Error('AdminHidden')
+                throw new Error('NotFound')
+            }
         }
         if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
 

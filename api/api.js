@@ -35,7 +35,8 @@ const startCache = async () => {
 		uploadSize: 512000,
 		latestSolveSubmissionID: 0,
 		maxSockets: 5,
-		uploadPath: "/usr/share/nginx/static/profile"
+		uploadPath: "/usr/share/nginx/static/profile",
+		categoryMeta: {}
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -82,59 +83,57 @@ const main = async () => {
 		app.post('/v1/account/login', accounts.login);
 		app.post('/v1/account/create', accounts.create);
 
-		app.use(authenticated);
-
 		// Accounts endpoints
-		app.get('/v1/account/disableStates', accounts.disableStates);
-		app.post('/v1/account/taken/username', accounts.takenUsername);
-		app.post('/v1/account/taken/email', accounts.takenEmail);
-		app.post('/v1/account/delete', accounts.deleteAccount);
-		app.get('/v1/account/type', accounts.type);
-		app.post('/v1/account/password', accounts.password);
-		app.post('/v1/account/adminChangePassword', accounts.adminChangePassword);
-		app.get('/v1/account/list', accounts.list);
-		app.post('/v1/account/permissions', accounts.permissions);
+		app.get('/v1/account/disableStates',authenticated, accounts.disableStates);
+		app.post('/v1/account/taken/username',authenticated, accounts.takenUsername);
+		app.post('/v1/account/taken/email',authenticated, accounts.takenEmail);
+		app.post('/v1/account/delete',authenticated, accounts.deleteAccount);
+		app.get('/v1/account/type',authenticated, accounts.type);
+		app.post('/v1/account/password',authenticated, accounts.password);
+		app.post('/v1/account/adminChangePassword',authenticated, accounts.adminChangePassword);
+		app.get('/v1/account/list',authenticated, accounts.list);
+		app.post('/v1/account/permissions',authenticated, accounts.permissions);
 
 		// Challenge endpoints
-		app.get('/v1/challenge/disableStates', challenges.disableStates);
-		app.get('/v1/challenge/list/', challenges.list);
-		app.get('/v1/challenge/list/:category', challenges.listCategory);
-		app.get('/v1/challenge/list_categories', challenges.listCategories);
-		app.get('/v1/challenge/list_all', challenges.listAll);
-		app.get('/v1/challenge/listCategoryInfo', challenges.listCategoryInfo);
-		app.get('/v1/challenge/show/:chall', challenges.show);
-		app.get('/v1/challenge/show/:chall/detailed', challenges.showDetailed);
-		app.post('/v1/challenge/hint', challenges.hint);
-		app.post('/v1/challenge/submit', challenges.submit);
-		app.post('/v1/challenge/new', challenges.newChall);
-		app.post('/v1/challenge/edit', challenges.edit);
-		app.post('/v1/challenge/edit/visibility', challenges.editVisibility);
-		app.post('/v1/challenge/edit/category', challenges.editCategory);
-		app.post('/v1/challenge/edit/categoryVisibility', challenges.editCategoryVisibility);
-		app.post('/v1/challenge/delete', challenges.deleteChall);
+		app.get('/v1/challenge/disableStates',authenticated, challenges.disableStates);
+		app.get('/v1/challenge/list/',authenticated, challenges.list);
+		app.get('/v1/challenge/list/:category',authenticated, challenges.listCategory);
+		app.get('/v1/challenge/list_categories',authenticated, challenges.listCategories);
+		app.get('/v1/challenge/list_all',authenticated, challenges.listAll);
+		app.get('/v1/challenge/listCategoryInfo',authenticated, challenges.listCategoryInfo);
+		app.get('/v1/challenge/show/:chall',authenticated, challenges.show);
+		app.get('/v1/challenge/show/:chall/detailed',authenticated, challenges.showDetailed);
+		app.post('/v1/challenge/hint',authenticated, challenges.hint);
+		app.post('/v1/challenge/submit',authenticated, challenges.submit);
+		app.post('/v1/challenge/new',authenticated, challenges.newChall);
+		app.post('/v1/challenge/edit',authenticated, challenges.edit);
+		app.post('/v1/challenge/edit/visibility',authenticated, challenges.editVisibility);
+		app.post('/v1/challenge/edit/category',authenticated, challenges.editCategory);
+		app.post('/v1/challenge/edit/categoryVisibility',authenticated, challenges.editCategoryVisibility);
+		app.post('/v1/challenge/delete',authenticated, challenges.deleteChall);
 
 		// Announcement endpoints
-		app.get('/v1/announcements/list/:version', announcemnets.listVersion);
-		app.get('/v1/announcements/get/:id', announcemnets.get);
-		app.post('/v1/announcements/create', announcemnets.create);
-		app.post('/v1/announcements/edit', announcemnets.edit);
-		app.post('/v1/announcements/delete', announcemnets.deleteAnnouncement);
+		app.get('/v1/announcements/list/:version',authenticated, announcemnets.listVersion);
+		app.get('/v1/announcements/get/:id',authenticated, announcemnets.get);
+		app.post('/v1/announcements/create',authenticated, announcemnets.create);
+		app.post('/v1/announcements/edit',authenticated, announcemnets.edit);
+		app.post('/v1/announcements/delete',authenticated, announcemnets.deleteAnnouncement);
 
 		// Scoreboard endpoints
-		app.get('/v1/scoreboard', scoreboard.scoreboard);
-		app.get('/v1/scoreboard/:username', scoreboard.userScoreboard);
-		app.get('/v1/userPoints/:username', scoreboard.userPoints);
+		app.get('/v1/scoreboard',authenticated, scoreboard.scoreboard);
+		app.get('/v1/scoreboard/:username',authenticated, scoreboard.userScoreboard);
+		app.get('/v1/userPoints/:username',authenticated, scoreboard.userPoints);
 
 		// Misc endpoints
-		app.get('/v1/backup/', misc.downloadBackup)
-		app.post('/v1/uploadBackup/', misc.uploadBackup)
-		app.post('/v1/adminSettings/', misc.adminSettings)
-		app.get('/v1/submissions', submissions.submissions);
-		app.post('/v1/submissions/new', submissions.newSubmission);
-		app.post('/v1/submissions/edit', submissions.editSubmission);
-		app.post('/v1/submissions/delete', submissions.deleteSubmission);
-		app.get('/v1/about', misc.about);
-		app.post('/v1/profile/upload', misc.profileUpload)
+		app.get('/v1/backup/',authenticated, misc.downloadBackup)
+		app.post('/v1/uploadBackup/',authenticated, misc.uploadBackup)
+		app.post('/v1/adminSettings/',authenticated, misc.adminSettings)
+		app.get('/v1/submissions',authenticated, submissions.submissions);
+		app.post('/v1/submissions/new',authenticated, submissions.newSubmission);
+		app.post('/v1/submissions/edit',authenticated, submissions.editSubmission);
+		app.post('/v1/submissions/delete',authenticated, submissions.deleteSubmission);
+		app.get('/v1/about',authenticated, misc.about);
+		app.post('/v1/profile/upload',authenticated, misc.profileUpload)
 
 		sockets.startup(server, app)
 
