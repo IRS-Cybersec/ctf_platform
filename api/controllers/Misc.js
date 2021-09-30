@@ -72,11 +72,11 @@ const uploadBackup = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         let backupData = {
-            announcements: req.body.announcements.map((document) => {document._id = MongoDB.ObjectID(document._id);document.timestamp = new Date(document.timestamp); return document}),
-            cache: req.body.cache.map((document) => {document._id = MongoDB.ObjectID(document._id); return document}),
-            challs: req.body.challs.map((document) => {document._id = MongoDB.ObjectID(document._id);document.created = new Date(document.created); return document}),
-            transactions: req.body.transactions.map((document) => {document._id = MongoDB.ObjectID(document._id);document.timestamp = new Date(document.timestamp); return document}),
-            users: req.body.users.map((document) => {document._id = MongoDB.ObjectID(document._id); return document})
+            announcements: req.body.announcements.map((document) => {document._id = MongoDB.ObjectId(document._id);document.timestamp = new Date(document.timestamp); return document}),
+            cache: req.body.cache.map((document) => {document._id = MongoDB.ObjectId(document._id); return document}),
+            challs: req.body.challs.map((document) => {document._id = MongoDB.ObjectId(document._id);document.created = new Date(document.created); return document}),
+            transactions: req.body.transactions.map((document) => {document._id = MongoDB.ObjectId(document._id);document.timestamp = new Date(document.timestamp); return document}),
+            users: req.body.users.map((document) => {document._id = MongoDB.ObjectId(document._id); return document})
         }
         
         await collections.announcements.deleteMany({})

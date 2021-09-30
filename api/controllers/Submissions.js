@@ -26,7 +26,7 @@ const newSubmission = async (req, res, next) => {
         let insertDoc = {
             author: req.body.author,
             challenge: req.body.challenge,
-            challengeID: MongoDB.ObjectID(req.body.challengeID),
+            challengeID: MongoDB.ObjectId(req.body.challengeID),
             type: req.body.type,
             timestamp: GTime,
             lastChallengeID: latestSolveSubmissionID,
@@ -69,7 +69,7 @@ const editSubmission = async (req, res, next) => {
         let updateDoc = {
             author: req.body.author,
             challenge: req.body.challenge,
-            challengeID: MongoDB.ObjectID(req.body.challengeID),
+            challengeID: MongoDB.ObjectId(req.body.challengeID),
             type: req.body.type,
             lastChallengeID: latestSolveSubmissionID,
             points: req.body.points
@@ -81,7 +81,7 @@ const editSubmission = async (req, res, next) => {
             updateDoc.correct = req.body.correct
             updateDoc.submission = req.body.submission
         }
-        await collections.transactions.updateOne({ _id: MongoDB.ObjectID(req.body.id) }, { $set: updateDoc })
+        await collections.transactions.updateOne({ _id: MongoDB.ObjectId(req.body.id) }, { $set: updateDoc })
         let transactionsCache = req.app.get("transactionsCache")
         let time = null
         for (let i = 0; i < transactionsCache.length; i++) {
@@ -118,11 +118,11 @@ const deleteSubmission = async (req, res, next) => {
         let notFoundList = []
         for (let i = 0; i < req.body.ids.length; i++) {
             const current = req.body.ids[i]
-            let delReq = await collections.transactions.findOneAndDelete({ _id: MongoDB.ObjectID(current) })
+            let delReq = await collections.transactions.findOneAndDelete({ _id: MongoDB.ObjectId(current) })
             if (delReq.value === null) notFoundList.push(current)
             else {
                 delReq = delReq.value
-                //const challengeID = MongoDB.ObjectID(delReq.challengeID.toString())
+                //const challengeID = MongoDB.ObjectId(delReq.challengeID.toString())
                 const challDoc = await collections.challs.findOne({ _id: delReq.challengeID })
                 if (delReq.type === "hint") {
                     const hints = challDoc.hints

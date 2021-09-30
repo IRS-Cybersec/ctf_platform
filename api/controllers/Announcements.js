@@ -29,7 +29,7 @@ const listVersion = async (req, res, next) => {
 const get = async (req, res, next) => {
     const collections = Connection.collections
     try {
-        let announcement = await collections.announcements.findOne({ _id: MongoDB.ObjectID(req.params.id) }, { projection: { _id: 0 } })
+        let announcement = await collections.announcements.findOne({ _id: MongoDB.ObjectId(req.params.id) }, { projection: { _id: 0 } })
         if (announcement !== null) {
             res.send({
                 success: true,
@@ -72,7 +72,7 @@ const edit = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        if ((await collections.announcements.updateOne({ _id: MongoDB.ObjectID(req.body.id) }, {
+        if ((await collections.announcements.updateOne({ _id: MongoDB.ObjectId(req.body.id) }, {
             "$set": {
                 title: req.body.title,
                 content: req.body.content,
@@ -94,7 +94,7 @@ const deleteAnnouncement = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         if (!Array.isArray(req.body.ids)) throw new Error('Validation');
-        let ids = req.body.ids.map((id) => { return MongoDB.ObjectID(id) })
+        let ids = req.body.ids.map((id) => { return MongoDB.ObjectId(id) })
         const delReq = await collections.announcements.deleteMany({ _id: { $in: ids } });
         if (!delReq.result.ok) throw new Error('Unknown');
         if (delReq.deletedCount === 0) throw new Error('NotFound');
