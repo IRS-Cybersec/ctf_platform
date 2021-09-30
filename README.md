@@ -1,6 +1,6 @@
 # Sieberrsec CTF Platform 😃
 
-![](demo2.gif)
+![](demo_assets/demo2.gif)
 
 Sieberrsec CTF platform. A Jeopardy CTF platform designed with various neat features to aid in training and learning. Written in ReactJS and NodeJS
 
@@ -42,38 +42,38 @@ Feel free to take a look at the screenshots below for a peek at what the platfor
 
 ## Screenshots 🖼️
 
-![image](1.jpg)
+![image](demo_assets/1.jpg)
 
 *Challenges page. Includes "Categories" to better sort challenges into various events and more*
 
-![](5.jpg)
+![](demo_assets/5.jpg)
 
 *In each category, challenges are automatically sorted according to the tags assigned to each challenge by default. You can also all the challenges in a category by switching to "Sort by Category" mode and sort them using various sort options such as in Ascending Amount of Points*
 
-![](6.jpg)
+![](demo_assets/6.jpg)
 
 *Modal for a challenge*
 
-![](2.jpg)
+![](demo_assets/2.jpg)
 
 *Scoreboard of the platform*
 
-![](3.jpg)
+![](demo_assets/3.jpg)
 
 *Admin panel showing the list of challenges. Here you can create, edit and delete challenges.*
 
-![](4.jpg)
+![](demo_assets/4.jpg)
 
 *Create a new challenge page*
 
-![](7.jpg)
+![](demo_assets/7.jpg)
 
 *Profile page of a user*
 
-![](8.jpg)
+![](demo_assets/8.jpg)
 
 *Home page with announcements*
 
-![](9.jpg)
+![](demo_assets/9.jpg)
 
 *Challenge creation page for challenge authors without access to the admin panel*
