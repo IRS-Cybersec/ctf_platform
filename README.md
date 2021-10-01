@@ -19,7 +19,7 @@ Password: 123
 **Admin Account:**
 ```bash
 Username: root
-Password: toor
+Password: 123
 ```
 _Please exercise caution and do not use any personal emails/passwords/usernames/any other info_
 
