@@ -16,15 +16,27 @@ import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
 import { Ellipsis } from 'react-spinners-css';
 import { Switch, Route, Link } from 'react-router-dom';
+import { update } from 'lodash';
 
 const { Column } = Table;
 const { confirm } = Modal;
 const { Option } = Select;
 const { Dragger } = Upload;
 
+const fileToBase64= (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+        const pos = reader.result.indexOf("base64,")
+        resolve(reader.result.slice(pos+7))
+    } ;
+    reader.onerror = error => reject(error);
+})
+
 const EditCategoryForm = (props) => {
     const [form] = Form.useForm();
     const [fileList, updateFileList] = useState([])
+    const [editLoading, updateEditLoading] = useState(false)
 
     let initialData = JSON.parse(JSON.stringify(props.initialData))
     initialData.name = props.initialData.name
@@ -33,39 +45,42 @@ const EditCategoryForm = (props) => {
         <Form
             form={form}
             onFinish={async (values) => {
-
+                updateEditLoading(true)
+                let fileData = ""
                 if (fileList.length > 0) {
                     // make a request to update category picture here
+                    try {
+                        fileData = await fileToBase64(fileList[0].originFileObj)
+                    }
+                    catch (e) {
+                        console.log(e)
+                        message.error({ content: "Oops. Unknown error" })
+                    }
+                    
                 }
-                await fetch(window.ipAddress + "/v1/challenge/edit", {
+                await fetch(window.ipAddress + "/v1/challenge/edit/category", {
                     method: 'post',
                     headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
                         "name": props.initialData.name,
                         "new_name": values.name,
+                        "categoryImage": fileData
                     })
                 }).then((results) => {
                     return results.json(); //return data in JSON (since its JSON data)
                 }).then((data) => {
                     if (data.success === true) {
-                        message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
-                        props.handleEditChallBack()
-                        setEditorValue("")
-                        form.resetFields()
-                    }
-                    else if (data.error === "exists") {
-                        message.warn("A challenge with an existing name exists")
+                        message.success({ content: "Edited category \"" + props.initialData.name + "\" successfully!" })
+                        props.handleEditCategoryDone()
                     }
                     else {
                         message.error({ content: "Oops. Unknown error" })
                     }
-
-
                 }).catch((error) => {
                     console.log(error)
                     message.error({ content: "Oops. There was an issue connecting with the server" });
                 })
-                props.setState({ editLoading: false })
+                updateEditLoading(false)
             }}
         >
             <p><b><u>Editing</u></b> <code>{props.initialData.name}</code></p>
@@ -86,7 +101,7 @@ const EditCategoryForm = (props) => {
             >
                 <Dragger
                     fileList={fileList}
-                    disabled={props.editLoading}
+                    disabled={editLoading}
                     accept=".png, .jpg, .jpeg, .webp"
                     maxCount={1}
                     onChange={(file) => {
@@ -99,7 +114,7 @@ const EditCategoryForm = (props) => {
                 </Dragger>
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Category</Button>
+            <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={editLoading}>Edit Category</Button>
 
         </Form>
     );
@@ -364,7 +379,11 @@ class AdminChallenges extends React.Component {
         this.setState({ selectedTableKeys: selectedRowKeys, selectedRows: selectedRows })
         if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
+    }
 
+    handleEditCategoryDone = () => {
+        this.handleRefresh()
+        this.setState({currentEditCategory: false})
     }
     disableSetting = async (setting, value) => {
 
@@ -611,7 +630,7 @@ class AdminChallenges extends React.Component {
 
                         {this.state.currentEditCategory && (
                             <div style={{ padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px" }}>
-                                <EditCategoryForm initialData={this.state.currentEditCategory} />
+                                <EditCategoryForm initialData={this.state.currentEditCategory} handleEditCategoryDone={this.handleEditCategoryDone.bind(this)}/>
                             </div>
                         )}
                     </Card>

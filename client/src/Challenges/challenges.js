@@ -13,8 +13,6 @@ import { Transition, animated } from 'react-spring';
 const { Meta } = Card;
 const { Option } = Select;
 
-const categoryImages = [require("./../assets/catPhoto1.webp").default]
-
 
 
 var i = -1
@@ -217,7 +215,6 @@ class Challenges extends React.Component {
                         )
                       }}
                       renderItem={item => {
-                        i = 0
 
                         return (
                           <List.Item key={item._id}>
@@ -231,7 +228,7 @@ class Challenges extends React.Component {
                                   type="inner"
                                   bordered={true}
                                   className="card-design hover"
-                                  cover={<img style={{ overflow: "hidden" }} alt="Category Card" src={categoryImages[i]} />}
+                                  cover={<img style={{ overflow: "hidden" }} alt="Category Card" src={"/static/category/" + item._id} />}
                                 >
                                   <Meta
                                     title={

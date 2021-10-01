@@ -1,7 +1,10 @@
 const Connection = require('./../utils/mongoDB.js')
 const MongoDB = require('mongodb')
+const sharp = require('sharp');
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
+const sanitizeFile = require('sanitize-filename');
 const DomPurify = require('dompurify')
+const fs = require('fs')
 var challengeCache = {}
 
 
@@ -692,17 +695,27 @@ const editCategory = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        if (!Array.isArray(req.body.category)) throw new Error('Validation');
-        let updateObj = {};
-        if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
+        // name changed
+        if (req.body.new_name !== req.body.name) {
+            await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
+            fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name)), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)))
+        }
+        // new categoryImage
+        if (req.body.categoryImage !== "") {
+            const buff = Buffer.from(req.body.categoryImage, "base64")
+            await sharp(buff)
+                .toFormat('webp')
+                .webp({ quality: 30 })
+                .toFile(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
+                .catch((err) => {
+                    console.error(err)
+                    return res.send({ success: false, error: "file-upload" })
+                })
+        }
+        res.send({ success: true })
     }
     catch (err) {
-        if (err.message == 'Validation')
-            res.send({
-                success: false,
-                error: 'validation'
-            });
-        else next(err);
+        next(err)
     }
 }
 
