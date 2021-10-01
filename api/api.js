@@ -138,7 +138,6 @@ const main = async () => {
 		app.post('/v1/submissions/delete', authenticated, submissions.deleteSubmission);
 		app.get('/v1/about', authenticated, misc.about);
 		app.post('/v1/profile/upload', authenticated, misc.profileUpload)
-		app.post('/v1/category/upload', authenticated, misc.categoryUpload)
 
 		sockets.startup(server, app)
 

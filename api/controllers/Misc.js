@@ -49,24 +49,6 @@ const profileUpload = async (req, res, next) => {
     res.send({ success: true })
 }
 
-const categoryUpload = async (req, res, next) => {
-    if (!req.files || !("category_pic" in req.files)) res.send({ success: false, error: "no-file" })
-    if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
-    let targetFile = req.files.category_pic
-    let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
-    if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
-
-    await sharp(targetFile.data)
-        .toFormat('webp')
-        .webp({ quality: 30 })
-        .toFile(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.category)) + ".webp")
-        .catch((err) => {
-            console.error(err)
-            return res.send({ success: false, error: "file-upload" })
-        })
-    res.send({ success: true })
-}
-
 const downloadBackup = async (req, res, next) => {
     const collections = Connection.collections
     try {
@@ -126,4 +108,4 @@ const about = async (req, res, next) => {
     });
 }
 
-module.exports = { adminSettings, profileUpload, about, downloadBackup, uploadBackup, categoryUpload }
+module.exports = { adminSettings, profileUpload, about, downloadBackup, uploadBackup }
