@@ -4,6 +4,7 @@ const sharp = require('sharp');
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const sanitizeFile = require('sanitize-filename');
 const DomPurify = require('dompurify')
+const path = require('path');
 const fs = require('fs')
 var challengeCache = {}
 
