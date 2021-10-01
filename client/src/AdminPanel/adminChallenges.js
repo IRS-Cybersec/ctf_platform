@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card, Select, Form } from 'antd';
+import React, { useState } from 'react';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card, Select, Form, Upload } from 'antd';
 import { Switch as AntdSwitch } from 'antd';
 import {
     ExclamationCircleOutlined,
@@ -20,9 +20,11 @@ import { Switch, Route, Link } from 'react-router-dom';
 const { Column } = Table;
 const { confirm } = Modal;
 const { Option } = Select;
+const { Dragger } = Upload;
 
 const EditCategoryForm = (props) => {
     const [form] = Form.useForm();
+    const [fileList, updateFileList] = useState([])
 
     let initialData = JSON.parse(JSON.stringify(props.initialData))
     initialData.name = props.initialData.name
@@ -31,6 +33,10 @@ const EditCategoryForm = (props) => {
         <Form
             form={form}
             onFinish={async (values) => {
+
+                if (fileList.length > 0) {
+                    // make a request to update category picture here
+                }
                 await fetch(window.ipAddress + "/v1/challenge/edit", {
                     method: 'post',
                     headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -71,6 +77,26 @@ const EditCategoryForm = (props) => {
                 rules={[{ required: true, message: 'Please enter a category name' }]}
             >
                 <Input allowClear placeholder="Category name" />
+            </Form.Item>
+
+            <h1>Category Cover Image:</h1>
+            <img src={"/static/category" + props.initialData.category} />
+            <Form.Item
+                name="categoryImage"
+            >
+                <Dragger
+                    fileList={fileList}
+                    disabled={props.editLoading}
+                    accept=".png, .jpg, .jpeg, .webp"
+                    maxCount={1}
+                    onChange={(file) => {
+                        updateFileList(file.fileList)
+                    }}
+                    beforeUpload={(file) => {
+                        return false
+                    }}>
+                    <h4>Drag and drop an image file (.png, .jpeg, .webp etc.) to upload.</h4>
+                </Dragger>
             </Form.Item>
 
             <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Category</Button>
@@ -584,8 +610,8 @@ class AdminChallenges extends React.Component {
                         </Select>
 
                         {this.state.currentEditCategory && (
-                            <div style={{padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px"}}>
-                                <EditCategoryForm initialData={this.state.currentEditCategory}/>
+                            <div style={{ padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px" }}>
+                                <EditCategoryForm initialData={this.state.currentEditCategory} />
                             </div>
                         )}
                     </Card>

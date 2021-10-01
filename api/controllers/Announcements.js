@@ -96,7 +96,6 @@ const deleteAnnouncement = async (req, res, next) => {
         if (!Array.isArray(req.body.ids)) throw new Error('Validation');
         let ids = req.body.ids.map((id) => { return MongoDB.ObjectId(id) })
         const delReq = await collections.announcements.deleteMany({ _id: { $in: ids } });
-        if (!delReq.result.ok) throw new Error('Unknown');
         if (delReq.deletedCount === 0) throw new Error('NotFound');
 
         let version = req.app.get("announcements")

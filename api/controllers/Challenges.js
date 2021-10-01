@@ -746,8 +746,7 @@ const deleteChall = async (req, res, next) => {
                 hints: 1,
                 _id: 0
             });
-            if (!delReq.ok) throw new Error('Unknown');
-            if (delReq.value === null) throw new Error('NotFound');
+            if (delReq.deletedCount === 0) throw new Error('NotFound');
 
             delete challengeCache[currentID]
 
