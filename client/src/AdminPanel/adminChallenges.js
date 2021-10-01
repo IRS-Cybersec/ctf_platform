@@ -95,7 +95,7 @@ const EditCategoryForm = (props) => {
             </Form.Item>
 
             <h1>Category Cover Image:</h1>
-            <img src={"/static/category" + props.initialData.category} />
+            <img src={"/static/category/" + props.initialData.name + ".webp"} />
             <Form.Item
                 name="categoryImage"
             >
