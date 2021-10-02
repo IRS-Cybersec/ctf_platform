@@ -145,7 +145,8 @@ class AdminChallenges extends React.Component {
             maxSockets: 0,
             categoryMeta: {},
             categoryOptions: [],
-            currentEditCategory: false
+            currentEditCategory: false,
+	    categorySelect: ""
         }
     }
 
@@ -372,8 +373,10 @@ class AdminChallenges extends React.Component {
     }
 
     handleRefresh = async () => {
-        await Promise.all([this.fillTableData(), this.handleCategoryData()])
-    }
+           this.setState({categorySelect: ""})
+	   await Promise.all([this.fillTableData(), this.handleCategoryData()])
+	    
+}
 
     handleTableSelect = (selectedRowKeys, selectedRows) => {
         this.setState({ selectedTableKeys: selectedRowKeys, selectedRows: selectedRows })
@@ -480,7 +483,8 @@ class AdminChallenges extends React.Component {
         this.setState({
             currentEditCategory: {
                 name: category
-            }
+            },
+	    categorySelect: category
         })
     }
 
@@ -624,7 +628,7 @@ class AdminChallenges extends React.Component {
                         <h3>Category Meta Information Editor<EyeOutlined /></h3>
                         <p>Select a category to edit info such as Name, Cover Pictures etc.</p>
 
-                        <Select style={{ width: "30ch" }} onChange={this.openCategoryEditor.bind(this)}>
+                        <Select style={{ width: "30ch" }} value={this.state.categorySelect} onChange={this.openCategoryEditor.bind(this)}>
                             {this.state.categoryOptions}
                         </Select>
 

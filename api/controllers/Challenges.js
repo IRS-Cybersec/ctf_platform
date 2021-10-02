@@ -699,7 +699,17 @@ const editCategory = async (req, res, next) => {
         // name changed
         if (req.body.new_name !== req.body.name) {
             await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
-            fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name)), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)))
+            let categoryMeta = req.app.get("categoryMeta")
+	    categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
+	    delete categoryMeta[req.body.name]
+	    console.log(categoryMeta)
+            req.app.set("categoryMeta", categoryMeta)
+            fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
+if (err && err.code !== "ENOENT") {
+console.error(err);
+ return res.send({success: false, error: "file-rename-error"})
+}
+})
         }
         // new categoryImage
         if (req.body.categoryImage !== "") {
