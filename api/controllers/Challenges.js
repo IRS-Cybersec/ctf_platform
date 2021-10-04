@@ -696,13 +696,13 @@ const editCategory = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        // name changed
+        
+ let categoryMeta = req.app.get("categoryMeta")
+// name changed
         if (req.body.new_name !== req.body.name) {
             await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
-            let categoryMeta = req.app.get("categoryMeta")
 	    categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
 	    delete categoryMeta[req.body.name]
-	    console.log(categoryMeta)
             req.app.set("categoryMeta", categoryMeta)
             fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
 if (err && err.code !== "ENOENT") {
@@ -723,6 +723,7 @@ console.error(err);
                     return res.send({ success: false, error: "file-upload" })
                 })
         }
+await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
         res.send({ success: true })
     }
     catch (err) {
