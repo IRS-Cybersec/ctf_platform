@@ -29,6 +29,6 @@
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "sharp": "^0.29.1",
-    "ws": "^8.2.2"
+    "ws": "^8.2.3"
   }
 }
