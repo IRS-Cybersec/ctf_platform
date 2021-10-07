@@ -40,10 +40,14 @@ const EditCategoryForm = (props) => {
     const [fileList, updateFileList] = useState([])
     const [editLoading, updateEditLoading] = useState(false)
     const [time, updateTime] = useState([])
+    const [useDefaultPic, updateUseDefaultPic] = useState(false)
+
     if (form.getFieldValue("name") !== props.initialData.name) {
         let initialData = JSON.parse(JSON.stringify(props.initialData))
         initialData.name = props.initialData.name
-        initialData.time = [dayjs(props.initialData.time[0]), dayjs(props.initialData.time[1])]
+        if (props.initialData.time.length > 0) initialData.time = [dayjs(props.initialData.time[0]), dayjs(props.initialData.time[1])]
+
+
         form.setFieldsValue(initialData)
     }
 
@@ -53,16 +57,20 @@ const EditCategoryForm = (props) => {
             onFinish={async (values) => {
                 updateEditLoading(true)
                 let fileData = ""
-                if (fileList.length > 0) {
-                    // make a request to update category picture here
-                    try {
-                        fileData = await fileToBase64(fileList[0].originFileObj)
+                if (useDefaultPic) {
+                    fileData = "default"
+                }
+                else {
+                    if (fileList.length > 0) {
+                        // make a request to update category picture here
+                        try {
+                            fileData = await fileToBase64(fileList[0].originFileObj)
+                        }
+                        catch (e) {
+                            console.log(e)
+                            message.error({ content: "Oops. Unknown error" })
+                        }
                     }
-                    catch (e) {
-                        console.log(e)
-                        message.error({ content: "Oops. Unknown error" })
-                    }
-
                 }
                 await fetch(window.ipAddress + "/v1/challenge/edit/category", {
                     method: 'post',
@@ -102,24 +110,35 @@ const EditCategoryForm = (props) => {
             </Form.Item>
 
             <h1>Category Cover Image:</h1>
-            <img src={"/static/category/" + props.initialData.name + ".webp"} />
-            <Form.Item
-                name="categoryImage"
-            >
-                <Dragger
-                    fileList={fileList}
-                    disabled={editLoading}
-                    accept=".png, .jpg, .jpeg, .webp"
-                    maxCount={1}
-                    onChange={(file) => {
-                        updateFileList(file.fileList)
-                    }}
-                    beforeUpload={(file) => {
-                        return false
-                    }}>
-                    <h4>Drag and drop an image file (.png, .jpeg, .webp etc.) to upload.</h4>
-                </Dragger>
-            </Form.Item>
+            {!useDefaultPic ? (
+                <img src={"/static/category/" + props.initialData.name + ".webp"} />
+            ) : (
+                <img src={"/static/category/default.webp"} />
+            )}
+            <Button danger type="primary" icon={<DeleteOutlined />} disabled={useDefaultPic} style={{ marginTop: "1ch", marginBottom: "5ch" }} onClick={() => { updateUseDefaultPic(true) }}>Reset To Default</Button>
+
+
+            {!useDefaultPic && (
+                <Form.Item
+                    name="categoryImage"
+                >
+
+                    <Dragger
+                        fileList={fileList}
+                        disabled={editLoading}
+                        accept=".png, .jpg, .jpeg, .webp"
+                        maxCount={1}
+                        onChange={(file) => {
+                            updateFileList(file.fileList)
+                        }}
+                        beforeUpload={(file) => {
+                            return false
+                        }}>
+                        <h4>Drag and drop an image file (.png, .jpeg, .webp etc.) to upload.</h4>
+                    </Dragger>
+                </Form.Item>
+            )}
+
 
             <h1>Category Competition Time</h1>
             <Form.Item

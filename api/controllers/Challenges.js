@@ -740,15 +740,25 @@ const editCategory = async (req, res, next) => {
         }
         // new categoryImage
         if (req.body.categoryImage !== "") {
-            const buff = Buffer.from(req.body.categoryImage, "base64")
-            await sharp(buff)
-                .toFormat('webp')
-                .webp({ quality: 30 })
-                .toFile(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
-                .catch((err) => {
-                    console.error(err)
-                    return res.send({ success: false, error: "file-upload" })
+            if (req.body.categoryImage === "default") {
+                fs.rm(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp", (err) => {
+                    if (err && err.code !== "ENOENT") {
+                        console.error(err)
+                    }
                 })
+            }
+            else {
+                const buff = Buffer.from(req.body.categoryImage, "base64")
+                await sharp(buff)
+                    .toFormat('webp')
+                    .webp({ quality: 30 })
+                    .toFile(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
+                    .catch((err) => {
+                        console.error(err)
+                        return res.send({ success: false, error: "file-upload" })
+                    })
+            }
+           
         }
         if (req.body.time.length > 0) {
             categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]).setSeconds(0), new Date(req.body.time[1]).setSeconds(0)]
