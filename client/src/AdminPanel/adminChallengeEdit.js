@@ -26,33 +26,33 @@ const CreateChallengeForm = (props) => {
     const [editorValue, setEditorValue] = React.useState("")
 
     //Render existing categories select options
-    let existingCats = []
-    for (let i = 0; i < props.allCat.length; i++) {
-        existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
-    }
-    //Render existing challenges select options minus the challenge itself
-    let existingChalls = {}
-    for (let i = 0; i < props.challenges.length; i++) {
-        if (props.challenges[i].name !== props.initialData.name) {
-            if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
-            existingChalls[props.challenges[i].category].push({
-                value: props.challenges[i]._id,
-                label: props.challenges[i].name
+    if (typeof form.getFieldValue("name") === "undefined") {
+        let existingCats = []
+        for (let i = 0; i < props.allCat.length; i++) {
+            existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
+        }
+        //Render existing challenges select options minus the challenge itself
+        let existingChalls = {}
+        for (let i = 0; i < props.challenges.length; i++) {
+            if (props.challenges[i].name !== props.initialData.name) {
+                if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
+                existingChalls[props.challenges[i].category].push({
+                    value: props.challenges[i]._id,
+                    label: props.challenges[i].name
+                })
+            }
+        }
+        let finalSortedChalls = []
+        for (const category in existingChalls) {
+            finalSortedChalls.push({
+                value: category,
+                label: category,
+                children: existingChalls[category]
             })
         }
-    }
-    let finalSortedChalls = []
-    for (const category in existingChalls) {
-        finalSortedChalls.push({
-            value: category,
-            label: category,
-            children: existingChalls[category]
-        })
-    }
-
-    let initialData = JSON.parse(JSON.stringify(props.initialData))
-
-    if (typeof form.getFieldValue("name") === "undefined") {
+    
+        let initialData = JSON.parse(JSON.stringify(props.initialData))
+    
         if (props.initialData.visibility === false) {
             initialData.visibility = "false"
         }

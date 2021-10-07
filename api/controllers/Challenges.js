@@ -696,20 +696,19 @@ const editCategory = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        
- let categoryMeta = req.app.get("categoryMeta")
-// name changed
+
+        let categoryMeta = req.app.get("categoryMeta")
+        // name changed
         if (req.body.new_name !== req.body.name) {
             await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
-	    categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
-	    delete categoryMeta[req.body.name]
-            req.app.set("categoryMeta", categoryMeta)
+            categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
+            delete categoryMeta[req.body.name]
             fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
-if (err && err.code !== "ENOENT") {
-console.error(err);
- return res.send({success: false, error: "file-rename-error"})
-}
-})
+                if (err && err.code !== "ENOENT") {
+                    console.error(err);
+                    return res.send({ success: false, error: "file-rename-error" })
+                }
+            })
         }
         // new categoryImage
         if (req.body.categoryImage !== "") {
@@ -723,7 +722,12 @@ console.error(err);
                     return res.send({ success: false, error: "file-upload" })
                 })
         }
-await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
+        console.log(req.body.time)
+        if (req.body.time.length > 0) {
+            categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]), new Date(req.body.time[1])]
+        }
+        await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
+        req.app.set("categoryMeta", categoryMeta)
         res.send({ success: true })
     }
     catch (err) {

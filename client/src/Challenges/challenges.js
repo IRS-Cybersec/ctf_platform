@@ -13,10 +13,6 @@ import { Transition, animated } from 'react-spring';
 const { Meta } = Card;
 const { Option } = Select;
 
-
-
-var i = -1
-
 class Challenges extends React.Component {
   constructor(props) {
     super(props);
