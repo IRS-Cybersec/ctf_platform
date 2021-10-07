@@ -31,12 +31,12 @@ const adminSettings = async (req, res, next) => {
 }
 
 const profileUpload = async (req, res, next) => {
-    if (!req.files || !("profile_pic" in req.files)) res.send({ success: false, error: "no-file" })
-    if (Object.keys(req.files).length !== 1) res.send({ success: false, error: "only-1-file" })
+    if (!req.files || !("profile_pic" in req.files)) return res.send({ success: false, error: "no-file" })
+    if (Object.keys(req.files).length !== 1) return res.send({ success: false, error: "only-1-file" })
     let targetFile = req.files.profile_pic
-    if (targetFile.size > req.app.get("uploadSize")) res.send({ success: false, error: "too-large", size: app.get("uploadSize") })
+    if (targetFile.size > req.app.get("uploadSize")) return res.send({ success: false, error: "too-large", size: req.app.get("uploadSize") })
     let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
-    if (!allowedExts.includes(path.extname(targetFile.name))) res.send({ success: false, error: "invalid-ext" })
+    if (!allowedExts.includes(path.extname(targetFile.name))) return res.send({ success: false, error: "invalid-ext" })
 
     await sharp(targetFile.data)
         .toFormat('webp')
@@ -46,19 +46,19 @@ const profileUpload = async (req, res, next) => {
             console.error(err)
             return res.send({ success: false, error: "file-upload" })
         })
-    res.send({ success: true })
+        return res.send({ success: true })
 }
 
 const deleteProfileUpload = async (req, res, next) => {
     fs.rm(path.join(req.app.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
         if (err) {
-            if (err.code === "ENOENT") return res.send({success: false, error: "already-default"})
+            if (err.code === "ENOENT") return res.send({ success: false, error: "already-default" })
             else {
                 console.error(err)
-                return res.send({success: false, error: "unknown"})
+                return res.send({ success: false, error: "unknown" })
             }
         }
-        else return res.send({success: true})
+        else return res.send({ success: true })
     })
 
 }
@@ -86,13 +86,13 @@ const uploadBackup = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         let backupData = {
-            announcements: req.body.announcements.map((document) => {document._id = MongoDB.ObjectId(document._id);document.timestamp = new Date(document.timestamp); return document}),
-            cache: req.body.cache.map((document) => {document._id = MongoDB.ObjectId(document._id); return document}),
-            challs: req.body.challs.map((document) => {document._id = MongoDB.ObjectId(document._id);document.created = new Date(document.created); return document}),
-            transactions: req.body.transactions.map((document) => {document._id = MongoDB.ObjectId(document._id);document.timestamp = new Date(document.timestamp); return document}),
-            users: req.body.users.map((document) => {document._id = MongoDB.ObjectId(document._id); return document})
+            announcements: req.body.announcements.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
+            cache: req.body.cache.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
+            challs: req.body.challs.map((document) => { document._id = MongoDB.ObjectId(document._id); document.created = new Date(document.created); return document }),
+            transactions: req.body.transactions.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
+            users: req.body.users.map((document) => { document._id = MongoDB.ObjectId(document._id); return document })
         }
-        
+
         await collections.announcements.deleteMany({})
         await collections.cache.deleteMany({})
         await collections.challs.deleteMany({})
@@ -106,7 +106,7 @@ const uploadBackup = async (req, res, next) => {
         await collections.users.insertMany(backupData.users)
 
         req.app.set("transactionsCache", backupData.transactions)
-        
+
 
         return res.send({ success: true })
     }

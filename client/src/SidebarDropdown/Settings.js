@@ -21,7 +21,7 @@ const ChangePasswordForm = (props) => {
 
                 fetch(window.ipAddress + "/v1/account/password", {
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
                         "password": values.oldPass,
                         "new_password": values.newPassword,
@@ -111,7 +111,7 @@ const DeleteAccountForm = (props) => {
 
                 fetch(window.ipAddress + "/v1/account/delete", {
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
                         "password": values.password
                     })
@@ -120,7 +120,7 @@ const DeleteAccountForm = (props) => {
                 }).then((data) => {
                     if (data.success === true) {
                         message.success({ content: "Account deleted successfully" })
-                        props.setState({deleteAccountModal: false})
+                        props.setState({ deleteAccountModal: false })
                         props.logout()
                         form.resetFields()
                     }
@@ -138,7 +138,7 @@ const DeleteAccountForm = (props) => {
             }}
             style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
         >
-            <h4>Your account data will be <b style={{color: "#d32029"}}>deleted permanently</b>. Please ensure you really no longer want this account.</h4>
+            <h4>Your account data will be <b style={{ color: "#d32029" }}>deleted permanently</b>. Please ensure you really no longer want this account.</h4>
             <h3>Please Enter Your Password To Confirm:</h3>
             <Form.Item
                 name="password"
@@ -146,10 +146,10 @@ const DeleteAccountForm = (props) => {
 
                 <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter password." />
             </Form.Item>
-            
+
 
             <Form.Item>
-            <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ deleteAccountModal: false }) }}>Cancel</Button>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ deleteAccountModal: false }) }}>Cancel</Button>
                 <Button type="primary" htmlType="submit" danger icon={<KeyOutlined />}>Delete Account</Button>
             </Form.Item>
         </Form>
@@ -172,25 +172,25 @@ class Settings extends React.Component {
 
     deleteProfilePic() {
         fetch(window.ipAddress + "/v1/profile/deleteUpload", {
-                    method: 'get',
-                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken}
-                }).then((results) => {
-                    return results.json(); //return data in JSON (since its JSON data)
-                }).then((data) => {
-                    if (data.success === true) {
-                        message.success({ content: "Reset profile picture to default" })
-                    }
-                    else if (data.error === "already-default") {
-                        message.warn("Profile picture is already default.")
-                    }
-                    else {
-                        message.error({ content: "Oops. Unknown error." })
-                    }
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken }
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                message.success({ content: "Reset profile picture to default" })
+            }
+            else if (data.error === "already-default") {
+                message.warn("Profile picture is already default.")
+            }
+            else {
+                message.error({ content: "Oops. Unknown error." })
+            }
 
-                }).catch((error) => {
-                    console.log(error)
-                    message.error({ content: "Oops. There was an issue connecting with the server" });
-                })
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
     }
 
 
@@ -212,7 +212,7 @@ class Settings extends React.Component {
 
                 <Divider />
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "15ch", overflow: "hidden" }}>
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "20ch", overflow: "hidden" }}>
                         <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"/static/profile/" + this.props.username + ".webp"} />
                         <div style={{ marginTop: "2ch", display: "flex" }}>
                             <Upload
@@ -230,17 +230,17 @@ class Settings extends React.Component {
                                         if (file.file.response.success) {
                                             message.success("Uploaded profile picture")
                                             message.success("Reload the page to see your shiny new picture :)!")
-                                        } 
+                                        }
                                         else {
                                             message.error("Failed to upload profile picture")
                                             if (file.file.response.error === "too-large") {
-                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + "Bytes.")
+                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + " Bytes.")
                                             }
                                         }
                                         this.setState({ fileList: [], disableUpload: false })
                                     }
                                 }}
-                                headers={{ "Authorization": window.IRSCTFToken}}
+                                headers={{ "Authorization": window.IRSCTFToken }}
                                 name="profile_pic"
                                 beforeUpload={file => {
                                     const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
@@ -250,12 +250,14 @@ class Settings extends React.Component {
                                     }
                                     return true
                                 }}>
-                                <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
+                                <Tooltip title={<span>Upload a custom profile picture.</span>}>
+                                    <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
+                                </Tooltip>
                             </Upload>
                             <Tooltip title={<span>Reset your profile picture to the default profile picture.</span>}>
-                                <Button danger type="primary" icon={<DeleteOutlined />} style={{marginLeft: "1ch"}}  onClick={() => {this.deleteProfilePic()}} />           
+                                <Button danger type="primary" icon={<DeleteOutlined />} style={{ marginLeft: "1ch" }} onClick={() => { this.deleteProfilePic() }} />
                             </Tooltip>
-                            </div>
+                        </div>
                     </div>
                     <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
                 </div>
@@ -270,7 +272,7 @@ class Settings extends React.Component {
 
                 <div>
                     <h3>Very Very Dangerous Button</h3>
-                    <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.setState({deleteAccountModal: true})}} >Delete Account</Button>
+                    <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => { this.setState({ deleteAccountModal: true }) }} >Delete Account</Button>
                     <p>You will be asked to key in your password to confirm</p>
                 </div>
             </Layout>

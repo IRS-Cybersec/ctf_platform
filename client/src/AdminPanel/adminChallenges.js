@@ -128,7 +128,7 @@ const EditCategoryForm = (props) => {
                 <RangePicker
                     showTime={{ format: 'HH:mm' }}
                     format="YYYY-MM-DD HH:mm"
-                    onChange={(date) => { console.log(date); updateTime([date[0].toISOString(), date[1].toISOString()]) }}
+                    onChange={(date) => { if (date && date.length > 0) updateTime([date[0].toISOString(), date[1].toISOString()]) }}
                 />
             </Form.Item>
 

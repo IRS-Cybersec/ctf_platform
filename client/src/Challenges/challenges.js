@@ -13,6 +13,8 @@ import { Transition, animated } from 'react-spring';
 const { Meta } = Card;
 const { Option } = Select;
 
+var countDownTimes = {}
+
 class Challenges extends React.Component {
   constructor(props) {
     super(props);
@@ -26,7 +28,8 @@ class Challenges extends React.Component {
       tagData: [],
       loadingChall: false,
       currentCategoryChallenges: [],
-      foundChallenge: false
+      foundChallenge: false,
+      countDownTimerStrings: {}
     };
   }
 
@@ -38,6 +41,7 @@ class Challenges extends React.Component {
 
   parseCategories(data) {
     //iterate through categories
+    let countDownTimerStrings = {}
     for (let x = 0; x < data.length; x++) {
       let currentCategory = data[x].challenges
       let solvedStats = {
@@ -55,9 +59,90 @@ class Challenges extends React.Component {
 
       solvedStats.percentage = Math.round((solvedStats.solved / solvedStats.challenges) * 100)
       data[x].challenges = solvedStats
+      if ("time" in data[x].meta) {
+        const startTime = new Date(data[x].meta.time[0])
+        const endTime = new Date(data[x].meta.time[1])
+        const currentTime = new Date()
+        // Competition hasn't started
+        if (currentTime < startTime) {
+          const timeLeft = Math.ceil((startTime - currentTime) / 1000)
+          countDownTimes[data[x]._id] = { time: timeLeft, tillStart: true } // time left in seconds till start
+          countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, true)
+        }
+        else {
+          const timeLeft = Math.ceil((endTime - currentTime) / 1000)
+          countDownTimes[data[x]._id] = { time: timeLeft, tillStart: false } // time left in seconds till end
+          countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, false)
+        }
+      }
+    }
+    this.setState({ countDownTimerStrings: countDownTimerStrings })
+    setInterval(this.countDownTicker.bind(this), 1000 * 10)
+    return data;
+  }
+
+  countDownTicker() {
+    let countDownTimerStrings = this.state.countDownTimerStrings
+    for (const key in countDownTimes) {
+      const current = countDownTimes[key]
+      current.time -= 10
+      countDownTimerStrings[key] = this.getTimerString(current.time, current.tillStart)
+    }
+    this.setState({ countDownTimerStrings: countDownTimerStrings })
+  }
+
+  getTimerString(timeLeft, tillStart) {
+
+    if (timeLeft > 0) {
+      let minutes = Math.ceil(timeLeft / 60)
+      let hours = 0
+      let days = 0
+      let months = 0
+      let years = 0
+      if (minutes >= 60) {
+        hours = Math.floor(minutes / 60)
+        minutes = minutes - hours * 60
+
+        if (hours >= 24) {
+          days = Math.floor(hours / 24)
+          hours = hours - days * 24
+
+          if (days >= 30) {
+            months = Math.floor(days / 30)
+            days = days - months * 30
+
+            if (months >= 12) {
+              years = Math.floor(months / 12)
+              months = months - years * 12
+            }
+          }
+        }
+      }
+
+      let finalTime = " till start."
+      if (!tillStart) finalTime = " remaining."
+      if (minutes !== 0) {
+        finalTime = minutes.toString() + (minutes > 1 ? " minutes " : " minute ") + finalTime
+      }
+      if (hours !== 0) {
+        finalTime = hours.toString() + (hours > 1 ? " hours " : " hour ") + finalTime
+      }
+      if (days !== 0) {
+        finalTime = days.toString() + (days > 1 ? " days " : " day ") + finalTime
+      }
+      if (months !== 0) {
+        finalTime = months.toString() + (months > 1 ? " months " : " month ") + finalTime
+      }
+      if (years !== 0) {
+        finalTime = years.toString() + (years > 1 ? " years " : " year ") + finalTime
+      }
+      return finalTime
+    }
+    else {
+      if (tillStart) return "Competition has started! Refresh this page to see the challenges!"
+      else return "The competition has ended"
     }
 
-    return data;
 
   }
 
@@ -158,12 +243,22 @@ class Challenges extends React.Component {
 
           </h1>
           {this.state.currentCategory && (<h4 className="category-header">{this.state.currentCategory}</h4>)}
-
-
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "10px", textAlign: "center" }}>
 
           <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ currentCategory: false, foundChallenge: false }) }} size="large">Back</Button>
+
+          {this.state.currentCategory && this.state.countDownTimerStrings[this.state.currentCategory] && (
+            <h1 style={{
+              color: "white",
+              fontSize: "170%",
+              letterSpacing: ".3rem",
+              fontWeight: 300,
+              color: "#d89614",
+            }}>
+              {this.state.countDownTimerStrings[this.state.currentCategory]}
+            </h1>
+          )}
           <div>
             <Select disabled={!this.state.currentCategory} defaultValue="points" style={{ width: "20ch", backgroundColor: "#1f1f1f" }} onChange={this.sortCats.bind(this)}>
               <Option value="points">Sort by ↑Points</Option>
@@ -211,7 +306,6 @@ class Challenges extends React.Component {
                         )
                       }}
                       renderItem={item => {
-
                         return (
                           <List.Item key={item._id}>
                             <Link to={"/Challenges/" + item._id}>
@@ -229,7 +323,7 @@ class Challenges extends React.Component {
                                   <Meta
                                     title={
                                       <div style={{ display: "flex", flexDirection: "column", textAlign: "center" }}>
-                                        <div id="Title" style={{ display: "flex", color: "#f5f5f5", alignItems: "center", marginBottom: "2ch"}}>
+                                        <div id="Title" style={{ display: "flex", color: "#f5f5f5", alignItems: "center", marginBottom: "2ch" }}>
                                           <h1 style={{ color: "white", fontSize: "2.5ch", width: "40ch", textOverflow: "ellipsis", overflow: "hidden" }}>{item._id}</h1>
                                           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
                                             <h2 style={{ fontSize: "2.5ch", marginLeft: "1vw", color: "#faad14", fontWeight: 700 }}>{item.challenges.solved}/{item.challenges.challenges}</h2>
@@ -240,6 +334,14 @@ class Challenges extends React.Component {
                                           </div>
                                         </div>
                                         <div>
+                                          {"time" in item.meta && (
+                                            <span style={{
+                                              color: "#d89614",
+                                               letterSpacing: ".1rem",
+                                              fontWeight: 300,
+                                              whiteSpace: "initial"
+                                            }}>{this.state.countDownTimerStrings[item._id]}</span>
+                                          )}
                                           {item.meta.visibility === false && (
                                             <h4 style={{ color: "#d9d9d9" }}>Hidden Category <EyeInvisibleOutlined /></h4>
                                           )}

@@ -643,7 +643,7 @@ class ChallengesTagSort extends React.Component {
               emptyText: (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                   <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                  <h1 style={{ fontSize: "200%" }}>Oops, no challenges have been created.</h1>
+                  <h1 style={{ fontSize: "200%" }}>No challenges have been released yet</h1>
                 </div>
               )
             }}

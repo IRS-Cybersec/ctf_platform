@@ -59,10 +59,12 @@ const list = async (req, res, next) => {
                 if (challenges[i]._id in categoryMeta) {
                     const currentMeta = categoryMeta[challenges[i]._id]
                     if (currentMeta.visibility === false) challenges.splice(i, 1) // remove categories that are hidden
-                    else if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
-                       challenges[i].challenges = [] 
+                    else {
+                        if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
+                            challenges[i].challenges = []
+                        }
+                        challenges[i].meta = currentMeta
                     }
-                    else challenges[i].meta = currentMeta
                 }
             }
         }
@@ -93,7 +95,6 @@ const list = async (req, res, next) => {
                 else challenges[i].meta = { visibility: true }
             }
         }
-
         res.send({
             success: true,
             challenges: challenges
@@ -374,7 +375,7 @@ const submit = async (req, res, next) => {
                     if (res.locals.perms === 2) throw new Error('AdminHidden')
                     throw new Error('NotFound')
                 }
-                else if (new Date(currentMeta.time[1]) > currentTime) return res.send({success: false, error: "submission-disabled"})
+                else if (currentTime > new Date(currentMeta.time[1])) return res.send({ success: false, error: "submission-disabled" })
             }
         }
         if (req.app.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
@@ -749,9 +750,8 @@ const editCategory = async (req, res, next) => {
                     return res.send({ success: false, error: "file-upload" })
                 })
         }
-        console.log(req.body.time)
         if (req.body.time.length > 0) {
-            categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]), new Date(req.body.time[1])]
+            categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]).setSeconds(0), new Date(req.body.time[1]).setSeconds(0)]
         }
         await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
         req.app.set("categoryMeta", categoryMeta)
