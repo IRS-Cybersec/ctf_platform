@@ -2,8 +2,8 @@ const Connection = require('./../utils/mongoDB.js')
 const sharp = require('sharp');
 const sanitizeFile = require('sanitize-filename');
 const path = require('path');
-const MongoDB = require('mongodb')
-
+const MongoDB = require('mongodb');
+const fs = require('fs');
 
 const adminSettings = async (req, res, next) => {
     const collections = Connection.collections
@@ -47,6 +47,20 @@ const profileUpload = async (req, res, next) => {
             return res.send({ success: false, error: "file-upload" })
         })
     res.send({ success: true })
+}
+
+const deleteProfileUpload = async (req, res, next) => {
+    fs.rm(path.join(req.app.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
+        if (err) {
+            if (err.code === "ENOENT") return res.send({success: false, error: "already-default"})
+            else {
+                console.error(err)
+                return res.send({success: false, error: "unknown"})
+            }
+        }
+        else return res.send({success: true})
+    })
+
 }
 
 const downloadBackup = async (req, res, next) => {
@@ -108,4 +122,4 @@ const about = async (req, res, next) => {
     });
 }
 
-module.exports = { adminSettings, profileUpload, about, downloadBackup, uploadBackup }
+module.exports = { deleteProfileUpload, adminSettings, profileUpload, about, downloadBackup, uploadBackup }

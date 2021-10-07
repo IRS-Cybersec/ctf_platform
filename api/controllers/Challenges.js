@@ -57,8 +57,12 @@ const list = async (req, res, next) => {
             const categoryMeta = req.app.get("categoryMeta")
             for (let i = 0; i < challenges.length; i++) {
                 if (challenges[i]._id in categoryMeta) {
-                    if (categoryMeta[challenges[i]._id].visibility === false) challenges.splice(i, 1) // remove categories that are hidden
-                    else challenges[i].meta = categoryMeta[challenges[i]._id]
+                    const currentMeta = categoryMeta[challenges[i]._id]
+                    if (currentMeta.visibility === false) challenges.splice(i, 1) // remove categories that are hidden
+                    else if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
+                       challenges[i].challenges = [] 
+                    }
+                    else challenges[i].meta = currentMeta
                 }
             }
         }
@@ -197,7 +201,14 @@ const show = async (req, res, next) => {
         if (!chall) throw new Error('NotFound')
         const categoryMeta = req.app.get("categoryMeta")
         if (chall.category in categoryMeta && res.locals.perms < 2) {
-            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
+            const currentMeta = categoryMeta[chall.category]
+            if (currentMeta.visibility === false) throw new Error('NotFound')
+            else if ("time" in currentMeta) {
+                const currentTime = new Date()
+                if (currentTime < new Date(currentMeta.time[0])) {
+                    throw new Error('NotFound')
+                }
+            }
         }
         if ("requires" in chall && res.locals.perms < 2) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(chall.requires) }, { projection: { _id: 0, solves: 1 } })
@@ -279,7 +290,14 @@ const hint = async (req, res, next) => {
         if (!hints) throw new Error('NotFound');
         const categoryMeta = req.app.get("categoryMeta")
         if (hints.category in categoryMeta && res.locals.perms < 2) {
-            if (categoryMeta[hints.category].visibility === false) throw new Error('NotFound')
+            const currentMeta = categoryMeta[hints.category]
+            if (currentMeta.visibility === false) throw new Error('NotFound')
+            else if ("time" in currentMeta) {
+                const currentTime = new Date()
+                if (currentTime < new Date(currentMeta.time[0])) {
+                    throw new Error('NotFound')
+                }
+            }
         }
         if ("requires" in hints && res.locals.perms < 2) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(hints.requires) }, { projection: { _id: 0, solves: 1 } })
@@ -345,12 +363,21 @@ const submit = async (req, res, next) => {
 
         const categoryMeta = req.app.get("categoryMeta")
         if (chall.category in categoryMeta) {
-            if (categoryMeta[chall.category].visibility === false) {
+            const currentMeta = categoryMeta[chall.category]
+            if (currentMeta.visibility === false) {
                 if (res.locals.perms === 2) throw new Error('AdminHidden')
                 throw new Error('NotFound')
             }
+            else if ("time" in currentMeta) {
+                const currentTime = new Date()
+                if (currentTime < new Date(currentMeta.time[0])) {
+                    if (res.locals.perms === 2) throw new Error('AdminHidden')
+                    throw new Error('NotFound')
+                }
+                else if (new Date(currentMeta.time[1]) > currentTime) return res.send({success: false, error: "submission-disabled"})
+            }
         }
-        if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
+        if (req.app.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
 
         //Check if the required challenge has been solved (if any)
 
