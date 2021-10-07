@@ -1,5 +1,5 @@
 const Connection = require('./../utils/mongoDB.js')
-const sharp = require('sharp');
+const sharp = "s" //require('sharp');
 const sanitizeFile = require('sanitize-filename');
 const path = require('path');
 const MongoDB = require('mongodb')
