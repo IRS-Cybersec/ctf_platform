@@ -253,7 +253,7 @@ class Settings extends React.Component {
                                 <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
                             </Upload>
                             <Tooltip title={<span>Reset your profile picture to the default profile picture.</span>}>
-                                <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.deleteProfilePic()}} />           
+                                <Button danger type="primary" icon={<DeleteOutlined />} style={{marginLeft: "1ch"}}  onClick={() => {this.deleteProfilePic()}} />           
                             </Tooltip>
                             </div>
                     </div>
