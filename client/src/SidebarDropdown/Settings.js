@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal } from 'antd';
+import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal, Tooltip } from 'antd';
 import {
     KeyOutlined,
     LockOutlined,
@@ -214,7 +214,7 @@ class Settings extends React.Component {
                 <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "15ch", overflow: "hidden" }}>
                         <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"/static/profile/" + this.props.username + ".webp"} />
-                        <div style={{ marginTop: "2ch" }}>
+                        <div style={{ marginTop: "2ch", display: "flex" }}>
                             <Upload
                                 fileList={this.state.fileList}
                                 disabled={this.state.disableUpload}
@@ -252,8 +252,9 @@ class Settings extends React.Component {
                                 }}>
                                 <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
                             </Upload>
-
-                            <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.deleteProfilePic()}} />           
+                            <Tooltip title={<span>Reset your profile picture to the default profile picture.</span>}>
+                                <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.deleteProfilePic()}} />           
+                            </Tooltip>
                             </div>
                     </div>
                     <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
