@@ -170,6 +170,29 @@ class Settings extends React.Component {
     componentDidMount() {
     }
 
+    deleteProfilePic() {
+        fetch(window.ipAddress + "/v1/profilePic/delete", {
+                    method: 'get',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken}
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Reset profile picture to default" })
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Password is incorrect. Please try again." })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+    }
+
 
     render() {
         return (
@@ -229,7 +252,9 @@ class Settings extends React.Component {
                                 }}>
                                 <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
                             </Upload>
-                        </div>
+
+                            <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => {this.deleteProfilePic()}} />           
+                            </div>
                     </div>
                     <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
                 </div>
