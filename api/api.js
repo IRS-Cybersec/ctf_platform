@@ -137,8 +137,9 @@ const main = async () => {
 		app.post('/v1/submissions/edit', authenticated, submissions.editSubmission);
 		app.post('/v1/submissions/delete', authenticated, submissions.deleteSubmission);
 		app.get('/v1/about', authenticated, misc.about);
-		app.post('/v1/profile/upload', authenticated, misc.profileUpload)
-
+		app.post('/v1/profile/upload', authenticated, misc.profileUpload);
+        app.get('/v1/profile/deleteUpload', authenticated, misc.deleteProfileUpload);
+        
 		sockets.startup(server, app)
 
 		app.use(errorHandling.unknownEndpoint)

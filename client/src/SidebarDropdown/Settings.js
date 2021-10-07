@@ -171,7 +171,7 @@ class Settings extends React.Component {
     }
 
     deleteProfilePic() {
-        fetch(window.ipAddress + "/v1/profilePic/delete", {
+        fetch(window.ipAddress + "/v1/profile/deleteUpload", {
                     method: 'get',
                     headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken}
                 }).then((results) => {
@@ -180,8 +180,8 @@ class Settings extends React.Component {
                     if (data.success === true) {
                         message.success({ content: "Reset profile picture to default" })
                     }
-                    else if (data.error === "wrong-password") {
-                        message.error({ content: "Password is incorrect. Please try again." })
+                    else if (data.error === "already-default") {
+                        message.warn("Profile picture is already default.")
                     }
                     else {
                         message.error({ content: "Oops. Unknown error." })
