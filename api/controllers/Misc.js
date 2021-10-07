@@ -52,7 +52,7 @@ const profileUpload = async (req, res, next) => {
 const deleteProfileUpload = async (req, res, next) => {
     fs.rm(path.join(req.app.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
         if (err) {
-            if (err.code === "ENONENT") return res.send({success: false, error: "already-default"})
+            if (err.code === "ENOENT") return res.send({success: false, error: "already-default"})
             else {
                 console.error(err)
                 return res.send({success: false, error: "unknown"})
