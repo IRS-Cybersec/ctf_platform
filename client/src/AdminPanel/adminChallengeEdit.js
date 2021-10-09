@@ -24,8 +24,11 @@ const { TabPane } = Tabs;
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
     const [editorValue, setEditorValue] = React.useState("")
+    const [existingCats, setExistingCats] = React.useState([])
+    const [finalSortedChalls, setFinalSortedChalls] = React.useState([])
 
     //Render existing categories select options
+   
     if (typeof form.getFieldValue("name") === "undefined") {
         let existingCats = []
         for (let i = 0; i < props.allCat.length; i++) {
@@ -42,6 +45,7 @@ const CreateChallengeForm = (props) => {
                 })
             }
         }
+        setExistingCats(existingCats)
         let finalSortedChalls = []
         for (const category in existingChalls) {
             finalSortedChalls.push({
@@ -50,7 +54,7 @@ const CreateChallengeForm = (props) => {
                 children: existingChalls[category]
             })
         }
-    
+        setFinalSortedChalls(finalSortedChalls)
         let initialData = JSON.parse(JSON.stringify(props.initialData))
     
         if (props.initialData.visibility === false) {
