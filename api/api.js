@@ -75,6 +75,15 @@ const startCache = async () => {
 			NodeCacheObj.set(key, checkCache[key])
 		}
 	}
+
+	// Create challenge cache
+	const cursor = collections.challs.find({}, { projection: { solves: 1 } })
+	let challengeCache = {}
+    await cursor.forEach((doc) => {
+        challengeCache[doc._id] = { solves: doc.solves }
+    })
+	NodeCacheObj.set("challengeCache", challengeCache)
+
 	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
 	return true
 }
@@ -83,7 +92,6 @@ const main = async () => {
 	if (await Connection.open()) {
 		await startCache()
 		await startupChecks.startValidation(app)
-		await challenges.createChallengeCache()
 		await createSigner()
 
 		app.post('/v1/account/login', accounts.login);

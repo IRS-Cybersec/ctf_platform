@@ -6,17 +6,8 @@ const sanitizeFile = require('sanitize-filename');
 const DomPurify = require('dompurify')
 const path = require('path');
 const fs = require('fs')
-var challengeCache = {}
 
 
-const createChallengeCache = async () => {
-    const collections = Connection.collections
-    const cursor = collections.challs.find({}, { projection: { solves: 1 } })
-    await cursor.forEach((doc) => {
-        challengeCache[doc._id] = { solves: doc.solves }
-    })
-    return true
-}
 const disableStates = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
@@ -455,6 +446,7 @@ const submit = async (req, res, next) => {
         latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        let challengeCache = NodeCacheObj.get("challengeCache")
         if (chall.flags.includes(req.body.flag)) {
             solved = true;
             if (challengeCache[req.body.chall].solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
@@ -569,6 +561,7 @@ const newChall = async (req, res, next) => {
         // 	}
         // }
 
+        let challengeCache = NodeCacheObj.get("challengeCache")
         await collections.challs.insertOne(doc);
         challengeCache[doc._id] = { solves: [] }
         res.send({ success: true });
@@ -607,6 +600,7 @@ const edit = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
+        
 
         let updateObj = {};
         let unsetObj = {};
@@ -621,6 +615,7 @@ const edit = async (req, res, next) => {
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         let calculatedPoints = 0
+        let challengeCache = NodeCacheObj.get("challengeCache")
         if (updateObj.dynamic === true) {
             calculatedPoints = (((updateObj.minimum - updateObj.initial) / (updateObj.minSolves ** 2)) * (challengeCache[req.body.id].solves.length ** 2)) + updateObj.initial
             calculatedPoints = Math.ceil(calculatedPoints)
@@ -809,6 +804,7 @@ const deleteChall = async (req, res, next) => {
             });
             if (delReq.deletedCount === 0) throw new Error('NotFound');
 
+            let challengeCache = NodeCacheObj.get("challengeCache")
             delete challengeCache[currentID]
 
             await collections.transactions.deleteMany({ challengeID: MongoDB.ObjectId(currentID) }); //delete transactions from db
@@ -827,4 +823,4 @@ const deleteChall = async (req, res, next) => {
     }
 }
 
-module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, createChallengeCache, editCategoryVisibility }
+module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, editCategoryVisibility }

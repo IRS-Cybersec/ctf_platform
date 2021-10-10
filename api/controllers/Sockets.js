@@ -43,7 +43,7 @@ const startup = async (server, appVar) => {
                 // Check if any other clients of the same username are connected, and if so, disconnect them
                 socket.isAuthed = true
 
-                const maxSockets = app.get("maxSockets")
+                const maxSockets = NodeCacheObj.get("maxSockets")
                 let socketNumber = 0
                 if (permsObject.username in socketConns) {
                     if (socketConns[permsObject.username].length >= maxSockets) {
@@ -62,11 +62,11 @@ const startup = async (server, appVar) => {
                 socket.username = permsObject.username
                 socket.id = socketNumber
 
-                const latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+                const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
                 if (payload.lastChallengeID < latestSolveSubmissionID) {
-                    const transactionCache = app.get("transactionsCache")
+                    const transactionCache = NodeCacheObj.get("transactionsCache")
                     let finalChallenges = []
-                    if (app.get("adminShowDisable")) {
+                    if (NodeCacheObj.get("adminShowDisable")) {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try { // compatibility for older transaction records
                                 if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
@@ -132,7 +132,7 @@ const startup = async (server, appVar) => {
 }
 
 const broadCastNewSolve = async (solveDetails) => {
-    if (app.get("adminShowDisable")) {
+    if (NodeCacheObj.get("adminShowDisable")) {
         for (let i = 0; i < solveDetails.length; i++) {
             if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
         }
