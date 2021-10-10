@@ -5,10 +5,9 @@ const path = require('path');
 const MongoDB = require('mongodb');
 const fs = require('fs');
 
-const adminSettings = async (req, res, next) => {
+const adminSettings = async (req, res) => {
     const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (req.locals.perms < 2) throw new Error('Permissions');
         const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets"]
         if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
         NodeCacheObj.set(req.body.setting, req.body.disable)
@@ -23,17 +22,12 @@ const adminSettings = async (req, res, next) => {
         else {
             throw new Error('Unknown');
         }
-
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const profileUpload = async (req, res, next) => {
-    if (!req.files || !("profile_pic" in req.files)) return res.send({ success: false, error: "no-file" })
-    if (Object.keys(req.files).length !== 1) return res.send({ success: false, error: "only-1-file" })
-    let targetFile = req.files.profile_pic
+const profileUpload = async (req, res) => {
+    if (!req.raw.files || !("profile_pic" in req.raw.files)) return res.send({ success: false, error: "no-file" })
+    if (Object.keys(req.raw.files).length !== 1) return res.send({ success: false, error: "only-1-file" })
+    let targetFile = req.raw.files.profile_pic
     if (targetFile.size > NodeCacheObj.get("uploadSize")) return res.send({ success: false, error: "too-large", size: NodeCacheObj.get("uploadSize") })
     let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
     if (!allowedExts.includes(path.extname(targetFile.name))) return res.send({ success: false, error: "invalid-ext" })
@@ -41,7 +35,7 @@ const profileUpload = async (req, res, next) => {
     await sharp(targetFile.data)
         .toFormat('webp')
         .webp({ quality: 30 })
-        .toFile(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp")
+        .toFile(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(req.locals.username)) + ".webp")
         .catch((err) => {
             console.error(err)
             return res.send({ success: false, error: "file-upload" })
@@ -49,8 +43,8 @@ const profileUpload = async (req, res, next) => {
         return res.send({ success: true })
 }
 
-const deleteProfileUpload = async (req, res, next) => {
-    fs.rm(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
+const deleteProfileUpload = async (req, res) => {
+    fs.rm(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(req.locals.username)) + ".webp", (err) => {
         if (err) {
             if (err.code === "ENOENT") return res.send({ success: false, error: "already-default" })
             else {
@@ -63,10 +57,9 @@ const deleteProfileUpload = async (req, res, next) => {
 
 }
 
-const downloadBackup = async (req, res, next) => {
+const downloadBackup = async (req, res) => {
     const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (req.locals.perms < 2) throw new Error('Permissions');
         let backupData = {
             announcements: await collections.announcements.find({}).toArray(),
             cache: await collections.cache.find({}).toArray(),
@@ -75,16 +68,11 @@ const downloadBackup = async (req, res, next) => {
             users: await collections.users.find({}).toArray()
         }
         return res.send({ success: true, data: backupData })
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const uploadBackup = async (req, res, next) => {
+const uploadBackup = async (req, res) => {
     const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (req.locals.perms < 2) throw new Error('Permissions');
         let backupData = {
             announcements: req.body.announcements.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
             cache: req.body.cache.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
@@ -108,13 +96,9 @@ const uploadBackup = async (req, res, next) => {
         NodeCacheObj.set("transactionsCache", backupData.transactions)
 
         return res.send({ success: true })
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const about = async (req, res, next) => {
+const about = async (req, res) => {
     res.send({
         success: true,
         version: 'dev'

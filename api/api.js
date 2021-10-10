@@ -1,6 +1,6 @@
-const express = require('express');
+const fastify = require('fastify')()
 const mongoSanitize = require('express-mongo-sanitize');
-const fileUpload = require('express-fileupload')
+const fastifyFileUpload = require('fastify-file-upload');
 
 const Connection = require('./utils/mongoDB.js')
 const errorHandling = require('./middlewares/errorHandling.js');
@@ -14,20 +14,9 @@ const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
 const { createSigner } = require('./utils/permissionUtils.js')
-const NodeCache = require('node-cache')
-global.NodeCacheObj = new NodeCache({checkperiod: 0, useClones: false})
+const NodeCache = require('node-cache');
 
-const app = express();
-let server = app.listen(20001, () => console.info('Web server started'));
-
-app.use(express.json({ limit: "30mb" }));
-app.use(fileUpload());
-app.use(mongoSanitize());
-
-if (process.env.NODE_ENV === "development") {
-	const cors = require("cors")
-	app.use(cors())
-}
+global.NodeCacheObj = new NodeCache({ checkperiod: 0, useClones: false })
 
 const startCache = async () => {
 
@@ -79,9 +68,9 @@ const startCache = async () => {
 	// Create challenge cache
 	const cursor = collections.challs.find({}, { projection: { solves: 1 } })
 	let challengeCache = {}
-    await cursor.forEach((doc) => {
-        challengeCache[doc._id] = { solves: doc.solves }
-    })
+	await cursor.forEach((doc) => {
+		challengeCache[doc._id] = { solves: doc.solves }
+	})
 	NodeCacheObj.set("challengeCache", challengeCache)
 
 	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
@@ -89,71 +78,100 @@ const startCache = async () => {
 }
 
 const main = async () => {
+	fastify.setErrorHandler(errorHandling.errorHandler)
+	// mongoSanitize hook
+	fastify.addHook('preHandler', (request, reply, done) => {
+		mongoSanitize.sanitize(request.body, {});
+		done()
+	})
+
+	await fastify.register(fastifyFileUpload)
+	if (process.env.NODE_ENV === "development") {
+		const cors = require("fastify-cors")
+		await fastify.register(cors)
+	}
+
 	if (await Connection.open()) {
 		await startCache()
-		await startupChecks.startValidation(app)
+		await startupChecks.startValidation()
 		await createSigner()
 
-		app.post('/v1/account/login', accounts.login);
-		app.post('/v1/account/create', accounts.create);
+		// Unauthenticated routes
+		fastify.register((instance, opts, done) => {
+			fastify.post('/v1/account/login', accounts.login);
+			fastify.post('/v1/account/create', accounts.create);
+			done()
+		})
 
-		// Accounts endpoints
-		app.get('/v1/account/disableStates', authenticated, accounts.disableStates);
-		app.post('/v1/account/taken/username', authenticated, accounts.takenUsername);
-		app.post('/v1/account/taken/email', authenticated, accounts.takenEmail);
-		app.post('/v1/account/delete', authenticated, accounts.deleteAccount);
-		app.get('/v1/account/type', authenticated, accounts.type);
-		app.post('/v1/account/password', authenticated, accounts.password);
-		app.post('/v1/account/adminChangePassword', authenticated, accounts.adminChangePassword);
-		app.get('/v1/account/list', authenticated, accounts.list);
-		app.post('/v1/account/permissions', authenticated, accounts.permissions);
+		// Authenticated routes
+		fastify.register((instance, opts, done) => {
+			// register auth routes to only this context
+			instance.decorateRequest('locals', null)
+			instance.addHook('preHandler', authenticated) // authentication hook
+			// Accounts endpoints
+			instance.get('/v1/account/disableStates', accounts.disableStates);
+			instance.post('/v1/account/taken/username', accounts.takenUsername);
+			instance.post('/v1/account/taken/email', accounts.takenEmail);
+			instance.post('/v1/account/delete', accounts.deleteAccount);
+			instance.get('/v1/account/type', accounts.type);
+			instance.post('/v1/account/password', accounts.password);
+			instance.post('/v1/account/adminChangePassword', accounts.adminChangePassword);
+			instance.get('/v1/account/list', accounts.list);
+			instance.post('/v1/account/permissions', accounts.permissions);
 
-		// Challenge endpoints
-		app.get('/v1/challenge/disableStates', authenticated, challenges.disableStates);
-		app.get('/v1/challenge/list/', authenticated, challenges.list);
-		app.get('/v1/challenge/list/:category', authenticated, challenges.listCategory);
-		app.get('/v1/challenge/list_categories', authenticated, challenges.listCategories);
-		app.get('/v1/challenge/list_all', authenticated, challenges.listAll);
-		app.get('/v1/challenge/listCategoryInfo', authenticated, challenges.listCategoryInfo);
-		app.get('/v1/challenge/show/:chall', authenticated, challenges.show);
-		app.get('/v1/challenge/show/:chall/detailed', authenticated, challenges.showDetailed);
-		app.post('/v1/challenge/hint', authenticated, challenges.hint);
-		app.post('/v1/challenge/submit', authenticated, challenges.submit);
-		app.post('/v1/challenge/new', authenticated, challenges.newChall);
-		app.post('/v1/challenge/edit', authenticated, challenges.edit);
-		app.post('/v1/challenge/edit/visibility', authenticated, challenges.editVisibility);
-		app.post('/v1/challenge/edit/category', authenticated, challenges.editCategory);
-		app.post('/v1/challenge/edit/categoryVisibility', authenticated, challenges.editCategoryVisibility);
-		app.post('/v1/challenge/delete', authenticated, challenges.deleteChall);
+			// Challenge endpoints
+			instance.get('/v1/challenge/disableStates', challenges.disableStates);
+			instance.get('/v1/challenge/list', challenges.list);
+			instance.get('/v1/challenge/list/:category', challenges.listCategory);
+			instance.get('/v1/challenge/list_categories', challenges.listCategories);
+			instance.get('/v1/challenge/list_all', challenges.listAll);
+			instance.get('/v1/challenge/listCategoryInfo', challenges.listCategoryInfo);
+			instance.get('/v1/challenge/show/:chall', challenges.show);
+			instance.get('/v1/challenge/show/:chall/detailed', challenges.showDetailed);
+			instance.post('/v1/challenge/hint', challenges.hint);
+			instance.post('/v1/challenge/submit', challenges.submit);
+			instance.post('/v1/challenge/new', challenges.newChall);
+			instance.post('/v1/challenge/edit', challenges.edit);
+			instance.post('/v1/challenge/edit/visibility', challenges.editVisibility);
+			instance.post('/v1/challenge/edit/category', challenges.editCategory);
+			instance.post('/v1/challenge/edit/categoryVisibility', challenges.editCategoryVisibility);
+			instance.post('/v1/challenge/delete', challenges.deleteChall);
 
-		// Announcement endpoints
-		app.get('/v1/announcements/list/:version', authenticated, announcemnets.listVersion);
-		app.get('/v1/announcements/get/:id', authenticated, announcemnets.get);
-		app.post('/v1/announcements/create', authenticated, announcemnets.create);
-		app.post('/v1/announcements/edit', authenticated, announcemnets.edit);
-		app.post('/v1/announcements/delete', authenticated, announcemnets.deleteAnnouncement);
+			// Announcement endpoints
+			instance.get('/v1/announcements/list/:version', announcemnets.listVersion);
+			instance.get('/v1/announcements/get/:id', announcemnets.get);
+			instance.post('/v1/announcements/create', announcemnets.create);
+			instance.post('/v1/announcements/edit', announcemnets.edit);
+			instance.post('/v1/announcements/delete', announcemnets.deleteAnnouncement);
 
-		// Scoreboard endpoints
-		app.get('/v1/scoreboard', authenticated, scoreboard.scoreboard);
-		app.get('/v1/scoreboard/:username', authenticated, scoreboard.userScoreboard);
-		app.get('/v1/userPoints/:username', authenticated, scoreboard.userPoints);
+			// Scoreboard endpoints
+			instance.get('/v1/scoreboard', scoreboard.scoreboard);
+			instance.get('/v1/scoreboard/:username', scoreboard.userScoreboard);
+			instance.get('/v1/userPoints/:username', scoreboard.userPoints);
 
-		// Misc endpoints
-		app.get('/v1/backup/', authenticated, misc.downloadBackup)
-		app.post('/v1/uploadBackup/', authenticated, misc.uploadBackup)
-		app.post('/v1/adminSettings/', authenticated, misc.adminSettings)
-		app.get('/v1/submissions', authenticated, submissions.submissions);
-		app.post('/v1/submissions/new', authenticated, submissions.newSubmission);
-		app.post('/v1/submissions/edit', authenticated, submissions.editSubmission);
-		app.post('/v1/submissions/delete', authenticated, submissions.deleteSubmission);
-		app.get('/v1/about', authenticated, misc.about);
-		app.post('/v1/profile/upload', authenticated, misc.profileUpload);
-        app.get('/v1/profile/deleteUpload', authenticated, misc.deleteProfileUpload);
-        
-		sockets.startup(server, app)
+			// Misc endpoints
+			instance.get('/v1/backup/', misc.downloadBackup)
+			instance.post('/v1/uploadBackup/', misc.uploadBackup)
+			instance.post('/v1/adminSettings/', misc.adminSettings)
+			instance.get('/v1/submissions', submissions.submissions);
+			instance.post('/v1/submissions/new', submissions.newSubmission);
+			instance.post('/v1/submissions/edit', submissions.editSubmission);
+			instance.post('/v1/submissions/delete', submissions.deleteSubmission);
+			instance.get('/v1/about', misc.about);
+			instance.post('/v1/profile/upload', misc.profileUpload);
+			instance.get('/v1/profile/deleteUpload', misc.deleteProfileUpload);
+			done()
+		})
+		sockets.startup(fastify.server)
 
-		app.use(errorHandling.unknownEndpoint)
-		app.use(errorHandling.errorHandler)
+		try {
+			await fastify.listen(20001)
+			console.log("Web server started")
+		} catch (err) {
+			console.log("Error starting web server... exiting")
+			console.error(err)
+			process.exit(1)
+		}
 
 		console.info('Initialization complete');
 	}

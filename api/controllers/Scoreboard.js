@@ -1,7 +1,6 @@
 const { checkUsernamePerms } = require('./../utils/permissionUtils.js')
 
-const scoreboard = async (req, res, next) => {
-    try {
+const scoreboard = async (req, res) => {
         let changes = {}
         let finalData = []
 
@@ -38,14 +37,9 @@ const scoreboard = async (req, res, next) => {
             users: finalData,
             lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID")
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const userScoreboard = async (req, res, next) => {
-    try {
+const userScoreboard = async (req, res) => {
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         let scores = []
         let found = false
@@ -65,14 +59,9 @@ const userScoreboard = async (req, res, next) => {
             scores: scores,
             hidden: false
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const userPoints = async (req, res, next) => {
-    try {
+const userPoints = async (req, res) => {
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         let adminShowDisable = NodeCacheObj.get("adminShowDisable")
         let score = 0
@@ -88,9 +77,5 @@ const userPoints = async (req, res, next) => {
             score: score,
             hidden: false
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 module.exports = { scoreboard, userScoreboard, userPoints }

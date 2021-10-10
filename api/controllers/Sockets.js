@@ -1,5 +1,4 @@
 var wss = null
-var app = null
 var collections = null
 var socketConns = {}
 const ws = require('ws')
@@ -14,10 +13,9 @@ const kickTimeOut = async (socket) => {
     }
 }
 
-const startup = async (server, appVar) => {
+const startup = async (server) => {
     collections = Connection.collections
     wss = new ws.Server({ server })
-    app = appVar
 
     //websocket methods
     wss.on('connection', (socket) => {
