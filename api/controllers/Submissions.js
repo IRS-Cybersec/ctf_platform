@@ -7,7 +7,7 @@ const submissions = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            submissions: req.app.get("transactionsCache")
+            submissions: NodeCacheObj.get("transactionsCache")
         });
     }
     catch (err) {
@@ -20,9 +20,9 @@ const newSubmission = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         const GTime = new Date()
-        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         let insertDoc = {
             author: req.body.author,
             challenge: req.body.challenge,
@@ -39,9 +39,8 @@ const newSubmission = async (req, res, next) => {
             insertDoc.correct = req.body.correct
             insertDoc.submission = req.body.submission
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         transactionsCache.push(insertDoc)
-        req.app.set("transactionsCache", transactionsCache)
         await collections.transactions.insertOne(insertDoc)
 
         broadCastNewSolve([{
@@ -63,9 +62,9 @@ const editSubmission = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         let updateDoc = {
             author: req.body.author,
             challenge: req.body.challenge,
@@ -82,7 +81,7 @@ const editSubmission = async (req, res, next) => {
             updateDoc.submission = req.body.submission
         }
         await collections.transactions.updateOne({ _id: MongoDB.ObjectId(req.body.id) }, { $set: updateDoc })
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         let time = null
         for (let i = 0; i < transactionsCache.length; i++) {
             if (transactionsCache[i]._id.toString() === req.body.id) {
@@ -93,7 +92,6 @@ const editSubmission = async (req, res, next) => {
                 break
             }
         }
-        req.app.set("transactionsCache", transactionsCache)
 
 
         broadCastNewSolve([{
@@ -145,13 +143,12 @@ const deleteSubmission = async (req, res, next) => {
             }
 
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         for (let i = 0; i < transactionsCache.length; i++) {
             if (req.body.ids.includes(transactionsCache[i]._id.toString())) {
                 transactionsCache.splice(i, 1)
             }
         }
-        req.app.set("transactionsCache", transactionsCache)
 
         if (notFoundList.length === 0) {
             res.send({

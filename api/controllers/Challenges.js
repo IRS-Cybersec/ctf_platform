@@ -22,7 +22,7 @@ const disableStates = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            states: { submissionDisabled: req.app.get("submissionDisabled"), maxSockets: req.app.get("maxSockets") }
+            states: { submissionDisabled: NodeCacheObj.get("submissionDisabled"), maxSockets: NodeCacheObj.get("maxSockets") }
         });
     }
     catch (err) {
@@ -54,7 +54,7 @@ const list = async (req, res, next) => {
                 }
             }]).toArray();
 
-            const categoryMeta = req.app.get("categoryMeta")
+            const categoryMeta = NodeCacheObj.get("categoryMeta")
             for (let i = 0; i < challenges.length; i++) {
                 if (challenges[i]._id in categoryMeta) {
                     const currentMeta = categoryMeta[challenges[i]._id]
@@ -87,7 +87,7 @@ const list = async (req, res, next) => {
                 }
             }]).toArray();
 
-            const categoryMeta = req.app.get("categoryMeta")
+            const categoryMeta = NodeCacheObj.get("categoryMeta")
             for (let i = 0; i < challenges.length; i++) {
                 if (challenges[i]._id in categoryMeta) {
                     challenges[i].meta = categoryMeta[challenges[i]._id]
@@ -153,7 +153,7 @@ const listCategoryInfo = async (req, res, next) => {
     const collections = Connection.collections
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
-        const categoryMeta = req.app.get("categoryMeta")
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
         let newCategoryMeta = {}
         const categories = await collections.challs.distinct('category')
         // this copies over category meta data ONLY if the category still exists in the categories of the challenge list
@@ -164,7 +164,6 @@ const listCategoryInfo = async (req, res, next) => {
             else newCategoryMeta[categories[i]] = { visibility: true }
         }
         await collections.cache.updateOne({}, { '$set': { categoryMeta: newCategoryMeta } })
-        req.app.set("categoryMeta", newCategoryMeta)
         res.send({
             success: true,
             categories: newCategoryMeta
@@ -200,7 +199,7 @@ const show = async (req, res, next) => {
 
 
         if (!chall) throw new Error('NotFound')
-        const categoryMeta = req.app.get("categoryMeta")
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
         if (chall.category in categoryMeta && res.locals.perms < 2) {
             const currentMeta = categoryMeta[chall.category]
             if (currentMeta.visibility === false) throw new Error('NotFound')
@@ -289,7 +288,7 @@ const hint = async (req, res, next) => {
         }));
 
         if (!hints) throw new Error('NotFound');
-        const categoryMeta = req.app.get("categoryMeta")
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
         if (hints.category in categoryMeta && res.locals.perms < 2) {
             const currentMeta = categoryMeta[hints.category]
             if (currentMeta.visibility === false) throw new Error('NotFound')
@@ -316,9 +315,9 @@ const hint = async (req, res, next) => {
                     [`hints.${req.body.id}.purchased`]: res.locals.username
                 }
             });
-            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+            let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
             latestSolveSubmissionID += 1
-            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+            NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
             let insertDoc = {
                 author: res.locals.username,
                 challenge: hints.name,
@@ -329,7 +328,7 @@ const hint = async (req, res, next) => {
                 hint_id: parseInt(req.body.id),
                 lastChallengeID: latestSolveSubmissionID
             }
-            let transactionsCache = req.app.get("transactionsCache")
+            let transactionsCache = NodeCacheObj.get("transactionsCache")
             await collections.transactions.insertOne(insertDoc);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
             transactionsCache.push(insertDoc)
@@ -362,7 +361,7 @@ const submit = async (req, res, next) => {
             else throw new Error('NotFound');
         }
 
-        const categoryMeta = req.app.get("categoryMeta")
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
         if (chall.category in categoryMeta) {
             const currentMeta = categoryMeta[chall.category]
             if (currentMeta.visibility === false) {
@@ -378,7 +377,7 @@ const submit = async (req, res, next) => {
                 else if (currentTime > new Date(currentMeta.time[1])) return res.send({ success: false, error: "submission-disabled" })
             }
         }
-        if (req.app.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
+        if (NodeCacheObj.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
 
         //Check if the required challenge has been solved (if any)
 
@@ -401,7 +400,7 @@ const submit = async (req, res, next) => {
         let transactionDocumentsUpdated = []
         let solved = false;
         async function insertTransaction(correct = false) {
-            let transactionsCache = req.app.get("transactionsCache")
+            let transactionsCache = NodeCacheObj.get("transactionsCache")
             let insertDocument = {
                 author: res.locals.username,
                 challenge: chall.name,
@@ -450,13 +449,12 @@ const submit = async (req, res, next) => {
 
 
             transactionsCache.push(insertDocument)
-            req.app.set("transactionsCache", transactionsCache)
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
-        latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         if (chall.flags.includes(req.body.flag)) {
             solved = true;
             if (challengeCache[req.body.chall].solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
@@ -619,9 +617,9 @@ const edit = async (req, res, next) => {
                 else updateObj[field] = req.body[field];
             }
         }
-        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         let calculatedPoints = 0
         if (updateObj.dynamic === true) {
             calculatedPoints = (((updateObj.minimum - updateObj.initial) / (updateObj.minSolves ** 2)) * (challengeCache[req.body.id].solves.length ** 2)) + updateObj.initial
@@ -632,7 +630,7 @@ const edit = async (req, res, next) => {
         else {
             calculatedPoints = updateObj.points
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         let transactionDocumentsUpdated = []
         await collections.transactions.updateMany({ challengeID: MongoDB.ObjectId(req.body.id), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
         for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
@@ -648,7 +646,6 @@ const edit = async (req, res, next) => {
                 })
             }
         }
-        req.app.set("transactionsCache", transactionsCache)
         broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {
@@ -725,13 +722,13 @@ const editCategory = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
 
-        let categoryMeta = req.app.get("categoryMeta")
+        let categoryMeta = NodeCacheObj.get("categoryMeta")
         // name changed
         if (req.body.new_name !== req.body.name) {
             await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
             categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
             delete categoryMeta[req.body.name]
-            fs.rename(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
+            fs.rename(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
                 if (err && err.code !== "ENOENT") {
                     console.error(err);
                     return res.send({ success: false, error: "file-rename-error" })
@@ -741,7 +738,7 @@ const editCategory = async (req, res, next) => {
         // new categoryImage
         if (req.body.categoryImage !== "") {
             if (req.body.categoryImage === "default") {
-                fs.rm(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp", (err) => {
+                fs.rm(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp", (err) => {
                     if (err && err.code !== "ENOENT") {
                         console.error(err)
                     }
@@ -752,7 +749,7 @@ const editCategory = async (req, res, next) => {
                 await sharp(buff)
                     .toFormat('webp')
                     .webp({ quality: 30 })
-                    .toFile(path.join(req.app.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
+                    .toFile(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
                     .catch((err) => {
                         console.error(err)
                         return res.send({ success: false, error: "file-upload" })
@@ -764,7 +761,6 @@ const editCategory = async (req, res, next) => {
             categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]).setSeconds(0), new Date(req.body.time[1]).setSeconds(0)]
         }
         await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
-        req.app.set("categoryMeta", categoryMeta)
         res.send({ success: true })
     }
     catch (err) {
@@ -777,11 +773,10 @@ const editCategoryVisibility = async (req, res, next) => {
     try {
         if (res.locals.perms < 2) throw new Error('Permissions');
         if (!Array.isArray(req.body.category) || req.body.visibility === undefined) throw new Error('Validation');
-        let categoryMeta = req.app.get("categoryMeta")
+        let categoryMeta = NodeCacheObj.get("categoryMeta")
         for (let i = 0; i < req.body.category.length; i++) {
             categoryMeta[req.body.category[i]].visibility = req.body.visibility
         }
-        req.app.set("categoryMeta", categoryMeta)
         await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
         res.send({ success: true })
 
@@ -818,11 +813,10 @@ const deleteChall = async (req, res, next) => {
 
             await collections.transactions.deleteMany({ challengeID: MongoDB.ObjectId(currentID) }); //delete transactions from db
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         for (let i = 0; i < transactionsCache.length; i++) {
             if (challenges.includes(transactionsCache[i]._id)) transactionsCache.splice(i, 1) // delete transactions from cache
         }
-        req.app.set("transactionsCache", transactionsCache)
 
         res.send({
             success: true

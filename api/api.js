@@ -14,6 +14,8 @@ const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
 const { createSigner } = require('./utils/permissionUtils.js')
+const NodeCache = require('node-cache')
+global.NodeCacheObj = new NodeCache({checkperiod: 0, useClones: false})
 
 const app = express();
 let server = app.listen(20001, () => console.info('Web server started'));
@@ -57,7 +59,7 @@ const startCache = async () => {
 	if (checkCache === null) {
 		await createCache() //First time set-up: (1) Create Cache 
 		for (const key in cache) {
-			app.set(key, cache[key])
+			NodeCacheObj.set(key, cache[key])
 		}
 	}
 	else {
@@ -70,10 +72,10 @@ const startCache = async () => {
 				await collections.cache.updateOne({}, { $set: updateObj })
 				console.log("Missing value " + key + " added")
 			}
-			app.set(key, checkCache[key])
+			NodeCacheObj.set(key, checkCache[key])
 		}
 	}
-	app.set("transactionsCache", await collections.transactions.find({}).toArray())
+	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
 	return true
 }
 

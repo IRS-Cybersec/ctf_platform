@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const argon2 = require('argon2');
 var fs = require('fs');
 
-const startValidation = async (app) => {
+const startValidation = async () => {
     const collections = Connection.collections
 
      // (1) Insert Validation
@@ -35,12 +35,12 @@ const startValidation = async (app) => {
         console.log("Transcations indexes created")
     }
 
-    await createDefaultAdminAccount(collections.users, collections.transactions, app);
+    await createDefaultAdminAccount(collections.users, collections.transactions);
     await loadConfigFile(collections.cache);
     return true
 }
 
-async function createDefaultAdminAccount(userCollection, transactionColl, app) {
+async function createDefaultAdminAccount(userCollection, transactionColl) {
     const adminAccount = await userCollection.findOne({type: 2});
 
     if (adminAccount === null){    
@@ -58,7 +58,7 @@ async function createDefaultAdminAccount(userCollection, transactionColl, app) {
             password: await argon2.hash(adminPassword),
             type: 2
         });
-        let latestSolveSubmissionID = app.get("latestSolveSubmissionID")
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         if (isNaN(latestSolveSubmissionID)) latestSolveSubmissionID = 1
         else latestSolveSubmissionID += 1
         let insertDoc = {
@@ -72,9 +72,8 @@ async function createDefaultAdminAccount(userCollection, transactionColl, app) {
             submission: '',
             lastChallengeID: latestSolveSubmissionID
         }
-        let transactionsCache = app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         transactionsCache.push(insertDoc)
-        app.set("transactionsCache", transactionsCache)
         await transactionColl.insertOne(insertDoc)
 
     }

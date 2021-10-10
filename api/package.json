@@ -26,6 +26,7 @@
     "express-fileupload": "^1.2.1",
     "express-mongo-sanitize": "^2.1.0",
     "mongodb": "^4.1.3",
+    "node-cache": "^5.1.2",
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "sharp": "^0.29.1",

@@ -5,7 +5,7 @@ const listVersion = async (req, res, next) => {
     const collections = Connection.collections
     try {
         //Check announcements version to determine if it needs update
-        let version = req.app.get("announcements")
+        let version = NodeCacheObj.get("announcements")
         if (parseInt(req.params.version) !== version) {
             res.send({
                 success: true,
@@ -55,8 +55,8 @@ const create = async (req, res, next) => {
             content: req.body.content,
             timestamp: new Date()
         })
-        let version = req.app.get("announcements")
-        req.app.set("announcements", version + 1)
+        let version = NodeCacheObj.get("announcements")
+        NodeCacheObj.set("announcements", version + 1)
         if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) {
             res.send({ success: true })
         }
@@ -78,8 +78,8 @@ const edit = async (req, res, next) => {
                 content: req.body.content,
             }
         })).matchedCount === 0) throw new Error('NotFound');
-        let version = req.app.get("announcements")
-        req.app.set("announcements", version + 1)
+        let version = NodeCacheObj.get("announcements")
+        NodeCacheObj.set("announcements", version + 1)
         if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
         else res.send({ success: false })
 
@@ -98,8 +98,8 @@ const deleteAnnouncement = async (req, res, next) => {
         const delReq = await collections.announcements.deleteMany({ _id: { $in: ids } });
         if (delReq.deletedCount === 0) throw new Error('NotFound');
 
-        let version = req.app.get("announcements")
-        req.app.set("announcements", version + 1)
+        let version = NodeCacheObj.get("announcements")
+        NodeCacheObj.set("announcements", version + 1)
         if ((await collections.cache.updateOne({}, { '$set': { announcements: version + 1 } })).matchedCount > 0) res.send({ success: true })
     }
     catch (err) {

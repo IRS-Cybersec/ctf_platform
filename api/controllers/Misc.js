@@ -11,7 +11,7 @@ const adminSettings = async (req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets"]
         if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
-        req.app.set(req.body.setting, req.body.disable)
+        NodeCacheObj.set(req.body.setting, req.body.disable)
 
         const set = {}
         set[req.body.setting] = req.body.disable
@@ -34,14 +34,14 @@ const profileUpload = async (req, res, next) => {
     if (!req.files || !("profile_pic" in req.files)) return res.send({ success: false, error: "no-file" })
     if (Object.keys(req.files).length !== 1) return res.send({ success: false, error: "only-1-file" })
     let targetFile = req.files.profile_pic
-    if (targetFile.size > req.app.get("uploadSize")) return res.send({ success: false, error: "too-large", size: req.app.get("uploadSize") })
+    if (targetFile.size > NodeCacheObj.get("uploadSize")) return res.send({ success: false, error: "too-large", size: NodeCacheObj.get("uploadSize") })
     let allowedExts = ['.png', '.jpg', '.jpeg', '.webp']
     if (!allowedExts.includes(path.extname(targetFile.name))) return res.send({ success: false, error: "invalid-ext" })
 
     await sharp(targetFile.data)
         .toFormat('webp')
         .webp({ quality: 30 })
-        .toFile(path.join(req.app.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp")
+        .toFile(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp")
         .catch((err) => {
             console.error(err)
             return res.send({ success: false, error: "file-upload" })
@@ -50,7 +50,7 @@ const profileUpload = async (req, res, next) => {
 }
 
 const deleteProfileUpload = async (req, res, next) => {
-    fs.rm(path.join(req.app.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
+    fs.rm(path.join(NodeCacheObj.get("uploadPath"), sanitizeFile(res.locals.username)) + ".webp", (err) => {
         if (err) {
             if (err.code === "ENOENT") return res.send({ success: false, error: "already-default" })
             else {
@@ -105,8 +105,7 @@ const uploadBackup = async (req, res, next) => {
         await collections.transactions.insertMany(backupData.transactions)
         await collections.users.insertMany(backupData.users)
 
-        req.app.set("transactionsCache", backupData.transactions)
-
+        NodeCacheObj.set("transactionsCache", backupData.transactions)
 
         return res.send({ success: true })
     }

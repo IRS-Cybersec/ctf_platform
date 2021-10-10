@@ -9,7 +9,7 @@ const disableStates = async(req, res, next) => {
         if (res.locals.perms < 2) throw new Error('Permissions');
         res.send({
             success: true,
-            states: { registerDisable: req.app.get("registerDisable"), adminShowDisable: req.app.get("adminShowDisable"), uploadSize: req.app.get("uploadSize"), uploadPath: req.app.get("uploadPath") }
+            states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath") }
         });
     }
     catch (err) {
@@ -66,7 +66,7 @@ const create = async (req, res, next) => {
             const perms = await checkPermissions(req.headers.authorization)
             if (perms !== false && perms.type >= 2) admin = true
         }
-        if (!admin && req.app.get("registerDisable")) {
+        if (!admin && NodeCacheObj.get("registerDisable")) {
             return res.send({ success: false, error: 'registration-disabled' })
         }
 
@@ -77,8 +77,8 @@ const create = async (req, res, next) => {
             password: await argon2.hash(req.body.password),
             type: 0
         });
-        const latestSolveSubmissionID = req.app.get("latestSolveSubmissionID") + 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID") + 1
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         const GTimestamp = new Date()
         let insertDoc = {
             author: req.body.username.toLowerCase(),
@@ -91,9 +91,8 @@ const create = async (req, res, next) => {
             submission: '',
             lastChallengeID: latestSolveSubmissionID
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         transactionsCache.push(insertDoc)
-        req.app.set("transactionsCache", transactionsCache)
         await collections.transactions.insertOne(insertDoc)
         // Send out to scoreboards that there is a new user
         broadCastNewSolve([{
