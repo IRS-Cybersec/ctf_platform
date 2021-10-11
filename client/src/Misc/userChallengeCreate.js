@@ -10,8 +10,8 @@ import {
     EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { Ellipsis } from 'react-spinners-css';
-import MDEditor from '@uiw/react-md-editor';
-import MarkdownRender from './MarkdownRenderer.js';
+const MDEditor = React.lazy(() => import("@uiw/react-md-editor"));
+const MarkdownRender = React.lazy(() => import('./MarkdownRenderer.js'));
 
 
 const { Option } = Select;

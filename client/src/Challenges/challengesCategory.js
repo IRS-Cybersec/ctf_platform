@@ -12,8 +12,8 @@ import {
   SolutionOutlined,
   LinkOutlined
 } from '@ant-design/icons';
-import MarkdownRender from './MarkdownRenderer.js';
-import { orderBy } from 'lodash';
+const MarkdownRender = React.lazy(() => import('./MarkdownRenderer.js'));
+import orderBy from 'lodash.orderby';
 import { Ellipsis } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
 

@@ -12,8 +12,8 @@ import {
     EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { Ellipsis } from 'react-spinners-css';
-import MDEditor from '@uiw/react-md-editor';
-import MarkdownRender from './../Misc/MarkdownRenderer.js';
+const MDEditor = React.lazy(() => import("@uiw/react-md-editor"));
+const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'));
 import { Prompt } from 'react-router-dom';
 
 

@@ -14,10 +14,10 @@ import {
   LockOutlined,
   CheckOutlined
 } from '@ant-design/icons';
-import MarkdownRender from './../Misc/MarkdownRenderer.js';
+const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'));
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
-import { orderBy } from 'lodash';
+import orderBy from 'lodash.orderby';
 
 
 const { TabPane } = Tabs;

@@ -3,7 +3,7 @@ import { Layout, message, Table, Avatar } from 'antd';
 import {
   FileUnknownTwoTone
 } from '@ant-design/icons';
-import { orderBy } from "lodash";
+import orderBy from 'lodash.orderby'
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis, Ripple } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
