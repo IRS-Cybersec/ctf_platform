@@ -101,7 +101,7 @@
     top: 7px;
     z-index: 1;
     font-size: 150%;
-    color: #49aa19;
+    color: #49aa19 !important;
 }
 
 .challenge-header-style {
