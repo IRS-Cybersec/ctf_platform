@@ -3,7 +3,7 @@ import { Layout, message, Table, Avatar } from 'antd';
 import {
   FileUnknownTwoTone
 } from '@ant-design/icons';
-import { orderBy } from "lodash";
+import orderBy from 'lodash.orderby'
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis, Ripple } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
@@ -108,7 +108,8 @@ class Scoreboard extends React.Component {
 
   connectWebSocket() {
     const proto = window.location.protocol === "http:" ? "ws:" : "wss:"
-    let webSocket = new WebSocket(proto + "//" + window.location.host +  "/api/" )
+    const address = process.env.NODE_ENV === "development" ? "ws://localhost:20001/" : proto + "//" + window.location.host +  "/api/"
+    let webSocket = new WebSocket(address)
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
       if (data.type === "score") {

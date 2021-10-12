@@ -9,10 +9,10 @@ import {
     NotificationOutlined,
     SearchOutlined
 } from '@ant-design/icons';
-import { orderBy } from "lodash";
+import orderBy from 'lodash.orderby';
 import { Ellipsis } from 'react-spinners-css';
-import MDEditor from '@uiw/react-md-editor';
-import MarkdownRender from './../Misc/MarkdownRenderer.js';
+const MDEditor = React.lazy(() => import("@uiw/react-md-editor"));
+const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'));
 
 const { Column } = Table;
 const { confirm } = Modal;

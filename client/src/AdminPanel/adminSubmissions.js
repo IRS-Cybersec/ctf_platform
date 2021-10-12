@@ -10,7 +10,7 @@ import {
     ExclamationCircleOutlined,
     EditOutlined
 } from '@ant-design/icons';
-import { orderBy } from "lodash";
+import orderBy from 'lodash.orderby'
 import { Ellipsis } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
 

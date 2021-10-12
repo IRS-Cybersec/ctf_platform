@@ -1,355 +1,341 @@
 const Connection = require('./../utils/mongoDB.js')
 const MongoDB = require('mongodb')
+const sharp = require('sharp');
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
-var challengeCache = {}
+const sanitizeFile = require('sanitize-filename');
+const DomPurify = require('dompurify')
+const path = require('path');
+const fs = require('fs')
 
 
-const createChallengeCache = async () => {
-    const collections = Connection.collections
-    const cursor = collections.challs.find({}, { projection: { solves: 1 } })
-    await cursor.forEach((doc) => {
-        challengeCache[doc._id] = { solves: doc.solves }
-    })
-    return true
-}
-const disableStates = async (req, res, next) => {
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        res.send({
-            success: true,
-            states: { submissionDisabled: req.app.get("submissionDisabled"), maxSockets: req.app.get("maxSockets") }
-        });
-    }
-    catch (err) {
-        next(err);
-    }
+const disableStates = async (req, res) => {
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    res.send({
+        success: true,
+        states: { submissionDisabled: NodeCacheObj.get("submissionDisabled"), maxSockets: NodeCacheObj.get("maxSockets") }
+    });
 }
 
-const list = async (req, res, next) => {
+const list = async (req, res) => {
     const collections = Connection.collections
-    try {
-        let challenges = []
-        if (res.locals.perms < 2) {
-            challenges = await collections.challs.aggregate([{
-                $match: { visibility: true }
-            }, {
-                $group: {
-                    _id: '$category',
-                    challenges: {
-                        $push: {
-                            _id: "$_id",
-                            name: '$name',
-                            points: '$points',
-                            solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
-                            firstBlood: { $arrayElemAt: ['$solves', 0] },
-                            tags: '$tags',
-                            requires: '$requires'
-                        }
-                    }
-                }
-            }]).toArray();
-
-            const categoryMeta = req.app.get("categoryMeta")
-            for (let i = 0; i < challenges.length; i++) {
-                if (challenges[i]._id in categoryMeta) {
-                    if (categoryMeta[challenges[i]._id].visibility === false) challenges.splice(i, 1) // remove categories that are hidden
-                    else challenges[i].meta = categoryMeta[challenges[i]._id]
-                }
-            }
-        }
-        else {
-            challenges = await collections.challs.aggregate([{
-                $group: {
-                    _id: '$category',
-                    challenges: {
-                        $push: {
-                            _id: "$_id",
-                            name: '$name',
-                            points: '$points',
-                            solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
-                            firstBlood: { $arrayElemAt: ['$solves', 0] },
-                            tags: '$tags',
-                            visibility: '$visibility',
-                            requires: '$requires'
-                        }
-                    }
-                }
-            }]).toArray();
-
-            const categoryMeta = req.app.get("categoryMeta")
-            for (let i = 0; i < challenges.length; i++) {
-                if (challenges[i]._id in categoryMeta) {
-                    challenges[i].meta = categoryMeta[challenges[i]._id]
-                }
-                else challenges[i].meta = { visibility: true }
-            }
-        }
-
-        res.send({
-            success: true,
-            challenges: challenges
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
-const listCategory = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        const challenges = await collections.challs.aggregate([{
-            $match: {
-                visibility: true,
-                category: req.params.category
-            }
+    let challenges = []
+    if (req.locals.perms < 2) {
+        challenges = await collections.challs.aggregate([{
+            $match: { visibility: true }
         }, {
-            $project: {
-                _id: "$_id",
-                name: '$name',
-                points: '$points',
-                solved: { $in: [res.locals.username.toLowerCase(), '$solves'] },
-                firstBlood: { $arrayElemAt: ['$solves', 0] },
-                tags: '$tags',
-                requires: '$requires'
+            $group: {
+                _id: '$category',
+                challenges: {
+                    $push: {
+                        _id: "$_id",
+                        name: '$name',
+                        points: '$points',
+                        solved: { $in: [req.locals.username.toLowerCase(), '$solves'] },
+                        firstBlood: { $arrayElemAt: ['$solves', 0] },
+                        tags: '$tags',
+                        requires: '$requires'
+                    }
+                }
             }
         }]).toArray();
-        if (challenges.length == 0) throw new Error('NotFound')
-        res.send({
-            success: true,
-            challenges: challenges
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
 
-
-const listCategories = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        res.send({
-            success: true,
-            categories: await collections.challs.distinct('category', { visibility: true })
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
-const listCategoryInfo = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        const categoryMeta = req.app.get("categoryMeta")
-        let newCategoryMeta = {}
-        const categories = await collections.challs.distinct('category')
-        // this copies over category meta data ONLY if the category still exists in the categories of the challenge list
-        // hence, categories inside categoryMeta which no longer exist inside challenge list are deleted
-        // categories inside the challenge list but not in categoryMeta are given a new object
-        for (let i = 0; i < categories.length; i++) {
-            if (categories[i] in categoryMeta) newCategoryMeta[categories[i]] = categoryMeta[categories[i]]
-            else newCategoryMeta[categories[i]] = { visibility: true }
-        }
-        await collections.cache.updateOne({}, { '$set': { categoryMeta: newCategoryMeta } })
-        req.app.set("categoryMeta", newCategoryMeta)
-        res.send({
-            success: true,
-            categories: newCategoryMeta
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
-const listAll = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        res.send({
-            success: true,
-            challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, requires: 1 } }).toArray())
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
-
-
-
-const show = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        const filter = res.locals.perms == 2 ? { _id: MongoDB.ObjectID(req.params.chall) } : { visibility: true, _id: MongoDB.ObjectID(req.params.chall) };
-        let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
-
-
-        if (!chall) throw new Error('NotFound')
-        const categoryMeta = req.app.get("categoryMeta")
-        if (chall.category in categoryMeta && res.locals.perms < 2) {
-            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
-        }
-        if ("requires" in chall && res.locals.perms < 2) {
-            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
-            if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-            if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
-        }
-        if (chall.hints != undefined)
-            chall.hints.forEach(hint => {
-                if (hint.purchased.includes(res.locals.username)) {
-                    hint.bought = true;
-                    delete hint.cost;
-                }
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
+        for (let i = 0; i < challenges.length; i++) {
+            if (challenges[i]._id in categoryMeta) {
+                const currentMeta = categoryMeta[challenges[i]._id]
+                if (currentMeta.visibility === false) challenges.splice(i, 1) // remove categories that are hidden
                 else {
-                    hint.bought = false;
-                    delete hint.hint;
+                    if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
+                        challenges[i].challenges = []
+                    }
+                    challenges[i].meta = currentMeta
                 }
-                delete hint.purchased;
-            });
-        if (chall.writeup != undefined) {
-            //If only send writeup after submitting flag option is ticked, check if challenge is completed before sending writeup link
-            if (chall.writeupComplete) {
-                if (chall.solves.find(element => element === res.locals.username) === undefined) chall.writeup = "CompleteFirst"
             }
         }
-        if (chall.max_attempts != 0)
-            chall.used_attempts = await collections.transactions.countDocuments({
-                author: res.locals.username,
-                challengeID: MongoDB.ObjectID(req.params.chall),
-                type: 'submission'
-            }, { limit: chall.max_attempts });
-        res.send({
-            success: true,
-            chall: chall
-        });
     }
-    catch (err) {
-        next(err);
-    }
-}
-
-const showDetailed = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        const chall = await collections.challs.findOne({ _id: MongoDB.ObjectID(req.params.chall) }, null);
-        if (!chall) {
-            res.status(400);
-            res.send({
-                success: false,
-                error: 'notfound'
-            });
-            return;
-        }
-        res.send({
-            success: true,
-            chall: chall
-        });
-    }
-    catch (err) {
-        next(err);
-    }
-}
-
-const hint = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        let findObject = { visibility: true, _id: MongoDB.ObjectID(req.body.chall) }
-        if (res.locals.perms === 2) findObject = { _id: MongoDB.ObjectID(req.body.chall) }
-        let hints = (await collections.challs.findOne(findObject, {
-            projection: {
-                name: 1,
-                hints: { $slice: [req.body.id, 1] },
-                requires: 1,
-                category: 1,
-                _id: 1
-            }
-        }));
-
-        if (!hints) throw new Error('NotFound');
-        const categoryMeta = req.app.get("categoryMeta")
-        if (hints.category in categoryMeta && res.locals.perms < 2) {
-            if (categoryMeta[hints.category].visibility === false) throw new Error('NotFound')
-        }
-        if ("requires" in hints && res.locals.perms < 2) {
-            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(hints.requires) }, { projection: { _id: 0, solves: 1 } })
-            if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-            if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
-        }
-
-        if (!hints.hints[0]) throw new Error('OutOfRange');
-        let Gtimestamp = new Date()
-        if (!hints.hints[0].purchased.includes(res.locals.username)) {
-            await collections.challs.updateOne({
-                _id: MongoDB.ObjectID(req.body.chall)
-            }, {
-                $push: {
-                    [`hints.${req.body.id}.purchased`]: res.locals.username
+    else {
+        challenges = await collections.challs.aggregate([{
+            $group: {
+                _id: '$category',
+                challenges: {
+                    $push: {
+                        _id: "$_id",
+                        name: '$name',
+                        points: '$points',
+                        solved: { $in: [req.locals.username.toLowerCase(), '$solves'] },
+                        firstBlood: { $arrayElemAt: ['$solves', 0] },
+                        tags: '$tags',
+                        visibility: '$visibility',
+                        requires: '$requires'
+                    }
                 }
-            });
-            let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
-            latestSolveSubmissionID += 1
-            req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
-            let insertDoc = {
-                author: res.locals.username,
-                challenge: hints.name,
-                challengeID: MongoDB.ObjectID(req.body.chall),
-                type: 'hint',
-                timestamp: Gtimestamp,
-                points: -hints.hints[0].cost,
-                hint_id: parseInt(req.body.id),
-                lastChallengeID: latestSolveSubmissionID
             }
-            let transactionsCache = req.app.get("transactionsCache")
-            await collections.transactions.insertOne(insertDoc);
-            await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            transactionsCache.push(insertDoc)
-            broadCastNewSolve([{
-                _id: insertDoc._id,
-                username: res.locals.username,
-                timestamp: Gtimestamp,
-                points: -hints.hints[0].cost,
-                lastChallengeID: latestSolveSubmissionID
-            }])
-        }
+        }]).toArray();
 
-        res.send({
-            success: true,
-            hint: hints.hints[0].hint
-        });
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
+        for (let i = 0; i < challenges.length; i++) {
+            if (challenges[i]._id in categoryMeta) {
+                challenges[i].meta = categoryMeta[challenges[i]._id]
+            }
+            else challenges[i].meta = { visibility: true }
+        }
     }
-    catch (err) {
-        next(err);
-    }
+    res.send({
+        success: true,
+        challenges: challenges
+    });
 }
 
-const submit = async (req, res, next) => {
+const listCategory = async (req, res) => {
+    const collections = Connection.collections
+    const challenges = await collections.challs.aggregate([{
+        $match: {
+            visibility: true,
+            category: req.params.category
+        }
+    }, {
+        $project: {
+            _id: "$_id",
+            name: '$name',
+            points: '$points',
+            solved: { $in: [req.locals.username.toLowerCase(), '$solves'] },
+            firstBlood: { $arrayElemAt: ['$solves', 0] },
+            tags: '$tags',
+            requires: '$requires'
+        }
+    }]).toArray();
+    if (challenges.length == 0) throw new Error('NotFound')
+    res.send({
+        success: true,
+        challenges: challenges
+    });
+}
+
+
+const listCategories = async (req, res) => {
+    const collections = Connection.collections
+    res.send({
+        success: true,
+        categories: await collections.challs.distinct('category', { visibility: true })
+    });
+}
+
+const listCategoryInfo = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    const categoryMeta = NodeCacheObj.get("categoryMeta")
+    let newCategoryMeta = {}
+    const categories = await collections.challs.distinct('category')
+    // this copies over category meta data ONLY if the category still exists in the categories of the challenge list
+    // hence, categories inside categoryMeta which no longer exist inside challenge list are deleted
+    // categories inside the challenge list but not in categoryMeta are given a new object
+    for (let i = 0; i < categories.length; i++) {
+        if (categories[i] in categoryMeta) newCategoryMeta[categories[i]] = categoryMeta[categories[i]]
+        else newCategoryMeta[categories[i]] = { visibility: true }
+    }
+    await collections.cache.updateOne({}, { '$set': { categoryMeta: newCategoryMeta } })
+    res.send({
+        success: true,
+        categories: newCategoryMeta
+    });
+}
+
+const listAll = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    res.send({
+        success: true,
+        challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, requires: 1 } }).toArray())
+    });
+}
+
+
+
+
+const show = async (req, res) => {
+    const collections = Connection.collections
+    const filter = req.locals.perms == 2 ? { _id: MongoDB.ObjectId(req.params.chall) } : { visibility: true, _id: MongoDB.ObjectId(req.params.chall) };
+    let chall = await collections.challs.findOne(filter, { projection: { visibility: 0, flags: 0, _id: 0 } });
+
+
+    if (!chall) throw new Error('NotFound')
+    const categoryMeta = NodeCacheObj.get("categoryMeta")
+    if (chall.category in categoryMeta && req.locals.perms < 2) {
+        const currentMeta = categoryMeta[chall.category]
+        if (currentMeta.visibility === false) throw new Error('NotFound')
+        else if ("time" in currentMeta) {
+            const currentTime = new Date()
+            if (currentTime < new Date(currentMeta.time[0])) {
+                throw new Error('NotFound')
+            }
+        }
+    }
+    if ("requires" in chall && req.locals.perms < 2) {
+        const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(chall.requires) }, { projection: { _id: 0, solves: 1 } })
+        if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
+        if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+    }
+    if (chall.hints != undefined)
+        chall.hints.forEach(hint => {
+            if (hint.purchased.includes(req.locals.username)) {
+                hint.bought = true;
+                delete hint.cost;
+            }
+            else {
+                hint.bought = false;
+                delete hint.hint;
+            }
+            delete hint.purchased;
+        });
+    if (chall.writeup != undefined) {
+        //If only send writeup after submitting flag option is ticked, check if challenge is completed before sending writeup link
+        if (chall.writeupComplete) {
+            if (chall.solves.find(element => element === req.locals.username) === undefined) chall.writeup = "CompleteFirst"
+        }
+    }
+    if (chall.max_attempts != 0)
+        chall.used_attempts = await collections.transactions.countDocuments({
+            author: req.locals.username,
+            challengeID: MongoDB.ObjectId(req.params.chall),
+            type: 'submission'
+        }, { limit: chall.max_attempts });
+    res.send({
+        success: true,
+        chall: chall
+    });
+}
+
+const showDetailed = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    const chall = await collections.challs.findOne({ _id: MongoDB.ObjectId(req.params.chall) }, null);
+    if (!chall) {
+        res.code(400);
+        res.send({
+            success: false,
+            error: 'notfound'
+        });
+        return;
+    }
+    res.send({
+        success: true,
+        chall: chall
+    });
+}
+
+const hint = async (req, res) => {
+    const collections = Connection.collections
+    let findObject = { visibility: true, _id: MongoDB.ObjectId(req.body.chall) }
+    if (req.locals.perms === 2) findObject = { _id: MongoDB.ObjectId(req.body.chall) }
+    let hints = (await collections.challs.findOne(findObject, {
+        projection: {
+            name: 1,
+            hints: { $slice: [req.body.id, 1] },
+            requires: 1,
+            category: 1,
+            _id: 1
+        }
+    }));
+
+    if (!hints) throw new Error('NotFound');
+    const categoryMeta = NodeCacheObj.get("categoryMeta")
+    if (hints.category in categoryMeta && req.locals.perms < 2) {
+        const currentMeta = categoryMeta[hints.category]
+        if (currentMeta.visibility === false) throw new Error('NotFound')
+        else if ("time" in currentMeta) {
+            const currentTime = new Date()
+            if (currentTime < new Date(currentMeta.time[0])) {
+                throw new Error('NotFound')
+            }
+        }
+    }
+    if ("requires" in hints && req.locals.perms < 2) {
+        const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(hints.requires) }, { projection: { _id: 0, solves: 1 } })
+        if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
+        if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+    }
+
+    if (!hints.hints[0]) throw new Error('OutOfRange');
+    let Gtimestamp = new Date()
+    if (!hints.hints[0].purchased.includes(req.locals.username)) {
+        await collections.challs.updateOne({
+            _id: MongoDB.ObjectId(req.body.chall)
+        }, {
+            $push: {
+                [`hints.${req.body.id}.purchased`]: req.locals.username
+            }
+        });
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
+        latestSolveSubmissionID += 1
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        let insertDoc = {
+            author: req.locals.username,
+            challenge: hints.name,
+            challengeID: MongoDB.ObjectId(req.body.chall),
+            type: 'hint',
+            timestamp: Gtimestamp,
+            points: -hints.hints[0].cost,
+            hint_id: parseInt(req.body.id),
+            lastChallengeID: latestSolveSubmissionID
+        }
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
+        await collections.transactions.insertOne(insertDoc);
+        await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
+        transactionsCache.push(insertDoc)
+        broadCastNewSolve([{
+            _id: insertDoc._id,
+            username: req.locals.username,
+            timestamp: Gtimestamp,
+            points: -hints.hints[0].cost,
+            lastChallengeID: latestSolveSubmissionID
+        }])
+    }
+
+    res.send({
+        success: true,
+        hint: hints.hints[0].hint
+    });
+}
+
+const submit = async (req, res) => {
     const collections = Connection.collections
     try {
-        const chall = await collections.challs.findOne({ visibility: true, _id: MongoDB.ObjectID(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1, category: 1 } });
+        const chall = await collections.challs.findOne({ _id: MongoDB.ObjectId(req.body.chall) }, { projection: { name: 1, points: 1, flags: 1, solves: 1, max_attempts: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1, category: 1, visibility: 1 } });
         if (!chall) throw new Error('NotFound');
-        const categoryMeta = req.app.get("categoryMeta")
-        if (chall.category in categoryMeta) {
-            if (categoryMeta[chall.category].visibility === false) throw new Error('NotFound')
+        if (chall.visibility === false) {
+            if (req.locals.perms === 2) throw new Error('AdminHidden')
+            else throw new Error('NotFound');
         }
-        if (req.app.get("submissionDisabled")) return res.send({ error: false, error: "submission-disabled" })
+
+        const categoryMeta = NodeCacheObj.get("categoryMeta")
+        if (chall.category in categoryMeta) {
+            const currentMeta = categoryMeta[chall.category]
+            if (currentMeta.visibility === false) {
+                if (req.locals.perms === 2) throw new Error('AdminHidden')
+                throw new Error('NotFound')
+            }
+            else if ("time" in currentMeta) {
+                const currentTime = new Date()
+                if (currentTime < new Date(currentMeta.time[0])) {
+                    if (req.locals.perms === 2) throw new Error('AdminHidden')
+                    throw new Error('NotFound')
+                }
+                else if (currentTime > new Date(currentMeta.time[1])) return res.send({ success: false, error: "submission-disabled" })
+            }
+        }
+        if (NodeCacheObj.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
 
         //Check if the required challenge has been solved (if any)
 
         if ("requires" in chall) {
-            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectID(chall.requires) }, { projection: { _id: 0, solves: 1 } })
+            const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-            if (!(solved.solves.includes(res.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+            if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
         }
         if (chall.max_attempts != 0) {
             if (await collections.transactions.countDocuments({
-                author: res.locals.username.toLowerCase(),
-                _id: MongoDB.ObjectID(req.body.chall),
+                author: req.locals.username.toLowerCase(),
+                _id: MongoDB.ObjectId(req.body.chall),
                 type: 'submission'
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }
@@ -360,11 +346,11 @@ const submit = async (req, res, next) => {
         let transactionDocumentsUpdated = []
         let solved = false;
         async function insertTransaction(correct = false) {
-            let transactionsCache = req.app.get("transactionsCache")
+            let transactionsCache = NodeCacheObj.get("transactionsCache")
             let insertDocument = {
-                author: res.locals.username,
+                author: req.locals.username,
                 challenge: chall.name,
-                challengeID: MongoDB.ObjectID(req.body.chall),
+                challengeID: MongoDB.ObjectId(req.body.chall),
                 timestamp: Gtimestamp,
                 type: 'submission',
                 points: correct ? calculatedPoints : 0,
@@ -374,14 +360,14 @@ const submit = async (req, res, next) => {
             }
             if (correct) {
                 await collections.challs.updateOne({
-                    _id: MongoDB.ObjectID(req.body.chall)
+                    _id: MongoDB.ObjectId(req.body.chall)
                 }, {
-                    $push: { solves: res.locals.username.toLowerCase() },
+                    $push: { solves: req.locals.username.toLowerCase() },
                     $set: { points: calculatedPoints }
                 });
 
                 if (gotDecay) {
-                    await collections.transactions.updateMany({ challengeID: MongoDB.ObjectID(req.body.chall), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
+                    await collections.transactions.updateMany({ challengeID: MongoDB.ObjectId(req.body.chall), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
                     for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache (in memory)
                         if (transactionsCache[i].challengeID == req.body.chall && transactionsCache[i].correct == true) {
                             transactionsCache[i].points = calculatedPoints
@@ -399,7 +385,7 @@ const submit = async (req, res, next) => {
                 await collections.transactions.insertOne(insertDocument);
                 transactionDocumentsUpdated.push({
                     _id: insertDocument._id,
-                    username: res.locals.username,
+                    username: req.locals.username,
                     timestamp: Gtimestamp,
                     points: calculatedPoints,
                     lastChallengeID: latestSolveSubmissionID
@@ -409,17 +395,17 @@ const submit = async (req, res, next) => {
 
 
             transactionsCache.push(insertDocument)
-            req.app.set("transactionsCache", transactionsCache)
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
-        latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        let challengeCache = NodeCacheObj.get("challengeCache")
         if (chall.flags.includes(req.body.flag)) {
             solved = true;
-            if (challengeCache[req.body.chall].solves.includes(res.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
-            challengeCache[req.body.chall].solves.push(res.locals.username) // add no. of solve to memory immediately so it won't double solve
+            if (challengeCache[req.body.chall].solves.includes(req.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
+            challengeCache[req.body.chall].solves.push(req.locals.username) // add no. of solve to memory immediately so it won't double solve
 
 
             // Calculate score decay if dynamic scoring
@@ -462,36 +448,38 @@ const submit = async (req, res, next) => {
     catch (err) {
         switch (err.message) {
             case 'Submitted':
-                res.status(400);
+                res.code(400);
                 res.send({
                     success: false,
                     error: 'submitted'
                 });
                 return;
             case 'Exceeded':
-                res.status(403);
+                res.code(403);
                 res.send({
                     success: false,
                     error: 'exceeded'
                 });
                 return;
+            default:
+                throw new Error(err)
         }
-        next(err);
+
     }
 }
 
-const newChall = async (req, res, next) => {
+const newChall = async (req, res) => {
     const collections = Connection.collections
     try {
-        if (res.locals.perms < 1) throw new Error('Permissions');
+        if (req.locals.perms < 1) throw new Error('Permissions');
         let doc = {
             name: req.body.name,
             category: req.body.category,
-            description: req.body.description,
+            description: req.locals.perms <= 1 ? DomPurify.sanitize(req.body.description) : req.body.description,
             points: parseInt(req.body.points),
             flags: req.body.flags,
 
-            author: res.locals.username,
+            author: req.locals.username,
             created: new Date(),
             solves: [],
             max_attempts: req.body.max_attempts ? parseInt(req.body.max_attempts) : 0,
@@ -515,7 +503,7 @@ const newChall = async (req, res, next) => {
             doc.writeupComplete = req.body.writeupComplete
         }
         if (req.body.requires) {
-            doc.requires = MongoDB.ObjectID(req.body.requires)
+            doc.requires = MongoDB.ObjectId(req.body.requires)
         }
         if (req.body.dynamic === true) req.body.points = req.body.initial
         // if (req.body.files) {
@@ -530,44 +518,50 @@ const newChall = async (req, res, next) => {
         // 	}
         // }
 
+        let challengeCache = NodeCacheObj.get("challengeCache")
         await collections.challs.insertOne(doc);
         challengeCache[doc._id] = { solves: [] }
         res.send({ success: true });
     }
     catch (err) {
-        if (err.name == 'MongoError') {
+        if (err.name == 'MongoServerError') {
             switch (err.code) {
                 case 11000:
                     switch (Object.keys(err.keyPattern)[0]) {
                         case 'name':
-                            res.status(403);
+                            console.log(err)
+                            res.code(403);
                             res.send({
                                 success: false,
                                 error: 'exists'
                             });
                             return;
+                        default:
+                            res.send({
+                                success: false,
+                                error: 'validation'
+                            });
+                            throw new Error(err)
                     }
-                    res.send({
-                        success: false,
-                        error: 'validation'
-                    });
+            default:
+                throw new Error(err)
             }
         }
         if (err.message == 'MissingHintCost') {
-            res.status(400);
+            res.code(400);
             res.send({
                 success: false,
                 error: 'validation'
             });
         }
-        next(err);
     }
 }
 
-const edit = async (req, res, next) => {
+const edit = async (req, res) => {
     const collections = Connection.collections
     try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (req.locals.perms < 2) throw new Error('Permissions');
+
 
         let updateObj = {};
         let unsetObj = {};
@@ -578,10 +572,11 @@ const edit = async (req, res, next) => {
                 else updateObj[field] = req.body[field];
             }
         }
-        let latestSolveSubmissionID = req.app.get("latestSolveSubmissionID")
+        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
-        req.app.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         let calculatedPoints = 0
+        let challengeCache = NodeCacheObj.get("challengeCache")
         if (updateObj.dynamic === true) {
             calculatedPoints = (((updateObj.minimum - updateObj.initial) / (updateObj.minSolves ** 2)) * (challengeCache[req.body.id].solves.length ** 2)) + updateObj.initial
             calculatedPoints = Math.ceil(calculatedPoints)
@@ -591,9 +586,9 @@ const edit = async (req, res, next) => {
         else {
             calculatedPoints = updateObj.points
         }
-        let transactionsCache = req.app.get("transactionsCache")
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         let transactionDocumentsUpdated = []
-        await collections.transactions.updateMany({ challengeID: MongoDB.ObjectID(req.body.id), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
+        await collections.transactions.updateMany({ challengeID: MongoDB.ObjectId(req.body.id), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
         for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
             if (transactionsCache[i].challengeID == req.body.id && transactionsCache[i].correct == true) {
                 transactionsCache[i].points = calculatedPoints
@@ -607,7 +602,6 @@ const edit = async (req, res, next) => {
                 })
             }
         }
-        req.app.set("transactionsCache", transactionsCache)
         broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {
@@ -617,12 +611,12 @@ const edit = async (req, res, next) => {
             });
         }
         if ((await collections.challs.updateOne(
-            { _id: MongoDB.ObjectID(req.body.id) },
+            { _id: MongoDB.ObjectId(req.body.id) },
             { '$set': updateObj }
         )).matchedCount === 0) throw new Error('NotFound');
         if (Object.keys(unsetObj).length > 0) {
             if ((await collections.challs.updateOne(
-                { _id: MongoDB.ObjectID(req.body.id) },
+                { _id: MongoDB.ObjectId(req.body.id) },
                 { '$unset': unsetObj }
             )).matchedCount === 0) throw new Error('NotFound');
         }
@@ -630,83 +624,106 @@ const edit = async (req, res, next) => {
     }
     catch (err) {
         if (err.message == 'MissingHintCost') {
-            res.status(400);
+            res.code(400);
             res.send({
                 success: false,
                 error: 'validation'
             });
         }
-        if (err.name == 'MongoError') {
+        if (err.name == 'MongoServerError') {
             switch (err.code) {
                 case 11000:
                     switch (Object.keys(err.keyPattern)[0]) {
                         case 'name':
-                            res.status(403);
+                            res.code(403);
                             res.send({
                                 success: false,
                                 error: 'exists'
                             });
                             return;
                     }
-                    res.send({
-                        success: false,
-                        error: 'validation'
-                    });
+                    default:
+                        res.send({
+                            success: false,
+                            error: 'validation'
+                        });
+                        throw new Error(err)
             }
         }
-        next(err);
     }
 }
 
-const editVisibility = async (req, res, next) => {
+const editVisibility = async (req, res) => {
     const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
-        let challenges = []
-        for (let i = 0; i < req.body.challenges.length; i++) challenges.push(MongoDB.ObjectID(req.body.challenges[i]))
-        if ((await collections.challs.updateMany({
-            _id: {
-                $in: challenges
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
+    let challenges = []
+    for (let i = 0; i < req.body.challenges.length; i++) challenges.push(MongoDB.ObjectId(req.body.challenges[i]))
+    if ((await collections.challs.updateMany({
+        _id: {
+            $in: challenges
+        }
+    }, {
+        $set: { visibility: req.body.visibility }
+    })).matchedCount > 0) res.send({ success: true });
+    else throw new Error('NotFound');
+}
+
+const editCategory = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+
+    let categoryMeta = NodeCacheObj.get("categoryMeta")
+    // name changed
+    if (req.body.new_name !== req.body.name) {
+        await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
+        categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
+        delete categoryMeta[req.body.name]
+        fs.rename(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
+            if (err && err.code !== "ENOENT") {
+                console.error(err);
+                return res.send({ success: false, error: "file-rename-error" })
             }
-        }, {
-            $set: { visibility: req.body.visibility }
-        })).matchedCount > 0) res.send({ success: true });
-        else throw new Error('NotFound');
+        })
     }
-    catch (err) {
-        next(err);
+    // new categoryImage
+    if (req.body.categoryImage !== "") {
+        if (req.body.categoryImage === "default") {
+            fs.rm(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp", (err) => {
+                if (err && err.code !== "ENOENT") {
+                    console.error(err)
+                }
+            })
+        }
+        else {
+            const buff = Buffer.from(req.body.categoryImage, "base64")
+            await sharp(buff)
+                .toFormat('webp')
+                .webp({ quality: 30 })
+                .toFile(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name)) + ".webp")
+                .catch((err) => {
+                    console.error(err)
+                    return res.send({ success: false, error: "file-upload" })
+                })
+        }
+
     }
+    if (req.body.time.length > 0) {
+        categoryMeta[req.body.new_name].time = [new Date(req.body.time[0]).setSeconds(0), new Date(req.body.time[1]).setSeconds(0)]
+    }
+    await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
+    res.send({ success: true })
 }
 
-const editCategory = async (req, res, next) => {
+const editCategoryVisibility = async (req, res) => {
     const collections = Connection.collections
     try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        if (!Array.isArray(req.body.category)) throw new Error('Validation');
-        let updateObj = {};
-        if (req.body.visibility != undefined) updateObj.visibility = req.body.visibility;
-    }
-    catch (err) {
-        if (err.message == 'Validation')
-            res.send({
-                success: false,
-                error: 'validation'
-            });
-        else next(err);
-    }
-}
-
-const editCategoryVisibility = async (req, res, next) => {
-    const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
+        if (req.locals.perms < 2) throw new Error('Permissions');
         if (!Array.isArray(req.body.category) || req.body.visibility === undefined) throw new Error('Validation');
-        let categoryMeta = req.app.get("categoryMeta")
+        let categoryMeta = NodeCacheObj.get("categoryMeta")
         for (let i = 0; i < req.body.category.length; i++) {
             categoryMeta[req.body.category[i]].visibility = req.body.visibility
         }
-        req.app.set("categoryMeta", categoryMeta)
         await collections.cache.updateOne({}, { '$set': { categoryMeta: categoryMeta } })
         res.send({ success: true })
 
@@ -717,46 +734,40 @@ const editCategoryVisibility = async (req, res, next) => {
                 success: false,
                 error: 'validation'
             });
-        else next(err);
+        else throw new Error(err)
     }
 }
 
-const deleteChall = async (req, res, next) => {
+const deleteChall = async (req, res) => {
     const collections = Connection.collections
-    try {
-        if (res.locals.perms < 2) throw new Error('Permissions');
-        let challenges = []
-        for (let i = 0; i < req.body.chall.length; i++) {
-            const currentID = req.body.chall[i]
-            challenges.push(currentID)
-            const delReq = await collections.challs.findOneAndDelete({
-                _id: MongoDB.ObjectID(currentID)
-            }, {
-                solves: 1,
-                points: 1,
-                hints: 1,
-                _id: 0
-            });
-            if (!delReq.ok) throw new Error('Unknown');
-            if (delReq.value === null) throw new Error('NotFound');
-
-            delete challengeCache[currentID]
-
-            await collections.transactions.deleteMany({ challengeID: MongoDB.ObjectID(currentID) }); //delete transactions from db
-        }
-        let transactionsCache = req.app.get("transactionsCache")
-        for (let i = 0; i < transactionsCache.length; i++) {
-            if (challenges.includes(transactionsCache[i]._id)) transactionsCache.splice(i, 1) // delete transactions from cache
-        }
-        req.app.set("transactionsCache", transactionsCache)
-
-        res.send({
-            success: true
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    let challenges = []
+    for (let i = 0; i < req.body.chall.length; i++) {
+        const currentID = req.body.chall[i]
+        challenges.push(currentID)
+        const delReq = await collections.challs.findOneAndDelete({
+            _id: MongoDB.ObjectId(currentID)
+        }, {
+            solves: 1,
+            points: 1,
+            hints: 1,
+            _id: 0
         });
+        if (delReq.deletedCount === 0) throw new Error('NotFound');
+
+        let challengeCache = NodeCacheObj.get("challengeCache")
+        delete challengeCache[currentID]
+
+        await collections.transactions.deleteMany({ challengeID: MongoDB.ObjectId(currentID) }); //delete transactions from db
     }
-    catch (err) {
-        next(err);
+    let transactionsCache = NodeCacheObj.get("transactionsCache")
+    for (let i = 0; i < transactionsCache.length; i++) {
+        if (challenges.includes(transactionsCache[i]._id)) transactionsCache.splice(i, 1) // delete transactions from cache
     }
+
+    res.send({
+        success: true
+    });
 }
 
-module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, createChallengeCache, editCategoryVisibility }
+module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, editCategoryVisibility }

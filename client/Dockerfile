@@ -22,6 +22,10 @@ COPY --from=builder /usr/src/app/build .
 COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY default.webp /usr/share/nginx/static/profile/default.webp 
+COPY defaultCatPhoto.webp /usr/share/nginx/static/category/default.webp 
+
+RUN useradd node
+RUN chown -R node /usr/share/nginx/static/
 
 EXPOSE 20005
 # Containers run nginx with global directives and daemon off

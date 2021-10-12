@@ -1,29 +1,19 @@
 
 const { checkPermissions, deletePermissions, setPermissions } = require('./../utils/permissionUtils.js')
 
-const authenticated = async (req, res, next) => {
+const authenticated = async (req, res) => {
+    if (req.headers.authorization == undefined) throw new Error('MissingToken');
+    let permissions = false
     try {
-        if (req.headers.authorization == undefined) throw new Error('MissingToken');
-        let permissions = false
-        try {
-            permissions = await checkPermissions(req.headers.authorization)
-        }
-        catch (err) {
-            //console.error(err)
-            return res.send({
-                success: false,
-                error: "BadToken"
-            })
-        }
-        if (permissions === false) throw new Error('BadToken');
-        res.locals.perms = permissions.type
-        res.locals.username = permissions.username
-        next()
+        permissions = await checkPermissions(req.headers.authorization)
     }
-    catch (e){
-        next(e)
+    catch (err) {
+        throw new Error('BadToken');
     }
-   
+    if (permissions === false) throw new Error('BadToken');
+    req.locals = {}
+    req.locals.perms = permissions.type
+    req.locals.username = permissions.username
 }
 
 module.exports = authenticated

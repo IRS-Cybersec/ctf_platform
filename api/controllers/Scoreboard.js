@@ -1,12 +1,11 @@
 const { checkUsernamePerms } = require('./../utils/permissionUtils.js')
 
-const scoreboard = async (req, res, next) => {
-    try {
+const scoreboard = async (req, res) => {
         let changes = {}
         let finalData = []
 
-        let transactionsCache = req.app.get("transactionsCache")
-        if (req.app.get("adminShowDisable")) {
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
+        if (NodeCacheObj.get("adminShowDisable")) {
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
                 const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
@@ -36,17 +35,12 @@ const scoreboard = async (req, res, next) => {
         res.send({
             success: true,
             users: finalData,
-            lastChallengeID: req.app.get("latestSolveSubmissionID")
+            lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID")
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const userScoreboard = async (req, res, next) => {
-    try {
-        let transactionsCache = req.app.get("transactionsCache")
+const userScoreboard = async (req, res) => {
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
         let scores = []
         let found = false
         for (let i = 0; i < transactionsCache.length; i++) {
@@ -58,23 +52,18 @@ const userScoreboard = async (req, res, next) => {
             }
         }
         if (!found) throw new Error('NotFound');
-        if (req.app.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, scores: [], hidden: true })
+        if (NodeCacheObj.get("adminShowDisable") && scores.length > 0 && scores[0].perms === 2) return res.send({ success: true, scores: [], hidden: true })
 
         res.send({
             success: true,
             scores: scores,
             hidden: false
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 
-const userPoints = async (req, res, next) => {
-    try {
-        let transactionsCache = req.app.get("transactionsCache")
-        let adminShowDisable = req.app.get("adminShowDisable")
+const userPoints = async (req, res) => {
+        let transactionsCache = NodeCacheObj.get("transactionsCache")
+        let adminShowDisable = NodeCacheObj.get("adminShowDisable")
         let score = 0
         for (let i = 0; i < transactionsCache.length; i++) {
             const current = transactionsCache[i]
@@ -88,9 +77,5 @@ const userPoints = async (req, res, next) => {
             score: score,
             hidden: false
         });
-    }
-    catch (err) {
-        next(err);
-    }
 }
 module.exports = { scoreboard, userScoreboard, userPoints }

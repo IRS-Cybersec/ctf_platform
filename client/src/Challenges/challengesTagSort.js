@@ -14,10 +14,10 @@ import {
   LockOutlined,
   CheckOutlined
 } from '@ant-design/icons';
-import MarkdownRender from './../Misc/MarkdownRenderer.js';
+const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'));
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
-import { orderBy } from 'lodash';
+import orderBy from 'lodash.orderby';
 
 
 const { TabPane } = Tabs;
@@ -456,7 +456,15 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Attempts Exhausted',
             description:
-              'It seems like you have execeeded the maximum number of attempts for "' + this.state.viewingChallengeDetails.name + '". Contact an admin if you need more tries',
+              'It seems like you have execeeded the maximum number of attempts for "' + this.state.viewingChallengeDetails.name + '". Contact an admin if you need more tries.',
+            duration: 0
+          });
+        }
+        else if (data.error === "admin-hidden") {
+          notification["error"]({
+            message: 'The challenge is hidden.',
+            description:
+              'Submission has been disabled as this challenge is hidden even for admins. This is to prevent challenge leakages.',
             duration: 0
           });
         }
@@ -472,7 +480,7 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Required challenge was not found',
             description:
-              'This is likely an error in the challenge settings. Please contact an admin',
+              'This is likely an error in the challenge settings. Please contact an admin.',
             duration: 0
           });
         }
@@ -480,7 +488,7 @@ class ChallengesTagSort extends React.Component {
           notification["error"]({
             message: 'Oops. Submission is disabled',
             description:
-              'New flag submissions have been disabled. The competition might have ended/is not running',
+              'New flag submissions have been disabled. The competition might have ended/is not running.',
             duration: 0
           });
         }
@@ -635,7 +643,7 @@ class ChallengesTagSort extends React.Component {
               emptyText: (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                   <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                  <h1 style={{ fontSize: "200%" }}>Oops, no challenges have been created.</h1>
+                  <h1 style={{ fontSize: "200%" }}>No challenges have been released yet</h1>
                 </div>
               )
             }}

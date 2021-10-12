@@ -1,6 +1,8 @@
-import React from 'react';
-import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card, Select, Form } from 'antd';
+import React, { useState } from 'react';
+import { Layout, Table, message, Button, Modal, Transfer, Divider, Input, Space, InputNumber, Card, Select, Form, Upload } from 'antd';
+import DatePicker from './../Components/DatePicker';
 import { Switch as AntdSwitch } from 'antd';
+import dayjs from 'dayjs';
 import {
     ExclamationCircleOutlined,
     DeleteOutlined,
@@ -20,49 +22,83 @@ import { Switch, Route, Link } from 'react-router-dom';
 const { Column } = Table;
 const { confirm } = Modal;
 const { Option } = Select;
+const { Dragger } = Upload;
+const { RangePicker } = DatePicker;
+
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+        const pos = reader.result.indexOf("base64,")
+        resolve(reader.result.slice(pos + 7))
+    };
+    reader.onerror = error => reject(error);
+})
 
 const EditCategoryForm = (props) => {
     const [form] = Form.useForm();
+    const [fileList, updateFileList] = useState([])
+    const [editLoading, updateEditLoading] = useState(false)
+    const [time, updateTime] = useState([])
+    const [useDefaultPic, updateUseDefaultPic] = useState(false)
 
-    let initialData = JSON.parse(JSON.stringify(props.initialData))
-    initialData.name = props.initialData.name
-    form.setFieldsValue(initialData)
+    if (form.getFieldValue("name") !== props.initialData.name) {
+        let initialData = JSON.parse(JSON.stringify(props.initialData))
+        initialData.name = props.initialData.name
+        if (props.initialData.time.length > 0) initialData.time = [dayjs(props.initialData.time[0]), dayjs(props.initialData.time[1])]
+
+
+        form.setFieldsValue(initialData)
+    }
+
     return (
         <Form
             form={form}
             onFinish={async (values) => {
-                await fetch(window.ipAddress + "/v1/challenge/edit", {
+                updateEditLoading(true)
+                let fileData = ""
+                if (useDefaultPic) {
+                    fileData = "default"
+                }
+                else {
+                    if (fileList.length > 0) {
+                        // make a request to update category picture here
+                        try {
+                            fileData = await fileToBase64(fileList[0].originFileObj)
+                        }
+                        catch (e) {
+                            console.log(e)
+                            message.error({ content: "Oops. Unknown error" })
+                        }
+                    }
+                }
+                await fetch(window.ipAddress + "/v1/challenge/edit/category", {
                     method: 'post',
                     headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
                         "name": props.initialData.name,
                         "new_name": values.name,
+                        "categoryImage": fileData,
+                        "time": time // time is in UTC+0
                     })
                 }).then((results) => {
                     return results.json(); //return data in JSON (since its JSON data)
                 }).then((data) => {
                     if (data.success === true) {
-                        message.success({ content: "Edited challenge \"" + props.initialData.name + "\" successfully!" })
-                        props.handleEditChallBack()
-                        setEditorValue("")
-                        form.resetFields()
-                    }
-                    else if (data.error === "exists") {
-                        message.warn("A challenge with an existing name exists")
+                        message.success({ content: "Edited category \"" + props.initialData.name + "\" successfully!" })
+                        props.handleEditCategoryDone()
                     }
                     else {
                         message.error({ content: "Oops. Unknown error" })
                     }
-
-
                 }).catch((error) => {
                     console.log(error)
                     message.error({ content: "Oops. There was an issue connecting with the server" });
                 })
-                props.setState({ editLoading: false })
+                updateEditLoading(false)
             }}
         >
-            <p><b><u>Editing</u></b> <code>{props.initialData.name}</code></p>
+            <p><b><u>Editing:</u></b> <code>{props.initialData.name}</code></p>
 
 
             <h1>Category Name:</h1>
@@ -73,7 +109,49 @@ const EditCategoryForm = (props) => {
                 <Input allowClear placeholder="Category name" />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={props.editLoading}>Edit Category</Button>
+            <h1>Category Cover Image:</h1>
+            {!useDefaultPic ? (
+                <img src={"/static/category/" + props.initialData.name + ".webp"} />
+            ) : (
+                <img src={"/static/category/default.webp"} />
+            )}
+            <Button danger type="primary" icon={<DeleteOutlined />} disabled={useDefaultPic} style={{ marginTop: "1ch", marginBottom: "5ch" }} onClick={() => { updateUseDefaultPic(true) }}>Reset To Default</Button>
+
+
+            {!useDefaultPic && (
+                <Form.Item
+                    name="categoryImage"
+                >
+
+                    <Dragger
+                        fileList={fileList}
+                        disabled={editLoading}
+                        accept=".png, .jpg, .jpeg, .webp"
+                        maxCount={1}
+                        onChange={(file) => {
+                            updateFileList(file.fileList)
+                        }}
+                        beforeUpload={(file) => {
+                            return false
+                        }}>
+                        <h4>Drag and drop an image file (.png, .jpeg, .webp etc.) to upload.</h4>
+                    </Dragger>
+                </Form.Item>
+            )}
+
+
+            <h1>Category Competition Time</h1>
+            <Form.Item
+                name="time"
+            >
+                <RangePicker
+                    showTime={{ format: 'HH:mm' }}
+                    format="YYYY-MM-DD HH:mm"
+                    onChange={(date) => { if (date && date.length > 0) updateTime([date[0].toISOString(), date[1].toISOString()]) }}
+                />
+            </Form.Item>
+
+            <Button type="primary" htmlType="submit" style={{ marginBottom: "1.5vh" }} loading={editLoading}>Edit Category</Button>
 
         </Form>
     );
@@ -104,7 +182,8 @@ class AdminChallenges extends React.Component {
             maxSockets: 0,
             categoryMeta: {},
             categoryOptions: [],
-            currentEditCategory: false
+            currentEditCategory: false,
+            categorySelect: ""
         }
     }
 
@@ -331,14 +410,20 @@ class AdminChallenges extends React.Component {
     }
 
     handleRefresh = async () => {
+        this.setState({ categorySelect: "" })
         await Promise.all([this.fillTableData(), this.handleCategoryData()])
+
     }
 
     handleTableSelect = (selectedRowKeys, selectedRows) => {
         this.setState({ selectedTableKeys: selectedRowKeys, selectedRows: selectedRows })
         if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
+    }
 
+    handleEditCategoryDone = () => {
+        this.setState({ currentEditCategory: false })
+        this.handleRefresh()
     }
     disableSetting = async (setting, value) => {
 
@@ -434,8 +519,10 @@ class AdminChallenges extends React.Component {
         const catMeta = this.state.categoryMeta[category]
         this.setState({
             currentEditCategory: {
-                name: category
-            }
+                name: category,
+                time: "time" in catMeta ? catMeta.time : []
+            },
+            categorySelect: category
         })
     }
 
@@ -576,16 +663,16 @@ class AdminChallenges extends React.Component {
                     </div>
 
                     <Card>
-                        <h3>Category Meta Information Editor<EyeOutlined /></h3>
+                        <h3>Category Meta Information Editor <EyeOutlined /></h3>
                         <p>Select a category to edit info such as Name, Cover Pictures etc.</p>
 
-                        <Select style={{ width: "30ch" }} onChange={this.openCategoryEditor.bind(this)}>
+                        <Select style={{ width: "30ch" }} value={this.state.categorySelect} onChange={this.openCategoryEditor.bind(this)}>
                             {this.state.categoryOptions}
                         </Select>
 
                         {this.state.currentEditCategory && (
-                            <div style={{padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px"}}>
-                                <EditCategoryForm initialData={this.state.currentEditCategory}/>
+                            <div style={{ padding: "10px", marginTop: "20px", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "10px" }}>
+                                <EditCategoryForm initialData={this.state.currentEditCategory} handleEditCategoryDone={this.handleEditCategoryDone.bind(this)} />
                             </div>
                         )}
                     </Card>

@@ -18,6 +18,7 @@ services:
       - "ctf-mongodb"
     volumes:
       - profile_files:/usr/share/nginx/static/profile
+      - category_files:/usr/share/nginx/static/category
   ctf-web-client:
 #    build:
 #      context: ./client
@@ -29,8 +30,10 @@ services:
       - "ctf-web-api"
     volumes:
       - profile_files:/usr/share/nginx/static/profile
+      - category_files:/usr/share/nginx/static/category
 volumes:
     profile_files:
+    category_files:
     db_data:
 networks:
   default:

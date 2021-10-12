@@ -4,9 +4,9 @@ import {
   FileUnknownTwoTone,
   NotificationTwoTone
 } from '@ant-design/icons';
-import MarkdownRenderer from './MarkdownRenderer.js';
+const MarkdownRenderer = React.lazy(() => import('./MarkdownRenderer.js'));
 import { Ellipsis } from 'react-spinners-css';
-import { orderBy } from "lodash";
+import orderBy from 'lodash.orderby'
 
 
 
