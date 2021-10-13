@@ -16,7 +16,8 @@ class Connection {
                 transactions: db.collection('transactions'),
                 pages: db.collection('pages'),
                 announcements: db.collection('announcements'),
-                cache: db.collection('cache')
+                cache: db.collection('cache'),
+                team: db.collection('team')
             }
             this.db = db
             this.collections = collections

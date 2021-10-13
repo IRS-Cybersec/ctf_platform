@@ -73,8 +73,24 @@ const startCache = async () => {
 	})
 	NodeCacheObj.set("challengeCache", challengeCache)
 
+	// Create transactions cache
 	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
-	return true
+
+	// Create teams cache
+	let usernameTeamCache = {}
+	let teamListCache = {}
+	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1 } })
+	await userCursor.forEach((doc) => {
+		teamListCache[doc.name] = {members: doc.members, code: doc.code}
+		// create username-team mapping
+		for (let i = 0; i < doc.members.length; i++) {
+			usernameTeamCache[doc.members[i]] = doc.name
+		}		
+	})
+NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
+NodeCacheObj.set("teamListCache", teamListCache)
+
+return true
 }
 
 const main = async () => {
