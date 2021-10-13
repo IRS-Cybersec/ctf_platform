@@ -81,16 +81,17 @@ const startCache = async () => {
 	let teamListCache = {}
 	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1 } })
 	await userCursor.forEach((doc) => {
-		teamListCache[doc.name] = {members: doc.members, code: doc.code}
+		teamListCache[doc.name] = { members: doc.members, code: doc.code }
 		// create username-team mapping
+		// this does not guarentee that every username will have a mapping
 		for (let i = 0; i < doc.members.length; i++) {
 			usernameTeamCache[doc.members[i]] = doc.name
-		}		
+		}
 	})
-NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
-NodeCacheObj.set("teamListCache", teamListCache)
+	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
+	NodeCacheObj.set("teamListCache", teamListCache)
 
-return true
+	return true
 }
 
 const main = async () => {

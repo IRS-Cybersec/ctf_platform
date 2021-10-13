@@ -34,7 +34,7 @@ const get = async (req, res) => {
             let changes = []
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                if (usernameTeamCache[current.author] === req.body.name) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.body.name) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
             }
             // if own team, send code as well
             if (team.members.includes(req.locals.username)) {
@@ -64,10 +64,19 @@ const get = async (req, res) => {
 const userTeam = (req, res) => {
     const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     if (NodeCacheObj.get("teamMode")) {
-        res.send({
-            success: true,
-            team: usernameTeamCache[req.locals.username]
-        })
+        if (req.locals.username in usernameTeamCache) {
+            res.send({
+                success: true,
+                team: usernameTeamCache[req.locals.username]
+            })
+        }
+        else {
+            res.send({
+                success: true,
+                team: ""
+            })
+        }
+       
     }
     else res.send({
         success: false,
@@ -92,7 +101,7 @@ const join = async (req, res) => {
         }
         if (!found) return res.send({ success: false, error: "invalid-code" })
         // Is user already in another team?
-        if (usernameTeamCache[req.locals.username] !== "") {
+        if (!(req.locals.username in usernameTeamCache)) {
             return res.send({
                 success: false,
                 error: "in-other-team"
@@ -128,7 +137,7 @@ const create = async (req, res) => {
         let teamList = NodeCacheObj.get("teamListCache")
         let usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         // Is user already in a team?
-        if (usernameTeamCache[req.locals.username] !== "") {
+        if (!(req.locals.username in usernameTeamCache)) {
             return res.send({
                 success: false,
                 error: "in-other-team"
@@ -170,7 +179,7 @@ const leave = async (req, res) => {
             }
         }
         if (!found) return res.send({ success: false, error: "not-in-any-team" })
-        usernameTeamCache[req.locals.username] = ""
+        delete usernameTeamCache[req.locals.username]
         // last member is leaving the team
         if (currentTeam.members.length === 1) {
             delete teamList[currentTeam.name]
