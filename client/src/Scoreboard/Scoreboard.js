@@ -511,7 +511,7 @@ class Scoreboard extends React.Component {
               <Column title="Position" dataIndex="position" key="position" />
               <Column title="Username" dataIndex="username" key="username"
                 render={(text, row, index) => {
-                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} onerror={() => {this.onerror=null;this.src=require("./../assets/default.webp").default}} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
                 }}
               />
               <Column title="Score" dataIndex="score" key="score" />
