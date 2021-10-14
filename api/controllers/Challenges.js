@@ -281,7 +281,15 @@ const hint = async (req, res) => {
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         await collections.transactions.insertOne(insertDoc);
         await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-        transactionsCache.push(insertDoc)
+        transactionsCache.push({
+            _id: insertDoc._id,
+            author: req.locals.username,
+            challenge: hints.name,
+            challengeID: MongoDB.ObjectId(req.body.chall),
+            timestamp: Gtimestamp,
+            points: -hints.hints[0].cost,
+            lastChallengeID: latestSolveSubmissionID
+        })
         broadCastNewSolve([{
             _id: insertDoc._id,
             username: req.locals.username,
@@ -394,7 +402,15 @@ const submit = async (req, res) => {
             else await collections.transactions.insertOne(insertDocument);
 
 
-            transactionsCache.push(insertDocument)
+            transactionsCache.push({
+                _id: insertDocument._id,
+                author: insertDocument.author,
+                challenge: insertDocument.challenge,
+                challengeID: insertDocument.challengeID,
+                timestamp: insertDocument.timestamp,
+                points: insertDocument.points,
+                lastChallengeID: insertDocument.lastChallengeID,
+            })
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction

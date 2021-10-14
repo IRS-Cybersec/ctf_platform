@@ -8,11 +8,10 @@ const scoreboard = async (req, res) => {
         if (NodeCacheObj.get("adminShowDisable")) {
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
-
+                
                 if (checkUsernamePerms(current.author) !== 2) {
-                    if (current.author in changes) changes[current.author].changes.push(document)
-                    else changes[current.author] = { _id: current.author, changes: [document] }
+                    if (current.author in changes) changes[current.author].changes.push(current)
+                    else changes[current.author] = { _id: current.author, changes: [current] }
                 }
 
             }
@@ -20,11 +19,9 @@ const scoreboard = async (req, res) => {
         else {
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
-
-
-                if (current.author in changes) changes[current.author].changes.push(document)
-                else changes[current.author] = { _id: current.author, changes: [document] }
+                
+                if (current.author in changes) changes[current.author].changes.push(current)
+                else changes[current.author] = { _id: current.author, changes: [current] }
             }
         }
 
@@ -69,7 +66,7 @@ const userPoints = async (req, res) => {
             const current = transactionsCache[i]
             if (current.points !== 0 && current.author === req.params.username) {
                 score += current.points
-                if (adminShowDisable && current.perms === 2) return res.send({ success: true, score: "Hidden", hidden: true })
+                if (adminShowDisable && checkUsernamePerms(current.author) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
             }
         }
         res.send({

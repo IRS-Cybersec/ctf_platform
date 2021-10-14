@@ -74,7 +74,20 @@ const startCache = async () => {
 	NodeCacheObj.set("challengeCache", challengeCache)
 
 	// Create transactions cache
-	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
+	const transactionsCursor = collections.transactions.find({})
+    let transactionsCache = []
+    await transactionsCursor.forEach((doc) => {
+        transactionsCache.push({
+            _id: doc._id,
+            author: doc.author,
+            points: doc.points,
+            challenge: doc.challenge,
+            timestamp: doc.timestamp,
+            challengeID: doc.challengeID,
+			lastChallengeID: latestSolveSubmissionID
+        })
+    })
+	NodeCacheObj.set("transactionsCache", transactionsCache)
 
 	// Create teams cache
 	let usernameTeamCache = {}

@@ -4,9 +4,10 @@ const MongoDB = require('mongodb')
 
 const submissions = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
+    const collections = Connection.collections
     res.send({
         success: true,
-        submissions: NodeCacheObj.get("transactionsCache")
+        submissions: await collections.transactions.find({})
     });
 }
 
@@ -34,7 +35,15 @@ const newSubmission = async (req, res) => {
         insertDoc.submission = req.body.submission
     }
     let transactionsCache = NodeCacheObj.get("transactionsCache")
-    transactionsCache.push(insertDoc)
+    transactionsCache.push({
+        _id: insertDoc._id,
+        challenge: insertDoc.challenge,
+        challengeID: insertDoc.challengeID,
+        timestamp: insertDoc.timestamp,
+        points: insertDoc.points,
+        lastChallengeID: insertDoc.lastChallengeID,
+        author: insertDoc.author
+    })
     await collections.transactions.insertOne(insertDoc)
 
     broadCastNewSolve([{
