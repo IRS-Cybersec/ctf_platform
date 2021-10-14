@@ -8,7 +8,7 @@ const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath") }
+        states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath"), teamSize: NodeCacheObj.get("teamMaxSize"), teamMode: NodeCacheObj.get("teamMode")  }
     });
 }
 

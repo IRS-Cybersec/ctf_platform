@@ -663,6 +663,27 @@ class AdminUsers extends React.Component {
                     </Card>
                 </div>
 
+                <Divider />
+
+                <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
+
+                    <Card>
+                        <h3>Max Team Size
+                            <InputNumber
+                                value={this.state.uploadSize}
+                                onChange={(value) => this.setState({ uploadSize: value })}
+                                onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
+                        <p>Sets the maximum number of members in a team. Press <b>Enter</b> to save</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card>
+                        <h3>Enable Teams:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.disableAdminShow} /></h3>
+                        <p>Enable teams for the platform. Users in a team will have their scores combined on the scoreboard <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
+                    </Card>
+                </div>
+
             </Layout>
         );
     }
