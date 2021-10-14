@@ -5,25 +5,69 @@ const scoreboard = async (req, res) => {
         let finalData = []
 
         let transactionsCache = NodeCacheObj.get("transactionsCache")
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                
-                if (checkUsernamePerms(current.author) !== 2) {
-                    if (current.author in changes) changes[current.author].changes.push(current)
-                    else changes[current.author] = { _id: current.author, changes: [current] }
+        if (NodeCacheObj.get("teamMode")) {
+            const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+            const teamList = NodeCacheObj.get("teamListCache")
+            if (NodeCacheObj.get("adminShowDisable")) {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (checkUsernamePerms(current.author) !== 2) {
+                        const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
+                        if (author in changes) changes[author].changes.push(current)
+                        else {
+                            let members = current.author
+                            let isTeam = false
+                            if (author != current.author) {
+                                members = teamList[author]
+                                isTeam = true
+                            } 
+                            changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
+                        } 
+                    }
+    
                 }
-
+            }
+            else {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
+                    if (author in changes) changes[author].changes.push(current)
+                    else {
+                        let members = current.author
+                        let isTeam = false
+                        if (author != current.author) {
+                            members = teamList[author]
+                            isTeam = true
+                        } 
+                        changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
+                    } 
+                }
             }
         }
         else {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                
-                if (current.author in changes) changes[current.author].changes.push(current)
-                else changes[current.author] = { _id: current.author, changes: [current] }
+            if (NodeCacheObj.get("adminShowDisable")) {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (checkUsernamePerms(current.author) !== 2) {
+                        if (current.author in changes) changes[current.author].changes.push(current)
+                        else changes[current.author] = { _id: current.author, changes: [current] }
+                    }
+    
+                }
+            }
+            else {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (current.author in changes) changes[current.author].changes.push(current)
+                    else changes[current.author] = { _id: current.author, changes: [current] }
+                }
             }
         }
+        
+       
 
         for (username in changes) {
             finalData.push(changes[username])

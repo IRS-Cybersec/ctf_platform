@@ -28,7 +28,6 @@ class Scoreboard extends React.Component {
   }
 
   componentDidMount = async () => {
-    console.log(require("./../assets/default.webp").default)
     let scoreboardData = window.scoreboardData
     if (typeof scoreboardData === "undefined") {
       changes = await this.getChanges()
@@ -115,7 +114,6 @@ class Scoreboard extends React.Component {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
         updating = true
-        lastChallengeID = parseInt(data.data.lastChallengeID)
         const payloadArray = data.data // List of transactions to update
         for (let y = 0; y < payloadArray.length; y++) {
           let userFound = false
@@ -148,6 +146,7 @@ class Scoreboard extends React.Component {
         
         window.scoreboardData = changes
         window.lastChallengeID = payloadArray[0].lastChallengeID
+        if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "init") {
@@ -191,6 +190,7 @@ class Scoreboard extends React.Component {
 
           window.scoreboardData = changes
           window.lastChallengeID =  data.lastChallengeID
+          if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
         }
