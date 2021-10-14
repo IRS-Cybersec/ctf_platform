@@ -21,8 +21,8 @@ RUN rm -rf ./*
 COPY --from=builder /usr/src/app/build .
 COPY nginx.conf /etc/nginx/nginx.conf
 
-RUN mkdir /usr/share/nginx/static/profile
-RUN mkdir /usr/share/nginx/static/category
+RUN mkdir -p /usr/share/nginx/static/profile
+RUN mkdir -p /usr/share/nginx/static/category
 RUN useradd node
 RUN chown -R node /usr/share/nginx/static/
 
