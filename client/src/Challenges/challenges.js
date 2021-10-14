@@ -318,7 +318,7 @@ class Challenges extends React.Component {
                                   type="inner"
                                   bordered={true}
                                   className="card-design hover"
-                                  cover={<img style={{ overflow: "hidden" }} alt="Category Card" src={"/static/category/" + item._id + ".webp"} onError={(e)=>{e.target.onerror = null; e.target.src=require("./../assets/defaultCatPhoto.webp")}} />}
+                                  cover={<img style={{ overflow: "hidden" }} alt="Category Card" src={"/static/category/" + item._id + ".webp"} onError={(e)=>{e.target.onerror = null; e.target.src=require("./../assets/defaultCatPhoto.webp").default}} />}
                                 >
                                   <Meta
                                     title={
