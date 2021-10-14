@@ -45,7 +45,7 @@ const userScoreboard = async (req, res) => {
 
             if (current.author === req.params.username) {
                 found = true
-                if (current.points !== 0) scores.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if (current.points !== 0) scores.push(current)
             }
         }
         if (!found) throw new Error('NotFound');
