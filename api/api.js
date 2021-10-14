@@ -84,7 +84,7 @@ const startCache = async () => {
             challenge: doc.challenge,
             timestamp: doc.timestamp,
             challengeID: doc.challengeID,
-			lastChallengeID: latestSolveSubmissionID
+			lastChallengeID: doc.lastChallengeID
         })
     })
 	NodeCacheObj.set("transactionsCache", transactionsCache)
