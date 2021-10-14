@@ -61,24 +61,24 @@ const startup = async (server) => {
                 socket.id = socketNumber
 
                 const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
-                if (payload.lastChallengeID < latestSolveSubmissionID) {
-                    const transactionCache = NodeCacheObj.get("transactionsCache")
-                    let finalChallenges = []
-                    if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
-                        if (NodeCacheObj.get("adminShowDisable")) {
-                            for (let i = 0; i < transactionCache.length; i++) {
-                                try { // compatibility for older transaction records
-                                    if (checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                        finalChallenges.push(transactionCache[i])
-                                    }
+                const transactionCache = NodeCacheObj.get("transactionsCache")
+                let finalChallenges = []
+                if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
+                    if (NodeCacheObj.get("adminShowDisable")) {
+                        for (let i = 0; i < transactionCache.length; i++) {
+                            try { // compatibility for older transaction records
+                                if (checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                    finalChallenges.push(transactionCache[i])
                                 }
-                                catch (e) { }
-
                             }
+                            catch (e) { }
+
                         }
-                        else finalChallenges = transactionCache
                     }
-                    else {
+                    else finalChallenges = transactionCache
+                }
+                else {
+                    if (payload.lastChallengeID < latestSolveSubmissionID) {
                         if (NodeCacheObj.get("adminShowDisable")) {
                             for (let i = 0; i < transactionCache.length; i++) {
                                 try { // compatibility for older transaction records
@@ -100,11 +100,10 @@ const startup = async (server) => {
                                 catch (e) { }
                             }
                         }
+                        socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                     }
-
-                    socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
+                    else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
                 }
-                else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
             }
         })
         socket.on('close', (e) => {
