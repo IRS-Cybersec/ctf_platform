@@ -196,8 +196,7 @@ class Scoreboard extends React.Component {
       }
     }
     webSocket.onopen = (e) => {
-      const ID = window.lastChallengeID
-      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: parseInt(ID) } }))
+      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: window.lastChallengeID, teamUpdateID: window.teamUpdateID } }))
       this.props.handleWebSocket(webSocket)
     }
     webSocket.onerror = (e) => {
@@ -392,6 +391,7 @@ class Scoreboard extends React.Component {
     }).then((data) => {
       if (data.success === true) {
         window.lastChallengeID =  data.lastChallengeID
+        window.teamUpdateID = data.teamUpdateID
         return data
       }
       else {
@@ -511,7 +511,7 @@ class Scoreboard extends React.Component {
               <Column title="Position" dataIndex="position" key="position" />
               <Column title="Username" dataIndex="username" key="username"
                 render={(text, row, index) => {
-                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} onerror={() => {this.onerror=null;this.src=require("./../assets/default.webp").default}} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} onerror={(e) => {e.target.onerror=null;e.target.src=require("./../assets/default.webp").default}} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
                 }}
               />
               <Column title="Score" dataIndex="score" key="score" />

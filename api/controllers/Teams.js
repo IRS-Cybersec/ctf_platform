@@ -1,6 +1,6 @@
 const Connection = require('./../utils/mongoDB.js')
 const crypto = require('crypto');
-const { broadCastRefreshRequired } = require('./Sockets.js')
+const { broadCastNewSolve } = require('./Sockets.js')
 
 const list = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
@@ -127,20 +127,10 @@ const join = async (req, res) => {
         usernameTeamCache[req.locals.username] = currentTeam.name
 
         // Broadcast a new transaction to signal a new team join
-        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
-        latestSolveSubmissionID += 1
-        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        let insertDoc = {
-            author: req.locals.username,
-            challenge: "",
-            challengeID: "",
-            timestamp: new Date(),
-            type: 'team-change',
-            points: 0,
-            lastChallengeID: latestSolveSubmissionID 
-        }
-        await collections.team.insertOne(insertDoc)
-        broadCastRefreshRequired()
+        let teamUpdateID = NodeCacheObj.get("teamUpdateID")
+        teamUpdateID += 1
+        NodeCacheObj.set("teamUpdateID", teamUpdateID)
+        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
 
         res.send({ success: true })
     }
@@ -175,20 +165,10 @@ const create = async (req, res) => {
         usernameTeamCache[req.locals.username] = req.body.name
         await collections.team.insertOne(newTeam)
         // Broadcast a new transaction to signal a new team change
-        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
-        latestSolveSubmissionID += 1
-        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        let insertDoc = {
-            author: req.locals.username,
-            challenge: "",
-            challengeID: "",
-            timestamp: new Date(),
-            type: 'team-change',
-            points: 0,
-            lastChallengeID: latestSolveSubmissionID 
-        }
-        await collections.team.insertOne(insertDoc)
-        broadCastRefreshRequired()
+        let teamUpdateID = NodeCacheObj.get("teamUpdateID")
+        teamUpdateID += 1
+        NodeCacheObj.set("teamUpdateID", teamUpdateID)
+        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
 
         res.send({ success: true })
     }
@@ -224,20 +204,10 @@ const leave = async (req, res) => {
             res.send({ success: true })
         }
         // Broadcast a new transaction to signal a new team join
-        let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
-        latestSolveSubmissionID += 1
-        NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        let insertDoc = {
-            author: req.locals.username,
-            challenge: "",
-            challengeID: "",
-            timestamp: new Date(),
-            type: 'team-change',
-            points: 0,
-            lastChallengeID: latestSolveSubmissionID 
-        }
-        await collections.team.insertOne(insertDoc)
-        broadCastRefreshRequired()
+        let teamUpdateID = NodeCacheObj.get("teamUpdateID")
+        teamUpdateID += 1
+        NodeCacheObj.set("teamUpdateID", teamUpdateID)
+        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
        
     }
     else res.send({ succcess: false, error: "teams-disabled" })

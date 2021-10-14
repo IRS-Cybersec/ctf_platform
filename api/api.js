@@ -33,7 +33,8 @@ const startCache = async () => {
 		categoryUploadPath: "/usr/share/nginx/static/category",
 		categoryMeta: {},
 		teamMode: false,
-		teamMaxSize: 3
+		teamMaxSize: 3,
+		teamUpdateID: 0
 	}
 	const collections = Connection.collections
 	createCache = async () => {

@@ -32,7 +32,8 @@ const scoreboard = async (req, res) => {
         res.send({
             success: true,
             users: finalData,
-            lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID")
+            lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID"),
+            teamUpdateID: NodeCacheObj.get("teamUpdateID")
         });
 }
 

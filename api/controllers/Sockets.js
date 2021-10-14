@@ -64,27 +64,44 @@ const startup = async (server) => {
                 if (payload.lastChallengeID < latestSolveSubmissionID) {
                     const transactionCache = NodeCacheObj.get("transactionsCache")
                     let finalChallenges = []
-                    if (NodeCacheObj.get("adminShowDisable")) {
-                        for (let i = 0; i < transactionCache.length; i++) {
-                            try { // compatibility for older transaction records
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                    finalChallenges.push(transactionCache[i])
+                    if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
+                        if (NodeCacheObj.get("adminShowDisable")) {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                try { // compatibility for older transaction records
+                                    if (checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
                                 }
-                            }
-                            catch (e) { }
+                                catch (e) { }
 
+                            }
                         }
+                        else finalChallenges = transactionCache
                     }
                     else {
-                        for (let i = 0; i < transactionCache.length; i++) {
-                            try {
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                    finalChallenges.push(transactionCache[i])
+                        if (NodeCacheObj.get("adminShowDisable")) {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                try { // compatibility for older transaction records
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
                                 }
+                                catch (e) { }
+
                             }
-                            catch (e) {}
+                        }
+                        else {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                try {
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
+                                }
+                                catch (e) { }
+                            }
                         }
                     }
+
                     socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                 }
                 else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
@@ -142,14 +159,6 @@ const broadCastNewSolve = (solveDetails) => {
     })
 }
 
-const broadCastRefreshRequired = () => {
-    wss.clients.forEach((client) => {
-        if (client.readyState === ws.OPEN && client.isAuthed === true) {
-            client.send(JSON.stringify({ type: "refresh-required"}));
-        }
-    })
-}
 
 
-
-module.exports = { startup, broadCastNewSolve, broadCastRefreshRequired}
+module.exports = { startup, broadCastNewSolve }
