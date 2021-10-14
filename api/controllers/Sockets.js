@@ -68,7 +68,7 @@ const startup = async (server) => {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try { // compatibility for older transaction records
                                 if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                    finalChallenges.push(transactionCache[i])
                                 }
                             }
                             catch (e) { }
@@ -79,7 +79,7 @@ const startup = async (server) => {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try {
                                 if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                    finalChallenges.push(transactionCache[i])
                                 }
                             }
                             catch (e) {}
@@ -129,7 +129,7 @@ const startup = async (server) => {
     });
 }
 
-const broadCastNewSolve = async (solveDetails) => {
+const broadCastNewSolve = (solveDetails) => {
     if (NodeCacheObj.get("adminShowDisable")) {
         for (let i = 0; i < solveDetails.length; i++) {
             if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
@@ -142,6 +142,14 @@ const broadCastNewSolve = async (solveDetails) => {
     })
 }
 
+const broadCastRefreshRequired = () => {
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws.OPEN && client.isAuthed === true) {
+            client.send(JSON.stringify({ type: "refresh-required"}));
+        }
+    })
+}
 
 
-module.exports = { startup, broadCastNewSolve }
+
+module.exports = { startup, broadCastNewSolve, broadCastRefreshRequired}
