@@ -189,6 +189,7 @@ class AdminUsers extends React.Component {
             disableRegisterState: false,
             disableLoading: false,
             disableLoading2: false,
+            disableLoading3: false,
             disableAdminShow: false,
             selectedTableKeys: [],
             disableEditButtons: true,
@@ -196,7 +197,9 @@ class AdminUsers extends React.Component {
             uploadLoading: false,
             uploadPath: "",
             uploadPathLoading: false,
-            passwordResetModal: false
+            passwordResetModal: false,
+            teamMode: false,
+            teamMaxSize: 3
         }
     }
 
@@ -215,7 +218,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath })
+                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -372,6 +375,10 @@ class AdminUsers extends React.Component {
             settingName = "Admin scores"
             this.setState({ disableLoading2: true })
         }
+        else if (setting === "teamMode") {
+            settingName = "Team mode"
+            this.setState({ disableLoading3: true })
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -383,14 +390,25 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                if (value) {
-                    message.success(settingName + " disabled")
+                if (setting === "teamMode") {
+                    if (!value) {
+                        message.success(settingName + " disabled")
+                    }
+                    else {
+                        message.success(settingName + " enabled")
+                    }
+                    this.setState({ teamMode: value })
                 }
                 else {
-                    message.success(settingName + " enabled")
+                    if (value) {
+                        message.success(settingName + " disabled")
+                    }
+                    else {
+                        message.success(settingName + " enabled")
+                    }
+                    if (setting === "registerDisable") this.setState({ disableRegisterState: value })
+                    else if (setting === "adminShowDisable") this.setState({ disableAdminShow: value })
                 }
-                if (setting === "registerDisable") this.setState({ disableRegisterState: value })
-                else if (setting === "adminShowDisable") this.setState({ disableAdminShow: value })
 
 
 
@@ -403,7 +421,7 @@ class AdminUsers extends React.Component {
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({ disableLoading: false, disableLoading2: false })
+        this.setState({ disableLoading: false, disableLoading2: false, disableLoading3: false })
     }
 
     changeSetting = async (setting, value) => {
@@ -417,6 +435,9 @@ class AdminUsers extends React.Component {
             settingName = "Profile pictures upload path"
             this.setState({ uploadPathLoading: true })
         }
+        else if (setting === "teamMaxSize") {
+            settingName = "Maximum size of teams"
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -429,7 +450,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 if (setting === "uploadSize") message.success(settingName + " changed to " + value.toString() + "B")
-                else if (setting === "uploadPath") message.success(settingName + " changed to " + value.toString())
+                else message.success(settingName + " changed to " + value.toString())
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -670,16 +691,16 @@ class AdminUsers extends React.Component {
                     <Card>
                         <h3>Max Team Size
                             <InputNumber
-                                value={this.state.uploadSize}
-                                onChange={(value) => this.setState({ uploadSize: value })}
-                                onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
+                                value={this.state.teamMaxSize}
+                                onChange={(value) => this.setState({ teamMaxSize: value })}
+                                onPressEnter={(e) => { this.changeSetting("teamMaxSize", this.state.teamMaxSize) }} /></h3>
                         <p>Sets the maximum number of members in a team. Press <b>Enter</b> to save</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
                     <Card>
-                        <h3>Enable Teams:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.disableAdminShow} /></h3>
+                        <h3>Enable Teams:  <Switch disabled={this.state.disableLoading3} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.teamMode} /></h3>
                         <p>Enable teams for the platform. Users in a team will have their scores combined on the scoreboard <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
                     </Card>
                 </div>

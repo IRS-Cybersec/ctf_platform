@@ -183,9 +183,9 @@ const main = async () => {
 			instance.get('/v1/userPoints/:username', scoreboard.userPoints);
 
 			// Misc endpoints
-			instance.get('/v1/backup/', misc.downloadBackup)
-			instance.post('/v1/uploadBackup/', misc.uploadBackup)
-			instance.post('/v1/adminSettings/', misc.adminSettings)
+			instance.get('/v1/backup', misc.downloadBackup)
+			instance.post('/v1/uploadBackup', misc.uploadBackup)
+			instance.post('/v1/adminSettings', misc.adminSettings)
 			instance.get('/v1/submissions', submissions.submissions);
 			instance.post('/v1/submissions/new', submissions.newSubmission);
 			instance.post('/v1/submissions/edit', submissions.editSubmission);
