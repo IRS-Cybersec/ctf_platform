@@ -23,8 +23,6 @@ const list = async (req, res) => {
     })
 }
 
-// The members of a team should already have been obtained from "list"
-// This endpoint returns the transactions of the team
 const get = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
@@ -37,18 +35,20 @@ const get = async (req, res) => {
                 const current = transactionsCache[i]
                 if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.body.name) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
             }
-            // if own team, send code as well
+            // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
                 res.send({
                     success: true,
                     changes: changes,
-                    code: team.code
+                    code: team.code,
+                    members: teamList[req.body.name]
                 })
             }
             else {
                 res.send({
                     success: true,
-                    changes: changes
+                    changes: changes,
+                    members: teamList[req.body.name]
                 })
             }
 
