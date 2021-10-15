@@ -13,6 +13,7 @@ const scoreboard = require('./controllers/Scoreboard.js')
 const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
+const teams = require('./controllers/Teams.js')
 const { createSigner } = require('./utils/permissionUtils.js')
 const NodeCache = require('node-cache');
 
@@ -181,6 +182,13 @@ const main = async () => {
 			instance.get('/v1/scoreboard', scoreboard.scoreboard);
 			instance.get('/v1/scoreboard/:username', scoreboard.userScoreboard);
 			instance.get('/v1/userPoints/:username', scoreboard.userPoints);
+
+			// Team endpoints
+			instance.get('/v1/team/userTeam', teams.userTeam);
+			instance.post('/v1/team/join', teams.join);
+			instance.post('/v1/team/create', teams.create);
+			instance.post('/v1/team/leave', teams.leave);
+			instance.post('/v1/team/info/:team', teams.get);
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)

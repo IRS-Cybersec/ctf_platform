@@ -25,6 +25,7 @@ const { Content, Sider } = Layout;
 const Home = lazy(() => import("./Misc/home.js"));
 const Challenges = lazy(() => import("./Challenges/challenges.js"));
 const Profile = lazy(() => import("./SidebarDropdown/profile.js"));
+const Teams = lazy(() => import("./SidebarDropdown/Teams.js"));
 const Settings = lazy(() => import("./SidebarDropdown/Settings.js"));
 const Scoreboard = lazy(() => import("./Scoreboard/Scoreboard.js"));
 const Login = lazy(() => import("./Login/login.js"));
@@ -49,7 +50,8 @@ class App extends React.Component {
       userScore: "Loading...",
       loading: true,
       mobileBreakpoint: false,
-      scoreboardSocket: false
+      scoreboardSocket: false,
+      team: false
     };
   }
 
@@ -102,6 +104,7 @@ class App extends React.Component {
             message.success({ content: "Session restored. Welcome back " + username, key, duration: 2.5 })
 
             this.obtainScore(username)
+            this.obtainTeam()
           }
           else {
             //Might be a fake token since server does not have it, exit
@@ -117,8 +120,22 @@ class App extends React.Component {
         this.setState({ loading: false })
       }
     }
+  }
 
-
+  obtainTeam = () => {
+    fetch(window.ipAddress + "/v1/userTeam", {
+      method: 'get',
+      headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+    }).then((results) => {
+      return results.json(); //return data in JSON (since its JSON data)
+    }).then((data) => {
+      if (data.success === true) {
+        this.setState({ team: data.team })
+      }
+    }).catch((error) => {
+      console.log(error)
+      message.error({ content: "Oops. There was an issue connecting with the server" });
+    })
   }
 
   // Callback function for Login component to set token and perms
@@ -155,9 +172,6 @@ class App extends React.Component {
       if (data.success === true) {
         this.setState({ userScore: data.score })
       }
-
-
-
     }).catch((error) => {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
@@ -324,7 +338,8 @@ class App extends React.Component {
                                     <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
                                     <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} key={window.location.pathname} />} />
                                     <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
-
+                                    <Route exact path='/Team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} />} />
+                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} />} />
 
                                     {this.state.permissions >= 1 ? (
                                       <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />

@@ -28,12 +28,12 @@ const get = async (req, res) => {
         const teamList = NodeCacheObj.get("teamListCache")
         const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         const transactionsCache = NodeCacheObj.get("transactionsCache")
-        if (req.body.name in teamList) {
-            const team = teamList[req.body.name]
+        if (req.params.team in teamList) {
+            const team = teamList[req.params.team ]
             let changes = []
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.body.name) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.params.team ) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
             }
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
@@ -41,14 +41,14 @@ const get = async (req, res) => {
                     success: true,
                     changes: changes,
                     code: team.code,
-                    members: teamList[req.body.name]
+                    members: teamList[req.params.team ]
                 })
             }
             else {
                 res.send({
                     success: true,
                     changes: changes,
-                    members: teamList[req.body.name]
+                    members: teamList[req.params.team ]
                 })
             }
 
@@ -74,7 +74,7 @@ const userTeam = (req, res) => {
         else {
             res.send({
                 success: true,
-                team: ""
+                team: false
             })
         }
        
