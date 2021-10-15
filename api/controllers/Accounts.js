@@ -8,7 +8,7 @@ const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath") }
+        states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath"), teamSize: NodeCacheObj.get("teamMaxSize"), teamMode: NodeCacheObj.get("teamMode")  }
     });
 }
 
@@ -82,7 +82,15 @@ const create = async (req, res) => {
             lastChallengeID: latestSolveSubmissionID
         }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
-        transactionsCache.push(insertDoc)
+        transactionsCache.push({
+            _id: insertDoc._id,
+            challenge: insertDoc.challenge,
+            challengeID: insertDoc.challengeID,
+            timestamp: insertDoc.timestamp,
+            points: insertDoc.points,
+            lastChallengeID: insertDoc.lastChallengeID,
+            author: insertDoc.author
+        })
         await collections.transactions.insertOne(insertDoc)
         // Send out to scoreboards that there is a new user
         broadCastNewSolve([{

@@ -8,7 +8,7 @@ const fs = require('fs');
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
         if (req.locals.perms < 2) throw new Error('Permissions');
-        const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets"]
+        const allowedSettings = ["registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
         if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
         NodeCacheObj.set(req.body.setting, req.body.disable)
 

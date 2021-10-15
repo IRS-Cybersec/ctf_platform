@@ -114,7 +114,6 @@ class Scoreboard extends React.Component {
       let data = JSON.parse(e.data)
       if (data.type === "score") {
         updating = true
-        lastChallengeID = parseInt(data.data.lastChallengeID)
         const payloadArray = data.data // List of transactions to update
         for (let y = 0; y < payloadArray.length; y++) {
           let userFound = false
@@ -147,6 +146,7 @@ class Scoreboard extends React.Component {
         
         window.scoreboardData = changes
         window.lastChallengeID = payloadArray[0].lastChallengeID
+        if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "init") {
@@ -190,14 +190,14 @@ class Scoreboard extends React.Component {
 
           window.scoreboardData = changes
           window.lastChallengeID =  data.lastChallengeID
+          if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
         }
       }
     }
     webSocket.onopen = (e) => {
-      const ID = window.lastChallengeID
-      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: parseInt(ID) } }))
+      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: window.lastChallengeID, teamUpdateID: window.teamUpdateID } }))
       this.props.handleWebSocket(webSocket)
     }
     webSocket.onerror = (e) => {
@@ -392,6 +392,7 @@ class Scoreboard extends React.Component {
     }).then((data) => {
       if (data.success === true) {
         window.lastChallengeID =  data.lastChallengeID
+        window.teamUpdateID = data.teamUpdateID
         return data
       }
       else {
@@ -511,7 +512,7 @@ class Scoreboard extends React.Component {
               <Column title="Position" dataIndex="position" key="position" />
               <Column title="Username" dataIndex="username" key="username"
                 render={(text, row, index) => {
-                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} icon={<img src={require("./../assets/default.webp").default}/>} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
                 }}
               />
               <Column title="Score" dataIndex="score" key="score" />

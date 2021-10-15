@@ -31,7 +31,10 @@ const startCache = async () => {
 		maxSockets: 5,
 		uploadPath: "/usr/share/nginx/static/profile",
 		categoryUploadPath: "/usr/share/nginx/static/category",
-		categoryMeta: {}
+		categoryMeta: {},
+		teamMode: false,
+		teamMaxSize: 3,
+		teamUpdateID: 0
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -73,7 +76,37 @@ const startCache = async () => {
 	})
 	NodeCacheObj.set("challengeCache", challengeCache)
 
-	NodeCacheObj.set("transactionsCache", await collections.transactions.find({}).toArray())
+	// Create transactions cache
+	const transactionsCursor = collections.transactions.find({})
+    let transactionsCache = []
+    await transactionsCursor.forEach((doc) => {
+        transactionsCache.push({
+            _id: doc._id,
+            author: doc.author,
+            points: doc.points,
+            challenge: doc.challenge,
+            timestamp: doc.timestamp,
+            challengeID: doc.challengeID,
+			lastChallengeID: doc.lastChallengeID
+        })
+    })
+	NodeCacheObj.set("transactionsCache", transactionsCache)
+
+	// Create teams cache
+	let usernameTeamCache = {}
+	let teamListCache = {}
+	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1 } })
+	await userCursor.forEach((doc) => {
+		teamListCache[doc.name] = { members: doc.members, code: doc.code }
+		// create username-team mapping
+		// this does not guarentee that every username will have a mapping
+		for (let i = 0; i < doc.members.length; i++) {
+			usernameTeamCache[doc.members[i]] = doc.name
+		}
+	})
+	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
+	NodeCacheObj.set("teamListCache", teamListCache)
+
 	return true
 }
 

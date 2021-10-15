@@ -73,7 +73,15 @@ async function createDefaultAdminAccount(userCollection, transactionColl) {
             lastChallengeID: latestSolveSubmissionID
         }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
-        transactionsCache.push(insertDoc)
+        transactionsCache.push({
+            _id: insertDoc._id,
+            challenge: insertDoc.challenge,
+            challengeID: insertDoc.challengeID,
+            timestamp: insertDoc.timestamp,
+            points: insertDoc.points,
+            lastChallengeID: insertDoc.lastChallengeID,
+            author: insertDoc.author
+        })
         await transactionColl.insertOne(insertDoc)
 
     }

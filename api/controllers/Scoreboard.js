@@ -5,28 +5,69 @@ const scoreboard = async (req, res) => {
         let finalData = []
 
         let transactionsCache = NodeCacheObj.get("transactionsCache")
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
-
-                if (checkUsernamePerms(current.author) !== 2) {
-                    if (current.author in changes) changes[current.author].changes.push(document)
-                    else changes[current.author] = { _id: current.author, changes: [document] }
+        if (NodeCacheObj.get("teamMode")) {
+            const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+            const teamList = NodeCacheObj.get("teamListCache")
+            if (NodeCacheObj.get("adminShowDisable")) {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (checkUsernamePerms(current.author) !== 2) {
+                        const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
+                        if (author in changes) changes[author].changes.push(current)
+                        else {
+                            let members = current.author
+                            let isTeam = false
+                            if (author != current.author) {
+                                members = teamList[author]
+                                isTeam = true
+                            } 
+                            changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
+                        } 
+                    }
+    
                 }
-
+            }
+            else {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
+                    if (author in changes) changes[author].changes.push(current)
+                    else {
+                        let members = current.author
+                        let isTeam = false
+                        if (author != current.author) {
+                            members = teamList[author]
+                            isTeam = true
+                        } 
+                        changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
+                    } 
+                }
             }
         }
         else {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                const document = {_id: current._id, points: current.points, challenge: current.challenge, timestamp: current.timestamp, challengeID: current.challengeID }
-
-
-                if (current.author in changes) changes[current.author].changes.push(document)
-                else changes[current.author] = { _id: current.author, changes: [document] }
+            if (NodeCacheObj.get("adminShowDisable")) {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (checkUsernamePerms(current.author) !== 2) {
+                        if (current.author in changes) changes[current.author].changes.push(current)
+                        else changes[current.author] = { _id: current.author, changes: [current] }
+                    }
+    
+                }
+            }
+            else {
+                for (let i = 0; i < transactionsCache.length; i++) {
+                    const current = transactionsCache[i]
+                    
+                    if (current.author in changes) changes[current.author].changes.push(current)
+                    else changes[current.author] = { _id: current.author, changes: [current] }
+                }
             }
         }
+        
+       
 
         for (username in changes) {
             finalData.push(changes[username])
@@ -35,7 +76,8 @@ const scoreboard = async (req, res) => {
         res.send({
             success: true,
             users: finalData,
-            lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID")
+            lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID"),
+            teamUpdateID: NodeCacheObj.get("teamUpdateID")
         });
 }
 
@@ -48,7 +90,7 @@ const userScoreboard = async (req, res) => {
 
             if (current.author === req.params.username) {
                 found = true
-                if (current.points !== 0) scores.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if (current.points !== 0) scores.push(current)
             }
         }
         if (!found) throw new Error('NotFound');
@@ -69,7 +111,7 @@ const userPoints = async (req, res) => {
             const current = transactionsCache[i]
             if (current.points !== 0 && current.author === req.params.username) {
                 score += current.points
-                if (adminShowDisable && current.perms === 2) return res.send({ success: true, score: "Hidden", hidden: true })
+                if (adminShowDisable && checkUsernamePerms(current.author) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
             }
         }
         res.send({

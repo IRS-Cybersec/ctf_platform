@@ -61,33 +61,61 @@ const startup = async (server) => {
                 socket.id = socketNumber
 
                 const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
-                if (payload.lastChallengeID < latestSolveSubmissionID) {
-                    const transactionCache = NodeCacheObj.get("transactionsCache")
-                    let finalChallenges = []
+                const teamUpdateID = NodeCacheObj.get("teamUpdateID")
+                const transactionCache = NodeCacheObj.get("transactionsCache")
+                let finalChallenges = []
+                if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
+                    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+                    console.log("team update")
                     if (NodeCacheObj.get("adminShowDisable")) {
                         for (let i = 0; i < transactionCache.length; i++) {
                             try { // compatibility for older transaction records
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
+                                if (checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                    const index = finalChallenges.push(transactionCache[i])
+                                    if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
                                 }
                             }
                             catch (e) { }
-
                         }
                     }
                     else {
                         for (let i = 0; i < transactionCache.length; i++) {
-                            try {
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                    finalChallenges.push({ _id: transactionCache[i]._id, username: transactionCache[i].author, timestamp: transactionCache[i].timestamp, points: transactionCache[i].points })
-                                }
+                            try { // compatibility for older transaction records
+                                const index = finalChallenges.push(transactionCache[i])
+                                if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
                             }
-                            catch (e) {}
+                            catch (e) { }
                         }
-                    }
-                    socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
+                    } 
+                    socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
                 }
-                else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
+                else {
+                    if (payload.lastChallengeID < latestSolveSubmissionID) {
+                        if (NodeCacheObj.get("adminShowDisable")) {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                try { // compatibility for older transaction records
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
+                                }
+                                catch (e) { }
+
+                            }
+                        }
+                        else {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                try {
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
+                                }
+                                catch (e) { }
+                            }
+                        }
+                        socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
+                    }
+                    else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
+                }
             }
         })
         socket.on('close', (e) => {
@@ -129,17 +157,43 @@ const startup = async (server) => {
     });
 }
 
-const broadCastNewSolve = async (solveDetails) => {
-    if (NodeCacheObj.get("adminShowDisable")) {
-        for (let i = 0; i < solveDetails.length; i++) {
-            if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
+const broadCastNewSolve = (solveDetails) => {
+    if (NodeCacheObj.get("teamMode")) {
+        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+        let finalDetails = []
+        if (NodeCacheObj.get("adminShowDisable")) {
+            for (let i = 0; i < solveDetails.length; i++) {
+                if (checkUsernamePerms(solveDetails[i].username) !== 2) {
+                    const length = finalDetails.push(solveDetails[i])
+                    if (solveDetails[i].username in usernameTeamCache) finalDetails[length].username = usernameTeamCache[solveDetails[i].username]
+                }
+            }
         }
+        else {
+            for (let i = 0; i < solveDetails.length; i++) {
+                const length = finalDetails.push(solveDetails[i])
+                if (solveDetails[i].username in usernameTeamCache) finalDetails[length].username = usernameTeamCache[solveDetails[i].username]
+            }
+        }
+        wss.clients.forEach((client) => {
+            if (client.readyState === ws.OPEN && client.isAuthed === true) {
+                client.send(JSON.stringify({ type: "score", data: finalDetails, teamUpdateID: NodeCacheObj.get("teamUpdateID") }));
+            }
+        })
     }
-    wss.clients.forEach((client) => {
-        if (client.readyState === ws.OPEN && client.isAuthed === true) {
-            client.send(JSON.stringify({ type: "score", data: solveDetails }));
+    else {
+        if (NodeCacheObj.get("adminShowDisable")) {
+            for (let i = 0; i < solveDetails.length; i++) {
+                if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
+            }
         }
-    })
+        wss.clients.forEach((client) => {
+            if (client.readyState === ws.OPEN && client.isAuthed === true) {
+                client.send(JSON.stringify({ type: "score", data: solveDetails }));
+            }
+        })
+    }
+
 }
 
 
