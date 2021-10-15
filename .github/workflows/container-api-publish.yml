@@ -7,7 +7,8 @@ name: Publishes the API server to GHCR
 
 on:
   push:
-    branches: ['master']
+    tags:
+      - '**'
 
 env:
   REGISTRY: ghcr.io
