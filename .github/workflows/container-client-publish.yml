@@ -7,7 +7,8 @@ name: Publishes the client files to GHCR
 
 on:
   push:
-    branches: ['container-publish']
+    tags:
+      - '**'
 
 env:
   REGISTRY: ghcr.io
