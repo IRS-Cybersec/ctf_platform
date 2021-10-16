@@ -7,7 +7,7 @@ const submissions = async (req, res) => {
     const collections = Connection.collections
     res.send({
         success: true,
-        submissions: await collections.transactions.find({})
+        submissions: await collections.transactions.find({}).toArray()
     });
 }
 
