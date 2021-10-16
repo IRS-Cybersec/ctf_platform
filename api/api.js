@@ -96,7 +96,7 @@ const startCache = async () => {
 	// Create teams cache
 	let usernameTeamCache = {}
 	let teamListCache = {}
-	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1 } })
+	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1, code: 1 } })
 	await userCursor.forEach((doc) => {
 		teamListCache[doc.name] = { members: doc.members, code: doc.code }
 		// create username-team mapping

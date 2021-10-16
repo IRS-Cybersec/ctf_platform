@@ -6,10 +6,11 @@ const list = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         let filteredData = []
         const teamList = NodeCacheObj.get("teamListCache")
-        for (let i = 0; i < teamList.length; i++) {
+        for (const team in teamList) {
+            const current = teamList[team]
             filteredData.push({
-                name: teamList[i].name,
-                members: teamList[i].members
+                name: current.name,
+                members: current.members
             })
         }
         res.send({
@@ -33,22 +34,22 @@ const get = async (req, res) => {
             let changes = []
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.params.team) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.params.team) changes.push(current)
             }
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
-                res.send({
+                return res.send({
                     success: true,
                     changes: changes,
                     code: team.code,
-                    members: teamList[req.params.team]
+                    members: team.members
                 })
             }
             else {
-                res.send({
+                return res.send({
                     success: true,
                     changes: changes,
-                    members: teamList[req.params.team]
+                    members: team.members
                 })
             }
 
@@ -91,9 +92,12 @@ const linkInfo = async (req, res) => {
         const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         let currentTeam = {}
         let found = false
-        for (let i = 0; i < teamList.length; i++) {
-            if (teamList[i].code === req.body.code) {
-                currentTeam = teamList[i]
+
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.code === req.body.code) {
+                currentTeam = current
+                currentTeam.name = team
                 found = true
                 break
             }
@@ -129,9 +133,11 @@ const join = async (req, res) => {
         // Does a team exist for this team code, and is it correct?
         let currentTeam = {}
         let found = false
-        for (let i = 0; i < teamList.length; i++) {
-            if (teamList[i].code === req.body.code) {
-                currentTeam = teamList[i]
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.code === req.body.code) {
+                currentTeam = current
+                currentTeam.name = team
                 found = true
                 break
             }
@@ -215,6 +221,7 @@ const leave = async (req, res) => {
         for (let i = 0; i < teamList.length; i++) {
             if (teamList[i].members.includes(req.locals.username)) {
                 currentTeam = teamList[i]
+                currentTeam.name = team
                 found = true
                 break
             }

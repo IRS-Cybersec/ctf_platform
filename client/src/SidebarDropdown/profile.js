@@ -5,6 +5,7 @@ import { Ellipsis } from 'react-spinners-css';
 import orderBy from 'lodash.orderby'
 import {
     FileUnknownTwoTone,
+    FrownOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -181,7 +182,11 @@ class Profile extends React.Component {
                     !this.state.targetUser && !this.state.loading && (
                         <div style={{ height: "100%", width: "100%" }}>
                             <br /><br /><br />
-                            <Empty><h4>We were unable to find this user :c</h4></Empty>
+                            <Empty
+                            image={<FrownOutlined />}
+                            imageStyle={{fontSize: "500%", color: "#177ddc"}}
+                            description={<h1>We were unable to find the user "{this.props.match.params.user}"</h1>}
+                            />
                         </div>
                     )
                 }

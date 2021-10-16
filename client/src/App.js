@@ -10,7 +10,8 @@ import {
   PlusSquareTwoTone,
   GithubOutlined,
   ExclamationCircleOutlined,
-  SettingOutlined
+  SettingOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 import './App.min.css';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
@@ -123,7 +124,7 @@ class App extends React.Component {
   }
 
   obtainTeam = () => {
-    fetch(window.ipAddress + "/v1/userTeam", {
+    fetch(window.ipAddress + "/v1/team/userTeam", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
     }).then((results) => {
@@ -132,6 +133,7 @@ class App extends React.Component {
       if (data.success === true) {
         this.setState({ team: data.team })
       }
+      else this.setState({ team: "teams-disabled" })
     }).catch((error) => {
       console.log(error)
       message.error({ content: "Oops. There was an issue connecting with the server" });
@@ -211,6 +213,18 @@ class App extends React.Component {
                         </div>
                         <Dropdown overlay={
                           <Menu>
+                            {this.state.team !== "teams-disabled" && (
+                              <div>
+                                <Menu.Item key="Team">
+                                  <NavLink to="/Team">
+                                    <span><b style={{ color: "#d89614" }}><u>{this.state.team ? this.state.team : "No Team"}</u></b> <br />Manage Team </span>
+                                    <TeamOutlined />
+                                  </NavLink>
+                                </Menu.Item>
+                                <Menu.Divider />
+                              </div>
+                            )}
+
                             <Menu.Item key="Profile">
                               <NavLink to="/Profile">
                                 <span>Profile </span>
@@ -240,10 +254,10 @@ class App extends React.Component {
                             style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", alignItems: "center", height: "13ch", cursor: "pointer", paddingLeft: "2ch", marginBottom: "2vh" }}>
                             <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignContent: "center", alignItems: "center", marginBottom: "1vh" }}>
                               <h3 style={{ marginRight: "1vw", fontSize: "2.3ch" }}>{this.state.username}</h3>
-                              <Avatar size="large" src={"/static/profile/" + this.state.username + ".webp"}/>
+                              <Avatar size="large" src={"/static/profile/" + this.state.username + ".webp"} />
                             </div>
                             <div>
-                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}><b>Score:</b> {this.state.userScore}</h3>
+                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}>{this.state.team ? <b>Team Score:</b> : <b>Score:</b>} {this.state.userScore}</h3>
                             </div>
                           </div>
                         </Dropdown>
@@ -332,14 +346,14 @@ class App extends React.Component {
                                   <Switch>
                                     <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
 
-                                    <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)}/>}/>
+                                    <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
                                     <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} handleWebSocket={this.handleWebSocket.bind(this)} transition={style} scoreboardSocket={this.state.scoreboardSocket} />} />
 
                                     <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} />} />
                                     <Route exact path='/Profile/:user?' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
                                     <Route exact path='/Team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
-                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team}/>} />
-                                    <Route exact path='/Team/join/:code' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team}/>} />
+                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
+                                    <Route exact path='/Team/join/:code' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
 
                                     {this.state.permissions >= 1 ? (
                                       <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />

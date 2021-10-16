@@ -1,7 +1,8 @@
 import React from 'react';
 import { Layout, message, Table, Avatar } from 'antd';
 import {
-  FileUnknownTwoTone
+  FileUnknownTwoTone,
+  TeamOutlined
 } from '@ant-design/icons';
 import orderBy from 'lodash.orderby'
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
@@ -108,7 +109,7 @@ class Scoreboard extends React.Component {
 
   connectWebSocket() {
     const proto = window.location.protocol === "http:" ? "ws:" : "wss:"
-    const address = process.env.NODE_ENV === "development" ? "ws://localhost:20001/" : proto + "//" + window.location.host +  "/api/"
+    const address = process.env.NODE_ENV === "development" ? "ws://localhost:20001/" : proto + "//" + window.location.host + "/api/"
     let webSocket = new WebSocket(address)
     webSocket.onmessage = (e) => {
       let data = JSON.parse(e.data)
@@ -143,7 +144,7 @@ class Scoreboard extends React.Component {
             changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
           }
         }
-        
+
         window.scoreboardData = changes
         window.lastChallengeID = payloadArray[0].lastChallengeID
         if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
@@ -189,7 +190,7 @@ class Scoreboard extends React.Component {
           }
 
           window.scoreboardData = changes
-          window.lastChallengeID =  data.lastChallengeID
+          window.lastChallengeID = data.lastChallengeID
           if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
           this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
           this.setState({ liveUpdates: true })
@@ -236,8 +237,8 @@ class Scoreboard extends React.Component {
 
         }
         else {
-          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points }
-          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points }
+          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
+          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
         }
       }
     }
@@ -245,7 +246,7 @@ class Scoreboard extends React.Component {
     //console.log(timestamp)
     // More processing & sort by timestamp
     for (const username in tempScoreTimeStampDict) {
-      scoreArray.push({ username: username, timestamp: tempScoreTimeStampDict[username].timestamp, score: tempScoreTimeStampDict[username].points })
+      scoreArray.push({ username: username, timestamp: tempScoreTimeStampDict[username].timestamp, score: tempScoreTimeStampDict[username].points, isTeam: tempScoreTimeStampDict[username].isTeam, members: tempScoreTimeStampDict[username].members })
     }
     scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
 
@@ -355,6 +356,7 @@ class Scoreboard extends React.Component {
     }
 
     finalData.push(finalPoint)
+    console.log(scoreArray)
     this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray, loadingTable: false, top10: top10 })
     updating = false
   }
@@ -391,7 +393,7 @@ class Scoreboard extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then((data) => {
       if (data.success === true) {
-        window.lastChallengeID =  data.lastChallengeID
+        window.lastChallengeID = data.lastChallengeID
         window.teamUpdateID = data.teamUpdateID
         return data
       }
@@ -512,7 +514,24 @@ class Scoreboard extends React.Component {
               <Column title="Position" dataIndex="position" key="position" />
               <Column title="Username" dataIndex="username" key="username"
                 render={(text, row, index) => {
-                  return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  if (row.isTeam) {
+                    return (
+                    <Link to={"/Team/" + text}><a style={{ fontSize: "110%", fontWeight: 700, display: "flex", alignItems: "center" }}>
+                      <Avatar.Group
+                      maxCount={3}
+                      maxStyle={{marginRight: "1ch"}}
+                      >
+                        {row.members.map((member) => {
+                          return (<Avatar src={"/static/profile/" + member + ".webp"} style={{ marginRight: "1ch" }} />)
+                        })}
+                      </Avatar.Group>
+                      <span>{text} <TeamOutlined/></span>
+                      </a>
+                    </Link>);
+                  }
+                  else {
+                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  }
                 }}
               />
               <Column title="Score" dataIndex="score" key="score" />
