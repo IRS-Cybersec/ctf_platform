@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, Suspense } from 'react';
 import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover, Card, Divider } from 'antd';
 import {
   UnlockOutlined,
@@ -18,7 +18,7 @@ const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'))
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
 import orderBy from 'lodash.orderby';
-
+import { Ellipsis } from 'react-spinners-css';
 
 const { TabPane } = Tabs;
 const { confirm } = Modal;
@@ -553,9 +553,13 @@ class ChallengesTagSort extends React.Component {
                 {this.state.challengeTags}
               </div>
               <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <div className="challengeModal">
-                <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
-              </div>
+              <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+              </div>}>
+                <div className="challengeModal">
+                  <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
+                </div>
+              </Suspense>
 
 
               <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>

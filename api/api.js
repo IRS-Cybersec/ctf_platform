@@ -188,7 +188,8 @@ const main = async () => {
 			instance.post('/v1/team/join', teams.join);
 			instance.post('/v1/team/create', teams.create);
 			instance.post('/v1/team/leave', teams.leave);
-			instance.post('/v1/team/info/:team', teams.get);
+			instance.get('/v1/team/info/:team', teams.get);
+			instance.post('/v1/team/linkInfo', teams.linkInfo);
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)

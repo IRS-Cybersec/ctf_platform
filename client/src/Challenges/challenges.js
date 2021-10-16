@@ -34,6 +34,7 @@ class Challenges extends React.Component {
   }
 
   componentDidMount() {
+    console.log(window.location.pathname.split("/"))
     this.setState({ loadingChall: true })
 
     this.fetchCategories()
@@ -278,6 +279,7 @@ class Challenges extends React.Component {
             enter={{ opacity: 1 }}
             leave={{ opacity: 0 }}>
             {(props, toggle) => {
+              console.log(toggle)
               if (toggle === true) {
                 return (<animated.div style={{ ...props, position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                   <Ellipsis color="#177ddc" size={120} ></Ellipsis>

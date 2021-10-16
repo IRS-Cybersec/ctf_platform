@@ -332,14 +332,14 @@ class App extends React.Component {
                                   <Switch>
                                     <Route exact path='/' render={(props) => <Home {...props} transition={style} />} />
 
-                                    <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)} />} />
+                                    <Route path='/Challenges/:categoryChall?' render={(props) => <Challenges {...props} transition={style} obtainScore={this.obtainScore.bind(this)}/>}/>
                                     <Route exact path='/Scoreboard' render={(props) => <Scoreboard {...props} handleWebSocket={this.handleWebSocket.bind(this)} transition={style} scoreboardSocket={this.state.scoreboardSocket} />} />
 
-                                    <Route exact path='/Profile' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
-                                    <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} key={window.location.pathname} />} />
-                                    <Route exact path='/Profile/:user' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
-                                    <Route exact path='/Team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} />} />
-                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} />} />
+                                    <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} />} />
+                                    <Route exact path='/Profile/:user?' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
+                                    <Route exact path='/Team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
+                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team}/>} />
+                                    <Route exact path='/Team/join/:code' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team}/>} />
 
                                     {this.state.permissions >= 1 ? (
                                       <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />

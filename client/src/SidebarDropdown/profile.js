@@ -26,7 +26,6 @@ class Profile extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ loading: true })
         const username = this.props.match.params.user;
         if (typeof username !== "undefined") {
             this.setState({ targetUser: username })
