@@ -264,7 +264,7 @@ class App extends React.Component {
                               <Avatar size="large" src={"/static/profile/" + this.state.username + ".webp"} />
                             </div>
                             <div>
-                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}>{this.state.team ? <b>Team Score:</b> : <b>Score:</b>} {this.state.userScore}</h3>
+                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}>{this.state.team !== "teams-disabled" && !this.state.team ? <b>Team Score:</b> : <b>Score:</b>} {this.state.userScore}</h3>
                             </div>
                           </div>
                         </Dropdown>

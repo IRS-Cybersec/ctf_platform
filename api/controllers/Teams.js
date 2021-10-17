@@ -65,7 +65,8 @@ const get = async (req, res) => {
 // get the team the user is in for the sidebar
 const userTeam = (req, res) => {
     const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+    if (NodeCacheObj.get("teamMode")) {
+        if (req.locals.username in usernameTeamCache) {
             res.send({
                 success: true,
                 team: usernameTeamCache[req.locals.username]
@@ -77,6 +78,12 @@ const userTeam = (req, res) => {
                 team: false
             })
         }
+
+    }
+    else res.send({
+        success: false,
+        error: "teams-disabled"
+    })
 }
 
 const linkInfo = async (req, res) => {
