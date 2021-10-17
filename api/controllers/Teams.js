@@ -1,6 +1,6 @@
 const Connection = require('./../utils/mongoDB.js')
 const crypto = require('crypto');
-const { broadCastNewSolve } = require('./Sockets.js')
+const { broadCastNewTeamChange } = require('./Sockets.js')
 
 const list = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
@@ -27,14 +27,23 @@ const list = async (req, res) => {
 const get = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         const transactionsCache = NodeCacheObj.get("transactionsCache")
         if (req.params.team in teamList) {
             const team = teamList[req.params.team]
             let changes = []
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.params.team) changes.push(current)
+                if ("originalAuthor" in current && current.author === req.params.team && current.points !== 0) {
+                    changes.push({
+                        _id: current.id,
+                        author: current.originalAuthor,
+                        points: current.points,
+                        challenge: current.challenge,
+                        timestamp: current.timestamp,
+                        challengeID: current.challengeID,
+                        type: current.type
+                    })
+                }
             }
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
@@ -165,8 +174,16 @@ const join = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].author === req.locals.username) {
+                transactionCache[i].author = currentTeam.name
+                transactionCache[i].originalAuthor = req.locals.username
+            }
+        }
+        await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: currentTeam.name, originalAuthor: req.locals.username } })
+        broadCastNewTeamChange()
         res.send({ success: true })
     }
     else res.send({ succcess: false, error: "teams-disabled" })
@@ -203,8 +220,17 @@ const create = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        // Edit transactions and change author to the team name
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].author === req.locals.username) {
+                transactionCache[i].author = req.body.name
+                transactionCache[i].originalAuthor = req.locals.username
+            }
+        }
+        await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: req.body.name, originalAuthor: req.locals.username } })
+        broadCastNewTeamChange()
         res.send({ success: true })
     }
     else res.send({ succcess: false, error: "teams-disabled" })
@@ -244,8 +270,16 @@ const leave = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].originalAuthor === req.locals.username) {
+                transactionCache[i].author = req.locals.username
+                delete transactionCache[i].originalAuthor
+            }
+        }
+        await collections.transactions.updateMany({ originalAuthor: req.locals.username }, { $set: { author: req.locals.username }, $unset: { originalAuthor: 0 } })
+        broadCastNewTeamChange()
     }
     else res.send({ succcess: false, error: "teams-disabled" })
 }

@@ -3,66 +3,41 @@ const { checkUsernamePerms } = require('./../utils/permissionUtils.js')
 const scoreboard = async (req, res) => {
     let changes = {}
     let finalData = []
+    const teamList = NodeCacheObj.get("teamListCache")
 
     let transactionsCache = NodeCacheObj.get("transactionsCache")
-    if (NodeCacheObj.get("teamMode")) {
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-        const teamList = NodeCacheObj.get("teamListCache")
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
+    if (NodeCacheObj.get("adminShowDisable")) {
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
 
-                if (checkUsernamePerms(current.author) !== 2) {
-                    const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
-                    if (author in changes) changes[author].changes.push(current)
-                    else {
-                        let members = [current.author]
-                        let isTeam = false
-                        if (author != current.author) {
-                            members = teamList[author].members
-                            isTeam = true
-                        }
-                        changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
-                    }
-                }
-
-            }
-        }
-        else {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                const author = current.author in usernameTeamCache ? usernameTeamCache[current.author] : current.author
-                if (author in changes) changes[author].changes.push(current)
+            if (checkUsernamePerms(current.author) !== 2) {
+                if (current.author in changes) changes[current.author].changes.push(current)
                 else {
                     let members = [current.author]
                     let isTeam = false
-                    if (author != current.author) {
-                        members = teamList[author].members
+                    if ("originalAuthor" in current) { // user is in a team
+                        members = teamList[current.author].members
                         isTeam = true
                     }
-                    changes[author] = { _id: author, changes: [current], members: members, isTeam: isTeam }
+                    changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
                 }
             }
+
         }
     }
     else {
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
 
-                if (checkUsernamePerms(current.author) !== 2) {
-                    if (current.author in changes) changes[current.author].changes.push(current)
-                    else changes[current.author] = { _id: current.author, changes: [current] }
+            if (current.author in changes) changes[current.author].changes.push(current)
+            else {
+                let members = [current.author]
+                let isTeam = false
+                if ("originalAuthor" in current) { // user is in a team
+                    members = teamList[current.author].members
+                    isTeam = true
                 }
-
-            }
-        }
-        else {
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-
-                if (current.author in changes) changes[current.author].changes.push(current)
-                else changes[current.author] = { _id: current.author, changes: [current] }
+                changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
             }
         }
     }
@@ -72,7 +47,6 @@ const scoreboard = async (req, res) => {
     for (username in changes) {
         finalData.push(changes[username])
     }
-
     res.send({
         success: true,
         users: finalData,
@@ -88,14 +62,31 @@ const userScoreboard = async (req, res) => {
 
     if (NodeCacheObj.get("adminShowDisable") && checkUsernamePerms(req.params.username) === 2) return res.send({ success: true, scores: [], hidden: true })
 
-    for (let i = 0; i < transactionsCache.length; i++) {
-        const current = transactionsCache[i]
+    if (NodeCacheObj.get("teamMode")) {
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
 
-        if (current.author === req.params.username) {
-            found = true
-            if (current.points !== 0) scores.push(current)
+            if ("originalAuthor" in current && current.originalAuthor === req.params.username) {
+                found = true
+                if (current.points !== 0) scores.push(current)
+            }
+            else if (current.author === req.params.username) {
+                found = true
+                if (current.points !== 0) scores.push(current)
+            }
         }
     }
+    else {
+        for (let i = 0; i < transactionsCache.length; i++) {
+            const current = transactionsCache[i]
+
+            if (current.author === req.params.username) {
+                found = true
+                if (current.points !== 0) scores.push(current)
+            }
+        }
+    }
+
 
     if (!found) throw new Error('NotFound');
 
@@ -114,12 +105,15 @@ const userPoints = async (req, res) => {
     if (adminShowDisable && checkUsernamePerms(req.params.username) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
 
     const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    // Return team score instead of individual user score if user is in a team
     if (NodeCacheObj.get("teamMode") && req.params.username in usernameTeamCache) {
         const userTeam = usernameTeamCache[req.params.username]
 
         for (let i = 0; i < transactionsCache.length; i++) {
             const current = transactionsCache[i]
-            if (current.points !== 0 && usernameTeamCache[current.author] === userTeam) score += current.points
+            if (current.points !== 0 && "originalAuthor" in current && current.author === userTeam) {
+                score += current.points
+            }
         }
     }
     else {
@@ -130,7 +124,7 @@ const userPoints = async (req, res) => {
             }
         }
     }
-    
+
     res.send({
         success: true,
         score: score,

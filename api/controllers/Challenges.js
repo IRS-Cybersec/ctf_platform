@@ -268,6 +268,7 @@ const hint = async (req, res) => {
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
+        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         let insertDoc = {
             author: req.locals.username,
             challenge: hints.name,
@@ -278,21 +279,27 @@ const hint = async (req, res) => {
             hint_id: parseInt(req.body.id),
             lastChallengeID: latestSolveSubmissionID
         }
+        if (req.locals.username in usernameTeamCache) {
+            insertDoc.author = usernameTeamCache[req.locals.username]
+            insertDoc.originalAuthor = req.locals.username
+        } 
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         await collections.transactions.insertOne(insertDoc);
         await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-        transactionsCache.push({
+        let transactionDoc = {
             _id: insertDoc._id,
-            author: req.locals.username,
+            author: insertDoc.author,
             challenge: hints.name,
             challengeID: MongoDB.ObjectId(req.body.chall),
             timestamp: Gtimestamp,
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
-        })
+        }
+        if ("originalAuthor" in insertDoc) transactionDoc.originalAuthor = insertDoc.originalAuthor
+        transactionsCache.push(transactionDoc)
         broadCastNewSolve([{
             _id: insertDoc._id,
-            username: req.locals.username,
+            author: req.locals.username in usernameTeamCache ? usernameTeamCache[req.locals.username] : req.locals.username,
             timestamp: Gtimestamp,
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
@@ -354,7 +361,9 @@ const submit = async (req, res) => {
         let transactionDocumentsUpdated = []
         let solved = false;
         async function insertTransaction(correct = false) {
+            const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
             let transactionsCache = NodeCacheObj.get("transactionsCache")
+           
             let insertDocument = {
                 author: req.locals.username,
                 challenge: chall.name,
@@ -366,6 +375,10 @@ const submit = async (req, res) => {
                 submission: req.body.flag,
                 lastChallengeID: latestSolveSubmissionID // used as a "last updated time" so we know if to send to the client if the client's last updatedID is less than this
             }
+            if (req.locals.username in usernameTeamCache) {
+                insertDocument.author = usernameTeamCache[req.locals.username]
+                insertDocument.originalAuthor = req.locals.username
+            } 
             if (correct) {
                 await collections.challs.updateOne({
                     _id: MongoDB.ObjectId(req.body.chall)
@@ -382,7 +395,7 @@ const submit = async (req, res) => {
                             transactionsCache[i].lastChallengeID = latestSolveSubmissionID
                             transactionDocumentsUpdated.push({
                                 _id: transactionsCache[i]._id,
-                                username: transactionsCache[i].author,
+                                author: transactionsCache[i].author,
                                 timestamp: transactionsCache[i].timestamp,
                                 points: transactionsCache[i].points,
                                 lastChallengeID: latestSolveSubmissionID
@@ -393,16 +406,14 @@ const submit = async (req, res) => {
                 await collections.transactions.insertOne(insertDocument);
                 transactionDocumentsUpdated.push({
                     _id: insertDocument._id,
-                    username: req.locals.username,
+                    author: req.locals.username in usernameTeamCache ? usernameTeamCache[req.locals.username] : req.locals.username,
                     timestamp: Gtimestamp,
                     points: calculatedPoints,
                     lastChallengeID: latestSolveSubmissionID
                 }) // mongoDB will add the _id field to insertDocument automatically
             }
             else await collections.transactions.insertOne(insertDocument);
-
-
-            transactionsCache.push({
+            let transactionDoc = {
                 _id: insertDocument._id,
                 author: insertDocument.author,
                 challenge: insertDocument.challenge,
@@ -410,7 +421,9 @@ const submit = async (req, res) => {
                 timestamp: insertDocument.timestamp,
                 points: insertDocument.points,
                 lastChallengeID: insertDocument.lastChallengeID,
-            })
+            }
+            if ("originalAuthor" in insertDocument) transactionDoc.originalAuthor = insertDocument.originalAuthor
+            transactionsCache.push(transactionDoc)
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
@@ -611,7 +624,7 @@ const edit = async (req, res) => {
                 transactionsCache[i].lastChallengeID = latestSolveSubmissionID
                 transactionDocumentsUpdated.push({
                     _id: transactionsCache[i]._id,
-                    username: transactionsCache[i].author,
+                    author: transactionsCache[i].author,
                     timestamp: transactionsCache[i].timestamp,
                     points: transactionsCache[i].points,
                     lastChallengeID: latestSolveSubmissionID

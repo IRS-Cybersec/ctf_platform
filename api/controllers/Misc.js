@@ -15,6 +15,31 @@ const adminSettings = async (req, res) => {
         const set = {}
         set[req.body.setting] = req.body.disable
         if ((await collections.cache.updateOne({}, { "$set": set })).matchedCount > 0) {
+            if (req.body.setting === "teamMode") {
+                if (req.body.disable) { // Enable team mode
+                    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+                    let transactionsCache = NodeCacheObj.get("transactionsCache")
+                    for (let i = 0; i < transactionsCache.length; i++) {
+                        if (transactionsCache[i].author in usernameTeamCache) {
+                            transactionsCache[i].originalAuthor = transactionsCache[i].author
+                            transactionsCache[i].author = usernameTeamCache[transactionsCache[i].author] // set author to the team the user is in
+                            await collections.transactions.updateOne({_id: transactionsCache[i]._id}, {$set: {author: transactionsCache[i].author, originalAuthor: transactionsCache[i].originalAuthor}})
+                        }
+                    }
+                    
+                }
+                else { // team mode disabled
+                    let transactionsCache = NodeCacheObj.get("transactionsCache")
+                    for (let i = 0; i < transactionsCache.length; i++) {
+                        if ("originalAuthor" in transactionsCache[i]) {
+                            transactionsCache[i].author = transactionsCache[i].originalAuthor
+                            await collections.transactions.updateOne({_id: transactionsCache[i]._id}, {$set: {author: transactionsCache[i].author}, $unset: {originalAuthor: 0}})
+                            delete transactionsCache[i].originalAuthor
+                        }
+                    }
+                    
+                }
+            }
             res.send({
                 success: true
             });

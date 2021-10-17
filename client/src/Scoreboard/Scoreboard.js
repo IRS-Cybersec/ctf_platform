@@ -123,7 +123,7 @@ class Scoreboard extends React.Component {
           userLoop:
           for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
 
-            if (changes.users[x]._id === payload.username) { // User found
+            if (changes.users[x]._id === payload.author) { // User found
               userFound = true
               const currentUserChanges = changes.users[x].changes
               let transactionFound = false
@@ -141,14 +141,19 @@ class Scoreboard extends React.Component {
 
           if (!userFound) {
             // User is a new user not on the scoreboard for whatever reason
-            changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
+            changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
           }
         }
 
+
         window.scoreboardData = changes
         window.lastChallengeID = payloadArray[0].lastChallengeID
-        if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
+      }
+      else if (data.type === "team-update") {
+        window.teamUpdateID = data.teamUpdateID
+        window.scoreboardData = data.data
+        this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)))
       }
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
@@ -158,41 +163,50 @@ class Scoreboard extends React.Component {
           message.warn("Your account has more than the concurrent number of socket connections allowed. Disconnecting...")
         }
         else {
-          lastChallengeID = parseInt(data.data.lastChallengeID)
-          const payloadArray = data.data // List of transactions to update
-          for (let y = 0; y < payloadArray.length; y++) {
-            let userFound = false
-            const payload = payloadArray[y] // Current transaction to update
-            userLoop:
-            for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
 
-              if (changes.users[x]._id === payload.username) { // User found
-                userFound = true
-                const currentUserChanges = changes.users[x].changes
-                let transactionFound = false
-                for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
-                  if (currentUserChanges[i]._id === payload._id) {
-                    transactionFound = true
-                    currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
-                    break userLoop;
+          if (data.msg === "team-update") {
+            window.teamUpdateID = data.teamUpdateID
+            window.scoreboardData = data.data
+            this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)))
+          }
+          else {
+            lastChallengeID = parseInt(data.data.lastChallengeID)
+            const payloadArray = data.data // List of transactions to update
+            for (let y = 0; y < payloadArray.length; y++) {
+              let userFound = false
+              const payload = payloadArray[y] // Current transaction to update
+              userLoop:
+              for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
+
+                if (changes.users[x]._id === payload.author) { // User found
+                  userFound = true
+                  const currentUserChanges = changes.users[x].changes
+                  let transactionFound = false
+                  for (let i = 0; i < currentUserChanges.length; i++) { // Iterate through changes (transactions of user)
+                    if (currentUserChanges[i]._id === payload._id) {
+                      transactionFound = true
+                      currentUserChanges[i] = payload // If transaction found, update transaction with the new payload
+                      break userLoop;
+                    }
                   }
+                  if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
+                  break
                 }
-                if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
-                break
+              }
+
+              if (!userFound) {
+                // User is a new user not on the scoreboard for whatever reason
+                changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
               }
             }
 
-            if (!userFound) {
-              // User is a new user not on the scoreboard for whatever reason
-              changes.users.push({ _id: payload.username, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
-            }
+
+            window.scoreboardData = changes
+            window.lastChallengeID = data.lastChallengeID
+            this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
+            this.setState({ liveUpdates: true })
           }
 
-          window.scoreboardData = changes
-          window.lastChallengeID = data.lastChallengeID
-          if ("teamUpdateID" in data) window.teamUpdateID = data.teamUpdateID
-          this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
-          this.setState({ liveUpdates: true })
         }
       }
     }
@@ -355,7 +369,6 @@ class Scoreboard extends React.Component {
     }
 
     finalData.push(finalPoint)
-    console.log(scoreArray)
     this.setState({ graphData: finalData, loadingGraph: false, scores: scoreArray, loadingTable: false, top10: top10 })
     updating = false
   }
@@ -515,18 +528,18 @@ class Scoreboard extends React.Component {
                 render={(text, row, index) => {
                   if (row.isTeam) {
                     return (
-                    <Link to={"/Team/" + text}><a style={{ fontSize: "110%", fontWeight: 700, display: "flex", alignItems: "center" }}>
-                      <Avatar.Group
-                      maxCount={3}
-                      maxStyle={{marginRight: "1ch"}}
-                      >
-                        {row.members.map((member) => {
-                          return (<Avatar src={"/static/profile/" + member + ".webp"} style={{ marginRight: "1ch" }} />)
-                        })}
-                      </Avatar.Group>
-                      <span>{text} <TeamOutlined/></span>
+                      <Link to={"/Team/" + text}><a style={{ fontSize: "110%", fontWeight: 700, display: "flex", alignItems: "center" }}>
+                        <Avatar.Group
+                          maxCount={3}
+                          maxStyle={{ marginRight: "1ch" }}
+                        >
+                          {row.members.map((member) => {
+                            return (<Avatar src={"/static/profile/" + member + ".webp"} style={{ marginRight: "1ch" }} />)
+                          })}
+                        </Avatar.Group>
+                        <span>{text} <TeamOutlined /></span>
                       </a>
-                    </Link>);
+                      </Link>);
                   }
                   else {
                     return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;

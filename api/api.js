@@ -81,15 +81,18 @@ const startCache = async () => {
 	const transactionsCursor = collections.transactions.find({})
     let transactionsCache = []
     await transactionsCursor.forEach((doc) => {
-        transactionsCache.push({
-            _id: doc._id,
+		const insertDoc = {
+			_id: doc._id,
             author: doc.author,
             points: doc.points,
             challenge: doc.challenge,
             timestamp: doc.timestamp,
             challengeID: doc.challengeID,
-			lastChallengeID: doc.lastChallengeID
-        })
+			lastChallengeID: doc.lastChallengeID,
+			type: doc.type
+		}
+		if ("originalAuthor" in doc) insertDoc.originalAuthor = doc.originalAuthor
+        transactionsCache.push(insertDoc)
     })
 	NodeCacheObj.set("transactionsCache", transactionsCache)
 

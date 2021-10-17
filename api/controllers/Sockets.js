@@ -62,72 +62,55 @@ const startup = async (server) => {
 
                 const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
                 const teamUpdateID = NodeCacheObj.get("teamUpdateID")
+                const teamList = NodeCacheObj.get("teamListCache")
                 const transactionCache = NodeCacheObj.get("transactionsCache")
+                
                 let finalChallenges = []
                 // Outdated team update, update everything
                 if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
-                    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-                    if (NodeCacheObj.get("adminShowDisable")) {
-                        for (let i = 0; i < transactionCache.length; i++) {
-                            if (checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                const index = finalChallenges.push(transactionCache[i])
-                                if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
+                    let changes = {}
+                    let finalData = []
+
+                    for (let i = 0; i < transactionCache.length; i++) {
+                        const current = transactionCache[i]
+                
+                        if (current.author in changes) changes[current.author].changes.push(current)
+                        else {
+                            let members = [current.author]
+                            let isTeam = false
+                            if ("originalAuthor" in current) { // user is in a team
+                                members = teamList[current.author].members
+                                isTeam = true
                             }
+                            changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
                         }
                     }
-                    else {
-                        for (let i = 0; i < transactionCache.length; i++) {
-                            const index = finalChallenges.push(transactionCache[i])
-                            if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
-                        }
+
+                    for (username in changes) {
+                        finalData.push(changes[username])
                     }
-                    socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
+
+                    socket.send(JSON.stringify({ type: "init", msg: "team-update", data: {users: finalData}, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
                 }
                 else {
                     // Some transactions are outdated, only update those
                     if (payload.lastChallengeID < latestSolveSubmissionID) {
-                        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-                        if (NodeCacheObj.get("teamMode")) {
-                            if (NodeCacheObj.get("adminShowDisable")) {
-                                for (let i = 0; i < transactionCache.length; i++) {
-                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                        const index = finalChallenges.push(transactionCache[i])
-                                        if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
-                                    }
-
+                        if (NodeCacheObj.get("adminShowDisable")) {
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                    finalChallenges.push(transactionCache[i])
                                 }
-                            }
-                            else {
-                                for (let i = 0; i < transactionCache.length; i++) {
-                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                        const index = finalChallenges.push(transactionCache[i])
-                                        if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
-                                    }
 
-                                }
                             }
                         }
                         else {
-                            if (NodeCacheObj.get("adminShowDisable")) {
-                                for (let i = 0; i < transactionCache.length; i++) {
-                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                        finalChallenges.push(transactionCache[i])
-                                    }
-
-                                }
-                            }
-                            else {
-                                for (let i = 0; i < transactionCache.length; i++) {
-                                    console.log(transactionCache[i].lastChallengeID)
-                                    console.log(payload.lastChallengeID)
-                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                        finalChallenges.push(transactionCache[i])
-                                    }
+                            for (let i = 0; i < transactionCache.length; i++) {
+                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
+                                    finalChallenges.push(transactionCache[i])
                                 }
                             }
                         }
-
-                        socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
+                        socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID }))
                     }
                     else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
                 }
@@ -173,44 +156,51 @@ const startup = async (server) => {
 }
 
 const broadCastNewSolve = (solveDetails) => {
-    if (NodeCacheObj.get("teamMode")) {
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-        let finalDetails = []
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < solveDetails.length; i++) {
-                if (checkUsernamePerms(solveDetails[i].username) !== 2) {
-                    const length = finalDetails.push(solveDetails[i])
-                    if (solveDetails[i].username in usernameTeamCache) finalDetails[length - 1].username = usernameTeamCache[solveDetails[i].username]
-                }
-            }
+    if (NodeCacheObj.get("adminShowDisable")) {
+        for (let i = 0; i < solveDetails.length; i++) {
+            if (checkUsernamePerms(solveDetails[i].author) === 2) solveDetails.splice(i, 1)
         }
-        else {
-            for (let i = 0; i < solveDetails.length; i++) {
-                const length = finalDetails.push(solveDetails[i])
-                if (solveDetails[i].username in usernameTeamCache) finalDetails[length - 1].username = usernameTeamCache[solveDetails[i].username]
-            }
-        }
-        wss.clients.forEach((client) => {
-            if (client.readyState === ws.OPEN && client.isAuthed === true) {
-                client.send(JSON.stringify({ type: "score", data: finalDetails, teamUpdateID: NodeCacheObj.get("teamUpdateID") }));
-            }
-        })
     }
-    else {
-        if (NodeCacheObj.get("adminShowDisable")) {
-            for (let i = 0; i < solveDetails.length; i++) {
-                if (checkUsernamePerms(solveDetails[i].username) === 2) solveDetails.splice(i, 1)
-            }
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws.OPEN && client.isAuthed === true) {
+            client.send(JSON.stringify({ type: "score", data: solveDetails }));
         }
-        wss.clients.forEach((client) => {
-            if (client.readyState === ws.OPEN && client.isAuthed === true) {
-                client.send(JSON.stringify({ type: "score", data: solveDetails }));
+    })
+}
+
+const broadCastNewTeamChange = () => {
+    let changes = {}
+    let finalData = []
+    const teamUpdateID = NodeCacheObj.get("teamUpdateID")
+    const teamList = NodeCacheObj.get("teamListCache")
+    const transactionsCache = NodeCacheObj.get("transactionsCache")
+
+    for (let i = 0; i < transactionsCache.length; i++) {
+        const current = transactionsCache[i]
+
+        if (current.author in changes) changes[current.author].changes.push(current)
+        else {
+            let members = [current.author]
+            let isTeam = false
+            if ("originalAuthor" in current) { // user is in a team
+                members = teamList[current.author].members
+                isTeam = true
             }
-        })
+            changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
+        }
     }
 
+    for (username in changes) {
+        finalData.push(changes[username])
+    }
+
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws.OPEN && client.isAuthed === true) {
+            client.send(JSON.stringify({ type: "team-update", data: { users: finalData }, teamUpdateID: teamUpdateID }));
+        }
+    })
 }
 
 
 
-module.exports = { startup, broadCastNewSolve }
+module.exports = { startup, broadCastNewSolve, broadCastNewTeamChange }

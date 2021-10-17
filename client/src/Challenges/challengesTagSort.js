@@ -412,7 +412,7 @@ class ChallengesTagSort extends React.Component {
       })
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
-    }).then( async (data) => {
+    }).then(async (data) => {
       //console.log(data)
       if (data.success === true) {
         if (data.data === "correct") {
@@ -531,30 +531,32 @@ class ChallengesTagSort extends React.Component {
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
-
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <LinkOutlined style={{ color: "#1890ff" }} onClick={
-                  async () => {
-                  await navigator.clipboard.writeText(window.location.href);
-                  message.success("Challenge link copied to clipboard.")
-                }} /></h1>
-              </div>
-              <div>
-                {this.state.challengeTags}
-              </div>
-              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
               <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
                 <Ellipsis color="#177ddc" size={120} ></Ellipsis>
               </div>}>
+
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <LinkOutlined style={{ color: "#1890ff" }} onClick={
+                    async () => {
+                      await navigator.clipboard.writeText(window.location.href);
+                      message.success("Challenge link copied to clipboard.")
+                    }} /></h1>
+                </div>
+                <div>
+                  {this.state.challengeTags}
+                </div>
+                <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
+
                 <div className="challengeModal">
                   <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
                 </div>
+
+
+
+                <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+                  {this.state.challengeHints}
+                </div>
               </Suspense>
-
-
-              <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
-                {this.state.challengeHints}
-              </div>
 
 
               <div style={{ display: "flex" }}>
