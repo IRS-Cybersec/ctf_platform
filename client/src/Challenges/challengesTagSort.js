@@ -412,7 +412,7 @@ class ChallengesTagSort extends React.Component {
       })
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
-    }).then((data) => {
+    }).then( async (data) => {
       //console.log(data)
       if (data.success === true) {
         if (data.data === "correct") {
@@ -424,7 +424,7 @@ class ChallengesTagSort extends React.Component {
           });
           this.setState({ challengeModal: false })
           this.props.history.push("/Challenges/" + this.props.category)
-          this.props.handleRefresh()
+          await this.props.handleRefresh()
           this.sortByTags()
 
         }
