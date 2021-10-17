@@ -64,54 +64,69 @@ const startup = async (server) => {
                 const teamUpdateID = NodeCacheObj.get("teamUpdateID")
                 const transactionCache = NodeCacheObj.get("transactionsCache")
                 let finalChallenges = []
+                // Outdated team update, update everything
                 if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
                     const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-                    console.log("team update")
                     if (NodeCacheObj.get("adminShowDisable")) {
                         for (let i = 0; i < transactionCache.length; i++) {
-                            try { // compatibility for older transaction records
-                                if (checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                    const index = finalChallenges.push(transactionCache[i])
-                                    if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
-                                }
+                            if (checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                const index = finalChallenges.push(transactionCache[i])
+                                if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
                             }
-                            catch (e) { }
                         }
                     }
                     else {
                         for (let i = 0; i < transactionCache.length; i++) {
-                            try { // compatibility for older transaction records
-                                const index = finalChallenges.push(transactionCache[i])
-                                if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
-                            }
-                            catch (e) { }
+                            const index = finalChallenges.push(transactionCache[i])
+                            if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
                         }
-                    } 
+                    }
                     socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
                 }
                 else {
+                    // Some transactions are outdated, only update those
                     if (payload.lastChallengeID < latestSolveSubmissionID) {
-                        if (NodeCacheObj.get("adminShowDisable")) {
-                            for (let i = 0; i < transactionCache.length; i++) {
-                                try { // compatibility for older transaction records
+                        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+                        if (NodeCacheObj.get("teamMode")) {
+                            if (NodeCacheObj.get("adminShowDisable")) {
+                                for (let i = 0; i < transactionCache.length; i++) {
                                     if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                        finalChallenges.push(transactionCache[i])
+                                        const index = finalChallenges.push(transactionCache[i])
+                                        if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
                                     }
-                                }
-                                catch (e) { }
 
+                                }
+                            }
+                            else {
+                                for (let i = 0; i < transactionCache.length; i++) {
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
+                                        const index = finalChallenges.push(transactionCache[i])
+                                        if (transactionCache[i].username in usernameTeamCache) finalChallenges[index].username = usernameTeamCache[transactionCache[i].username]
+                                    }
+
+                                }
                             }
                         }
                         else {
-                            for (let i = 0; i < transactionCache.length; i++) {
-                                try {
+                            if (NodeCacheObj.get("adminShowDisable")) {
+                                for (let i = 0; i < transactionCache.length; i++) {
+                                    if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
+                                        finalChallenges.push(transactionCache[i])
+                                    }
+
+                                }
+                            }
+                            else {
+                                for (let i = 0; i < transactionCache.length; i++) {
+                                    console.log(transactionCache[i].lastChallengeID)
+                                    console.log(payload.lastChallengeID)
                                     if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
                                         finalChallenges.push(transactionCache[i])
                                     }
                                 }
-                                catch (e) { }
                             }
                         }
+
                         socket.send(JSON.stringify({ type: "init", data: finalChallenges, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
                     }
                     else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
@@ -165,14 +180,14 @@ const broadCastNewSolve = (solveDetails) => {
             for (let i = 0; i < solveDetails.length; i++) {
                 if (checkUsernamePerms(solveDetails[i].username) !== 2) {
                     const length = finalDetails.push(solveDetails[i])
-                    if (solveDetails[i].username in usernameTeamCache) finalDetails[length].username = usernameTeamCache[solveDetails[i].username]
+                    if (solveDetails[i].username in usernameTeamCache) finalDetails[length - 1].username = usernameTeamCache[solveDetails[i].username]
                 }
             }
         }
         else {
             for (let i = 0; i < solveDetails.length; i++) {
                 const length = finalDetails.push(solveDetails[i])
-                if (solveDetails[i].username in usernameTeamCache) finalDetails[length].username = usernameTeamCache[solveDetails[i].username]
+                if (solveDetails[i].username in usernameTeamCache) finalDetails[length - 1].username = usernameTeamCache[solveDetails[i].username]
             }
         }
         wss.clients.forEach((client) => {

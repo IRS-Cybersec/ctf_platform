@@ -113,8 +113,8 @@ const userPoints = async (req, res) => {
     let score = 0
     if (adminShowDisable && checkUsernamePerms(req.params.username) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
 
-    if (NodeCacheObj.get("teamMode")) {
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    if (NodeCacheObj.get("teamMode") && req.params.username in usernameTeamCache) {
         const userTeam = usernameTeamCache[req.params.username]
 
         for (let i = 0; i < transactionsCache.length; i++) {

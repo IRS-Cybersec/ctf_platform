@@ -140,6 +140,10 @@ class App extends React.Component {
     })
   }
 
+  setTeam = (team) => {
+    this.setState({ team: team })
+  }
+
   // Callback function for Login component to set token and perms
   handleLogin = (receivedToken, permissions, remember) => {
     const username = receivedToken.split(".")[0]
@@ -217,7 +221,10 @@ class App extends React.Component {
                               <div>
                                 <Menu.Item key="Team">
                                   <NavLink to="/Team">
-                                    <span><b style={{ color: "#d89614" }}><u>{this.state.team ? this.state.team : "No Team"}</u></b> <br />Manage Team </span>
+                                    <span>
+                                      <b style={{ color: "#d89614" }}><u>{this.state.team ? this.state.team : "No Team"}</u></b>
+                                      <br />{this.state.team ? "Manage Team " : "Create/Join a Team "}
+                                    </span>
                                     <TeamOutlined />
                                   </NavLink>
                                 </Menu.Item>
@@ -351,9 +358,8 @@ class App extends React.Component {
 
                                     <Route exact path='/Settings' render={(props) => <Settings {...props} transition={style} logout={this.handleLogout.bind(this)} username={this.state.username} />} />
                                     <Route exact path='/Profile/:user?' render={(props) => <Profile {...props} transition={style} username={this.state.username} key={window.location.pathname} />} />
-                                    <Route exact path='/Team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
-                                    <Route exact path='/Team/:team' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
-                                    <Route exact path='/Team/join/:code' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} />} />
+                                    <Route exact path='/Team/:team?' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} setTeam={this.setTeam.bind(this)} obtainScore={this.obtainScore.bind(this)} />} />
+                                    <Route exact path='/Team/join/:code' render={(props) => <Teams {...props} transition={style} key={window.location.pathname} team={this.state.team} setTeam={this.setTeam.bind(this)} obtainScore={this.obtainScore.bind(this)} />} />
 
                                     {this.state.permissions >= 1 ? (
                                       <Route exact path='/CreateChallenge' render={(props) => <UserChallengeCreate {...props} transition={style} />} />

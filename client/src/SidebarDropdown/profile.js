@@ -235,7 +235,6 @@ class Profile extends React.Component {
                                 </ResponsiveContainer>
 
                             </div>
-                            <div style={{ height: "70%", width: "100%" }}>
                                 <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
                                     emptyText: (
                                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
@@ -252,7 +251,6 @@ class Profile extends React.Component {
                                     <Column width={30} title="Score Change" dataIndex="score" key="score" />
                                     <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
                                 </Table>
-                            </div>
                         </Layout>
 
                     )

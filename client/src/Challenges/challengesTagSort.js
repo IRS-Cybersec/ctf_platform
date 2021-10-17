@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, Suspense } from 'react';
-import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover, Card, Divider } from 'antd';
+import React, { Suspense } from 'react';
+import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Card, Divider } from 'antd';
 import {
   UnlockOutlined,
   ProfileOutlined,
@@ -46,20 +46,6 @@ const SubmitFlagForm = (props) => {
       </Form.Item>
     </Form>
   );
-}
-
-const CopyLinkInput = (props) => {
-  const copyInput = useRef(null)
-
-  useEffect(() => {
-    copyInput.current.select()
-    document.execCommand('copy')
-    message.success('Challenge link copied to clipboard.')
-  })
-
-  return (
-    <Input ref={copyInput} value={window.location.href} />
-  )
 }
 
 
@@ -547,7 +533,11 @@ class ChallengesTagSort extends React.Component {
               )}
 
               <div style={{ display: "flex", justifyContent: "center" }}>
-                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput />} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
+                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <LinkOutlined style={{ color: "#1890ff" }} onClick={
+                  async () => {
+                  await navigator.clipboard.writeText(window.location.href);
+                  message.success("Challenge link copied to clipboard.")
+                }} /></h1>
               </div>
               <div>
                 {this.state.challengeTags}

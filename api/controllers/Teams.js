@@ -194,7 +194,7 @@ const create = async (req, res) => {
         const newTeam = {
             name: req.body.name,
             members: [req.locals.username],
-            code: crypto.randomBytes(32).toString('hex')
+            code: crypto.randomBytes(16).toString('hex')
         }
         teamList[req.body.name] = newTeam
         usernameTeamCache[req.locals.username] = req.body.name
@@ -218,9 +218,10 @@ const leave = async (req, res) => {
         let currentTeam = {}
         let found = false
         // Find the team the user is in
-        for (let i = 0; i < teamList.length; i++) {
-            if (teamList[i].members.includes(req.locals.username)) {
-                currentTeam = teamList[i]
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.members.includes(req.locals.username)) {
+                currentTeam = current
                 currentTeam.name = team
                 found = true
                 break

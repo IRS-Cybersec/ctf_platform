@@ -8,7 +8,8 @@ import {
     LinkOutlined,
     UsergroupAddOutlined,
     IdcardOutlined,
-    FileUnknownTwoTone
+    FileUnknownTwoTone,
+    WarningOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -37,7 +38,13 @@ const CreateTeamForm = (props) => {
                     if (data.success === true) {
                         message.success({ content: "Created the team " + values.name + " successfully!" })
                         form.resetFields()
+                        props.loadTeamDetails(values.name)
+                        props.setTeam(values.name)
+                        props.obtainScore()
                         props.setState({ createTeamModal: false })
+                    }
+                    else if (data.error === "name-taken") {
+                        message.error("Team name has been taken. Please select another name.")
                     }
                     else {
                         message.error({ content: "Oops. Unknown error." })
@@ -77,6 +84,7 @@ class Teams extends React.Component {
 
     constructor(props) {
         super(props);
+        this.copyLinkRef = React.createRef();
         this.state = {
             inviteName: "",
             loading: true,
@@ -88,7 +96,9 @@ class Teams extends React.Component {
             joinLoading: false,
             teamScore: "Loading...",
             graphData: [],
-            scores: []
+            scores: [],
+            userScores: [],
+            leaveLoading: false
         }
     }
 
@@ -122,7 +132,9 @@ class Teams extends React.Component {
         }).then((data) => {
             if (data.success) {
                 message.success("Successfully joined the team.")
+                this.props.setTeam(name)
                 this.loadTeamDetails(name)
+                this.props.obtainScore()
                 close()
             }
             else if (data.error === "invalid-code") {
@@ -147,6 +159,37 @@ class Teams extends React.Component {
         })
         this.setState({ joinLoading: true })
     }
+
+    leaveTeam = async (close) => {
+        this.setState({ leaveLoading: true })
+        await fetch(window.ipAddress + "/v1/team/leave", {
+            method: 'post',
+            headers: { "Authorization": window.IRSCTFToken },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success) {
+                this.setState({ teamName: false })
+                message.success("Successfully left the team.")
+                if (data.msg && data.msg === "last-member") message.info("Since you were the last member, the team will be disbanded.")
+                this.props.setTeam(false)
+                this.props.obtainScore()
+                close()
+            }
+            else if (data.error === "not-in-any-team") {
+                message.error("You are not in any team. Please refresh the page to see if you are still in a team.")
+            }
+            else {
+                message.error("Unknown error.")
+            }
+
+        }).catch((error) => {
+            console.log(error);
+            message.error({ content: "Something went wrong fetching your challenges." })
+        })
+        this.setState({ leaveLoading: true })
+    }
+
 
     loadTeamDetails = async (team) => {
         await fetch(window.ipAddress + "/v1/team/info/" + encodeURIComponent(team), {
@@ -187,6 +230,7 @@ class Teams extends React.Component {
         let challengeArrayReversed = orderBy(changes, ["timestamp"], ["asc"])
         let graphData = []
         let graphPoint = {}
+        let userScores = {}
         let scoreTotal = 0
 
         graphData.push({
@@ -197,6 +241,9 @@ class Teams extends React.Component {
         for (let x = 0; x < challengeArray.length; x++) {
             //Plot graph
             scoreTotal += challengeArrayReversed[x].points
+            if (challengeArrayReversed[x].author in userScores) userScores[challengeArrayReversed[x].author] += challengeArrayReversed[x].points
+            else userScores[challengeArrayReversed[x].author] = 0
+
             graphPoint = {
                 Score: scoreTotal,
                 Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
@@ -213,7 +260,7 @@ class Teams extends React.Component {
                 challengeID: "",
                 username: currentStuff.author
             }
-            
+
             //Current record is a hint
             if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
             else currentDS.challenge = currentStuff.challenge
@@ -271,8 +318,18 @@ class Teams extends React.Component {
             Time: new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
         }
         graphData.push(graphPoint)
-        this.setState({ teamScore: scoreTotal, graphData: graphData, scores: challengeDS, loading: false })
-        //console.log(graphData)
+
+        // convert userScores from object to array
+        let userScoreArray = []
+        for (const user in userScores) {
+            userScoreArray.push({
+                key: user,
+                username: user,
+                score: userScores[user]
+            })
+        }
+
+        this.setState({ teamScore: scoreTotal, graphData: graphData, scores: challengeDS, loading: false, userScores: userScoreArray })
     }
 
     getCodeDetails = async (code) => {
@@ -332,7 +389,7 @@ class Teams extends React.Component {
                     footer={null}
                     onCancel={() => { this.setState({ createTeamModal: false }) }}
                 >
-                    <CreateTeamForm setState={this.setState.bind(this)} />
+                    <CreateTeamForm setState={this.setState.bind(this)} obtainScore={this.props.obtainScore.bind(this)} loadTeamDetails={this.loadTeamDetails.bind(this)} setTeam={this.props.setTeam.bind(this)} />
                 </Modal>
 
                 {this.state.loading ? (
@@ -367,10 +424,19 @@ class Teams extends React.Component {
                                         {this.state.teamName ?
                                             (
                                                 <Layout style={{ height: "100%", width: "100%", padding: "3%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2ch" }}>
                                                         <div style={{ display: "flex" }}>
                                                             <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                                                                <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={"/static/profile/" + this.state.targetUser + ".webp"} />
+                                                                <Avatar.Group
+                                                                    maxCount={3}
+                                                                >
+                                                                    {this.state.members.map((member) => {
+                                                                        return (
+                                                                            <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={"/static/profile/" + member + ".webp"} />
+                                                                        )
+                                                                    })}
+
+                                                                </ Avatar.Group>
                                                                 <h1 style={{ fontSize: "5ch" }}>{this.state.teamName}</h1>
                                                             </div>
                                                             <div>
@@ -378,8 +444,54 @@ class Teams extends React.Component {
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {this.state.teamName === this.props.team && (
+                                                        <div style={{ backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", width: "fit-content", padding: "20px" }}>
+                                                            <h4 style={{ fontSize: "2ch", color: "#49aa19" }}>You are part of this team</h4>
+                                                            <div style={{ marginTop: "2ch" }}>
+                                                                <div style={{ display: "flex", marginBottom: "2ch" }}>
+                                                                    <Input value={window.location.origin + "/Team/Join/" + this.state.code} />
+                                                                    <Button type="primary" style={{ marginLeft: "1ch" }} icon={<LinkOutlined />} onClick={async () => {
+                                                                        await navigator.clipboard.writeText(window.location.origin + "/Team/Join/" + this.state.code);
+                                                                        message.success("Invite link copied to clipboard.")
+
+                                                                    }}>Copy Invite Link</Button>
+                                                                </div>
+                                                                <Button style={{ marginRight: "1ch" }} danger type="primary" onClick={() => {
+                                                                    confirm({
+                                                                        title: "Leave Team?",
+                                                                        content: <span>Are you sure you want to leave: <b><u>{this.state.teamName}</u></b>?</span>,
+                                                                        icon: <WarningOutlined />,
+                                                                        maskClosable: true,
+                                                                        okText: "Leave Team",
+                                                                        confirmLoading: this.state.joinLoading,
+                                                                        onOk: (close) => { this.leaveTeam(close) },
+                                                                        onCancel: () => { },
+                                                                    });
+                                                                }}>Leave Team</Button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     <Divider />
-                                                    <h1 style={{ fontSize: "3ch" }}>Score History</h1>
+                                                    <h1 style={{ fontSize: "3ch" }}>Individual Member's Scoring</h1>
+                                                    <Table style={{ marginTop: "2vh" }} dataSource={this.state.userScores} pagination={{ pageSize: 10 }} locale={{
+                                                        emptyText: (
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                                                <h1 style={{ fontSize: "200%" }}>{this.state.teamName} has not completed any challenges/bought any hints</h1>
+                                                            </div>
+                                                        )
+                                                    }}>
+                                                        <Column width={30} title="Username" dataIndex="username" key="username"
+                                                            render={(text, row, index) => {
+                                                                return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                                            }}
+                                                        />
+                                                        <Column width={30} title="Total Score" dataIndex="score" key="score" />
+                                                    </Table>
+                                                    <Divider />
+                                                    <h1 style={{ fontSize: "3ch" }}>Team Score History</h1>
                                                     <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
                                                         <ResponsiveContainer width="90%" height={350}>
                                                             <AreaChart height={350} data={this.state.graphData}
@@ -409,29 +521,27 @@ class Teams extends React.Component {
                                                         </ResponsiveContainer>
 
                                                     </div>
-                                                    <div style={{ height: "70%", width: "100%" }}>
-                                                        <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
-                                                            emptyText: (
-                                                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                                                    <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                                                    <h1 style={{ fontSize: "200%" }}>{this.state.targetUser} has not completed any challenges/bought any hints</h1>
-                                                                </div>
-                                                            )
-                                                        }}>
-                                                            <Column width={30} title="Username" dataIndex="username" key="username"
-                                                             render={(text, row, index) => {
+                                                    <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
+                                                        emptyText: (
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                                                <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                                                <h1 style={{ fontSize: "200%" }}>{this.state.teamName} has not completed any challenges/bought any hints</h1>
+                                                            </div>
+                                                        )
+                                                    }}>
+                                                        <Column width={30} title="Username" dataIndex="username" key="username"
+                                                            render={(text, row, index) => {
                                                                 return <Link to={"/Profile/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                                                             }}
-                                                            />
-                                                            <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge"
-                                                                render={(text, row, index) => {
-                                                                    if (row.challengeID !== "") return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                                                                    else return (<span>{text}</span>);
-                                                                }} />
-                                                            <Column width={30} title="Score Change" dataIndex="score" key="score" />
-                                                            <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
-                                                        </Table>
-                                                    </div>
+                                                        />
+                                                        <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge"
+                                                            render={(text, row, index) => {
+                                                                if (row.challengeID !== "") return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                                                else return (<span>{text}</span>);
+                                                            }} />
+                                                        <Column width={30} title="Score Change" dataIndex="score" key="score" />
+                                                        <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
+                                                    </Table>
                                                 </Layout>
 
                                             ) :
@@ -443,7 +553,26 @@ class Teams extends React.Component {
                                                             <h1>The world's a dangerous place</h1> <h2>Don't go alone, join/create a team today!</h2>
                                                         </div>
                                                         <Button icon={<UsergroupAddOutlined />} type="primary" size="large" onClick={() => { this.setState({ createTeamModal: true }) }}>Create a Team</Button>
-                                                        <p style={{ marginTop: "3ch" }}>Got an <b>invite link <LinkOutlined /></b>? Simply paste it in the address bar to join the team!</p>
+                                                        <div style={{ marginTop: "3ch" }}>
+                                                            <span>Got an <b>invite link <LinkOutlined />?</b></span>
+                                                            <div>
+                                                                <Button style={{marginTop: "1ch"}} size="large" type="primary" icon={<LinkOutlined />} onClick={() => {
+                                                                    navigator.clipboard.readText().then(text => {
+                                                                        if (!(/^.*\/Team\/Join\/[0-9a-fA-F]{32}$/.test(text))) message.error("Invalid link. Please check that you have copied the link correctly.", 3)
+                                                                        else {
+                                                                            const code = text.split("/Team/Join/")
+                                                                            this.getCodeDetails(code[1])
+                                                                        }
+                                                                       
+                                                                    }).catch(err => {
+                                                                        console.log(err)
+                                                                        message.error("Failed to read link from your clipboard.", 5)
+                                                                        message.info("Please ensure that you have allowed permissions for reading of clipboard text.", 5)
+                                                                    })
+
+                                                                }}>Paste &amp; Use Link</Button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )

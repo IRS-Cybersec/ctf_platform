@@ -163,6 +163,7 @@ class Scoreboard extends React.Component {
           for (let y = 0; y < payloadArray.length; y++) {
             let userFound = false
             const payload = payloadArray[y] // Current transaction to update
+            console.log(payload)
 
             userLoop:
             for (let x = 0; x < changes.users.length; x++) { // Iterate through user list
