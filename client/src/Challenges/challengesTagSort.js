@@ -536,11 +536,14 @@ class ChallengesTagSort extends React.Component {
               </div>}>
 
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                  <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <LinkOutlined style={{ color: "#1890ff" }} onClick={
-                    async () => {
-                      await navigator.clipboard.writeText(window.location.href);
-                      message.success("Challenge link copied to clipboard.")
-                    }} /></h1>
+                  <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name}
+                    <Tooltip title="Copy challenge link to clipboard.">
+                      <LinkOutlined style={{ color: "#1890ff", marginLeft: "0.5ch" }} onClick={
+                      async () => {
+                        await navigator.clipboard.writeText(window.location.href);
+                        message.success("Challenge link copied to clipboard.")
+                      }} /></Tooltip>
+                  </h1>
                 </div>
                 <div>
                   {this.state.challengeTags}
