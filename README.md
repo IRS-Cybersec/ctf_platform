@@ -26,10 +26,11 @@ _Please exercise caution and do not use any personal emails/passwords/usernames/
 ## Features 🎆
 - "**Categories**" 🗄️ for better organization of challenges into different "events"
 - **Sorting of challenges** 🏷️ by their tags (`Forensics`, `Pwn` etc.)
-- **Announcements** 📢 with markdown support
+- **Teams** 👫 with individual members scoring
 - **Dynamic Scoring** 💯 for challenges
-- **Markdown supported Challenge Descriptions** ✔️ that allow you to add **code blocks with syntax highlighting** and more
 - **Live Scoreboard** 🥇 that is relatively light on the server
+- **Announcements** 📢 with markdown support
+- **Markdown supported Challenge Descriptions** ✔️ that allow you to add **code blocks with syntax highlighting** and more
 - **Writeup links** 🔗 per challenge (along with the option to only release writeups after submitting the flag)
 - **Challenge Creator Role** 🧔 so as to allow challenge authors to submit challenges without having full admin access
 - **Set Required Challenges** 🔐 to unlock other challenges
