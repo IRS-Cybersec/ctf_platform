@@ -223,7 +223,6 @@ class Challenges extends React.Component {
   handleRefresh = async () => {
 
     await this.fetchCategories()
-    console.log([this.state.originalData[this.state.currentCategory]])
     await this.setStateAsync({ currentCategoryChallenges: [this.state.originalData[this.state.currentCategory]] })
     await this.props.obtainScore()
     return true
