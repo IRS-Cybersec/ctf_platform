@@ -154,8 +154,8 @@ class App extends React.Component {
     this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
     message.success({ content: "Logged In! Welcome back " + username })
 
-    this.obtainScore()
-
+    this.obtainScore(username)
+    this.obtainTeam()
   }
 
   handleLogout = async (close) => {
@@ -163,7 +163,7 @@ class App extends React.Component {
     delete window.scoreboardData
     delete window.lastChallengeID
     localStorage.removeItem("IRSCTF-token")
-    this.setState({ token: false, logined: false })
+    this.setState({ token: false, logined: false, team: false, userScore: "Loading..." })
 
     message.info({ content: "Logged out. See you next time :D!" })
   }
