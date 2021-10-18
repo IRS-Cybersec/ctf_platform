@@ -105,6 +105,12 @@ class Teams extends React.Component {
         }
     }
 
+    componentDidUpdate(prevProps) {
+        if (window.location.pathname === "/Team" && prevProps.team !== this.props.team) {
+            this.loadTeamDetails(this.props.team) // Sometimes the main component does not load this.props.team before the component mounts. Hence it fails to load the user's team on page refresh
+        }
+    }
+
     componentDidMount() {
         const code = this.props.match.params.code
         if (typeof code !== "undefined") {
