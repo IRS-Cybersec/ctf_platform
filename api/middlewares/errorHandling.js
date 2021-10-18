@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res) => {
-    console.error(err);
+    console.error(err)
     if (err.message) {
         switch (err.message) {
             case 'Permissions':

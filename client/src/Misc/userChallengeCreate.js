@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card } from 'antd';
 import {
     MinusCircleOutlined,
@@ -65,7 +65,7 @@ const CreateChallengeForm = (props) => {
                     }
                     await fetch(window.ipAddress + "/v1/challenge/new", {
                         method: 'post',
-                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                         body: JSON.stringify({
                             "name": values.name,
                             "category": category,
@@ -153,23 +153,27 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://github.com/rehypejs/rehype-raw" target="_blank" rel="noreferrer">HTML</a>)):</h1>
-            <Form.Item
-                name="description"
-                rules={[{ required: true, message: 'Please enter a description' }]}
-                valuePropName={editorValue}
-            >
-                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
-            </Form.Item>
-            <h3>Challenge Description Preview</h3>
-            <Card
-                type="inner"
-                bordered={true}
-                bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
-                className="challengeModal"
-            >
-                <MarkdownRender>{editorValue}</MarkdownRender>
-            </Card>
+            <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+            </div>}>
+                <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://github.com/rehypejs/rehype-raw" target="_blank" rel="noreferrer">HTML</a>)):</h1>
+                <Form.Item
+                    name="description"
+                    rules={[{ required: true, message: 'Please enter a description' }]}
+                    valuePropName={editorValue}
+                >
+                    <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
+                </Form.Item>
+                <h3>Challenge Description Preview</h3>
+                <Card
+                    type="inner"
+                    bordered={true}
+                    bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+                    className="challengeModal"
+                >
+                    <MarkdownRender>{editorValue}</MarkdownRender>
+                </Card>
+            </Suspense>
 
 
             <Divider />
@@ -447,7 +451,7 @@ class UserChallengeCreate extends React.Component {
     componentDidMount = () => {
         fetch(window.ipAddress + "/v1/challenge/list_categories", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then(async (data) => {

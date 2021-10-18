@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
@@ -9,7 +9,7 @@ import {
     EditTwoTone,
     SolutionOutlined,
     EyeOutlined,
-    EyeInvisibleOutlined
+    EyeInvisibleOutlined,
 } from '@ant-design/icons';
 import { Ellipsis } from 'react-spinners-css';
 const MDEditor = React.lazy(() => import("@uiw/react-md-editor"));
@@ -28,7 +28,7 @@ const CreateChallengeForm = (props) => {
     const [finalSortedChalls, setFinalSortedChalls] = React.useState([])
 
     //Render existing categories select options
-   
+
     if (typeof form.getFieldValue("name") === "undefined") {
         let existingCats = []
         for (let i = 0; i < props.allCat.length; i++) {
@@ -56,7 +56,7 @@ const CreateChallengeForm = (props) => {
         }
         setFinalSortedChalls(finalSortedChalls)
         let initialData = JSON.parse(JSON.stringify(props.initialData))
-    
+
         if (props.initialData.visibility === false) {
             initialData.visibility = "false"
         }
@@ -71,7 +71,7 @@ const CreateChallengeForm = (props) => {
         }
         else if (props.initialData.dynamic === true) {
             initialData.dynamic = "true"
-            props.setState({dynamic: true})
+            props.setState({ dynamic: true })
         }
         else {
             initialData.dynamic = "false"
@@ -116,7 +116,7 @@ const CreateChallengeForm = (props) => {
                     if (values.requires && values.requires.length > 0) requires = values.requires[1]
                     await fetch(window.ipAddress + "/v1/challenge/edit", {
                         method: 'post',
-                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken},
+                        headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                         body: JSON.stringify({
                             "id": props.initialData._id,
                             "name": values.name,
@@ -221,22 +221,27 @@ const CreateChallengeForm = (props) => {
             <Divider />
 
             <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://github.com/rehypejs/rehype-raw" target="_blank" rel="noreferrer">HTML</a>)):</h1>
-            <Form.Item
-                name="description"
-                rules={[{ required: true, message: 'Please enter a description' }]}
-                valuePropName={editorValue}
-            >
-                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
-            </Form.Item>
-            <h3>Challenge Description Preview</h3>
-            <Card
-                type="inner"
-                bordered={true}
-                bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
-                className="challengeModal"
-            >
-                <MarkdownRender>{editorValue}</MarkdownRender>
-            </Card>
+            <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+            </div>}>
+                <Form.Item
+                    name="description"
+                    rules={[{ required: true, message: 'Please enter a description' }]}
+                    valuePropName={editorValue}
+                >
+                    <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
+                </Form.Item>
+
+                <h3>Challenge Description Preview</h3>
+                <Card
+                    type="inner"
+                    bordered={true}
+                    bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+                    className="challengeModal"
+                >
+                    <MarkdownRender>{editorValue}</MarkdownRender>
+                </Card>
+            </Suspense>
 
 
             <Divider />
@@ -504,9 +509,9 @@ const CreateChallengeForm = (props) => {
                             rules={[{ required: props.state.dynamic, message: 'Please set whether the challenge uses dynamic scoring' }]}
                             initialValue="false"
                         >
-                            <Select style={{ width: "20ch" }} onSelect={(option) => { option === "false" ? props.setState({dynamic: false}) : props.setState({dynamic: true})}}>
-                                <Option value="false"><span style={{ color: "#d32029"  }}>Disabled</span></Option>
-                                <Option value="true"><span style={{ color: "#49aa19"}}>Enabled</span></Option>
+                            <Select style={{ width: "20ch" }} onSelect={(option) => { option === "false" ? props.setState({ dynamic: false }) : props.setState({ dynamic: true }) }}>
+                                <Option value="false"><span style={{ color: "#d32029" }}>Disabled</span></Option>
+                                <Option value="true"><span style={{ color: "#49aa19" }}>Enabled</span></Option>
                             </Select>
 
                         </Form.Item>
@@ -626,7 +631,7 @@ class AdminChallengeEdit extends React.Component {
         this.setState({ loading: true })
         fetch(window.ipAddress + "/v1/challenge/show/" + encodeURIComponent(id) + "/detailed", {
             method: 'get',
-            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken}
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken }
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {

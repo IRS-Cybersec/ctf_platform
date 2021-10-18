@@ -7,7 +7,7 @@ const submissions = async (req, res) => {
     const collections = Connection.collections
     res.send({
         success: true,
-        submissions: await collections.transactions.find({})
+        submissions: await collections.transactions.find({}).toArray()
     });
 }
 
@@ -48,7 +48,7 @@ const newSubmission = async (req, res) => {
 
     broadCastNewSolve([{
         _id: insertDoc._id,
-        username: req.body.author,
+        author: req.body.author,
         timestamp: GTime,
         points: req.body.points,
         lastChallengeID: latestSolveSubmissionID
@@ -93,7 +93,7 @@ const editSubmission = async (req, res) => {
 
     broadCastNewSolve([{
         _id: req.body.id,
-        username: req.body.author,
+        author: req.body.author,
         timestamp: time,
         points: req.body.points,
         lastChallengeID: latestSolveSubmissionID

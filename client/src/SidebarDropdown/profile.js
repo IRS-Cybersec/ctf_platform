@@ -5,6 +5,7 @@ import { Ellipsis } from 'react-spinners-css';
 import orderBy from 'lodash.orderby'
 import {
     FileUnknownTwoTone,
+    FrownOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -26,7 +27,6 @@ class Profile extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ loading: true })
         const username = this.props.match.params.user;
         if (typeof username !== "undefined") {
             this.setState({ targetUser: username })
@@ -182,7 +182,11 @@ class Profile extends React.Component {
                     !this.state.targetUser && !this.state.loading && (
                         <div style={{ height: "100%", width: "100%" }}>
                             <br /><br /><br />
-                            <Empty><h4>We were unable to find this user :c</h4></Empty>
+                            <Empty
+                            image={<FrownOutlined />}
+                            imageStyle={{fontSize: "500%", color: "#177ddc"}}
+                            description={<h1>We were unable to find the user "{this.props.match.params.user}"</h1>}
+                            />
                         </div>
                     )
                 }
@@ -192,7 +196,7 @@ class Profile extends React.Component {
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <div style={{ display: "flex" }}>
                                     <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                                        <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} icon={<img src={require("./../assets/default.webp").default}/>} size='large' src={"/static/profile/" + this.state.targetUser + ".webp"} />
+                                        <Avatar style={{ backgroundColor: "transparent", marginRight: "3ch", width: "10ch", height: "10ch" }} size='large' src={"/static/profile/" + this.state.targetUser + ".webp"} />
                                         <h1 style={{ fontSize: "5ch" }}>{this.state.targetUser}</h1>
                                     </div>
                                     <div>
@@ -231,7 +235,6 @@ class Profile extends React.Component {
                                 </ResponsiveContainer>
 
                             </div>
-                            <div style={{ height: "70%", width: "100%" }}>
                                 <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
                                     emptyText: (
                                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
@@ -248,7 +251,6 @@ class Profile extends React.Component {
                                     <Column width={30} title="Score Change" dataIndex="score" key="score" />
                                     <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
                                 </Table>
-                            </div>
                         </Layout>
 
                     )

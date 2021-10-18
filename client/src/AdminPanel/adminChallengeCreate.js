@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
@@ -12,6 +12,7 @@ import {
     EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { Prompt } from 'react-router-dom';
+import { Ellipsis } from 'react-spinners-css';
 const MDEditor = React.lazy(() => import("@uiw/react-md-editor"));
 const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'));
 
@@ -191,23 +192,27 @@ const CreateChallengeForm = (props) => {
 
             <Divider />
 
-            <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://github.com/rehypejs/rehype-raw" target="_blank" rel="noreferrer">HTML</a>):</h1>
-            <Form.Item
-                name="description"
-                rules={[{ required: true, message: 'Please enter a description' }]}
-                valuePropName={editorValue}
-            >
-                <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
-            </Form.Item>
-            <h3>Challenge Description Preview</h3>
-            <Card
-                type="inner"
-                bordered={true}
-                bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
-                className="challengeModal"
-            >
-                <MarkdownRender>{editorValue}</MarkdownRender>
-            </Card>
+            <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+            </div>}>
+                <h1>Challenge Description (Supports <a href="https://guides.github.com/features/mastering-markdown/" target="_blank" rel="noreferrer">Markdown</a> and <a href="https://github.com/rehypejs/rehype-raw" target="_blank" rel="noreferrer">HTML</a>):</h1>
+                <Form.Item
+                    name="description"
+                    rules={[{ required: true, message: 'Please enter a description' }]}
+                    valuePropName={editorValue}
+                >
+                    <MDEditor value={editorValue} onChange={(value) => { setEditorValue(value) }} preview="edit" />
+                </Form.Item>
+                <h3>Challenge Description Preview</h3>
+                <Card
+                    type="inner"
+                    bordered={true}
+                    bodyStyle={{ backgroundColor: "#262626", textAlign: "center" }}
+                    className="challengeModal"
+                >
+                    <MarkdownRender>{editorValue}</MarkdownRender>
+                </Card>
+            </Suspense>
 
 
             <Divider />
@@ -215,36 +220,36 @@ const CreateChallengeForm = (props) => {
             <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                
-                <Card>
-                <h1>Challenge Points:</h1>
-                    <Form.Item
-                        name="points"
-                        rules={[{ required: true, message: 'Please enter challenge points' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 1-100000",
-                        },]}
-                        initialValue={1}
-                    >
 
-                        <InputNumber disabled={props.state.dynamic} min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
-                    </Form.Item>
+                    <Card>
+                        <h1>Challenge Points:</h1>
+                        <Form.Item
+                            name="points"
+                            rules={[{ required: true, message: 'Please enter challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={1}
+                        >
+
+                            <InputNumber disabled={props.state.dynamic} min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
+                        </Form.Item>
                     </Card>
 
                     <Card>
-                    <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
-                    <Form.Item
-                        name="max_attempts"
-                        rules={[{ required: true, message: 'Please enter the maximum number of attempts' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 0-10000",
-                        },]}
-                        style={{ alignText: 'center' }}
-                        initialValue={0}
-                    >
+                        <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
+                        <Form.Item
+                            name="max_attempts"
+                            rules={[{ required: true, message: 'Please enter the maximum number of attempts' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 0-10000",
+                            },]}
+                            style={{ alignText: 'center' }}
+                            initialValue={0}
+                        >
 
-                        <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
-                    </Form.Item>
+                            <InputNumber min={0} max={10000} style={{ width: "30ch" }}></InputNumber>
+                        </Form.Item>
                     </Card>
                 </div>
 
@@ -349,15 +354,15 @@ const CreateChallengeForm = (props) => {
             <Divider />
 
 
-            <div className="settings-responsive2" style={{ display: "flex",  justifyContent: "space-around" }}>
+            <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                    
+
                     <Form.List name="hints" >
                         {(fields, { add, remove }) => {
                             return (
                                 <Card>
-                                <h1>Hints</h1>
+                                    <h1>Hints</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
                                             <Form.Item
@@ -408,117 +413,117 @@ const CreateChallengeForm = (props) => {
                     </Form.List>
 
                     <Card>
-                    <h1>Writeup Link (Optional)</h1>
-                    <Form.Item
-                        name="writeup"
-                        rules={[
-                            {
-                                type: 'url',
-                                message: "Please enter a valid link",
-                            }]}
-                    >
-
-                        <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
-                    </Form.Item>
-                    <div style={{ display: "flex", alignContent: "center" }}>
-                        <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                        <h1>Writeup Link (Optional)</h1>
                         <Form.Item
-                            name="writeupComplete"
+                            name="writeup"
+                            rules={[
+                                {
+                                    type: 'url',
+                                    message: "Please enter a valid link",
+                                }]}
                         >
-                            <Switch defaultChecked />
+
+                            <Input allowClear style={{ width: "50ch" }} placeholder="Enter a writeup link for this challenge" />
                         </Form.Item>
-                    </div>
+                        <div style={{ display: "flex", alignContent: "center" }}>
+                            <h4 style={{ marginRight: "2ch" }}>Release Writeup Only After Completion: </h4>
+                            <Form.Item
+                                name="writeupComplete"
+                            >
+                                <Switch defaultChecked />
+                            </Form.Item>
+                        </div>
                     </Card>
 
                     <Card>
-                    <h1>Visibility</h1>
-                    <Form.Item
-                        name="visibility"
-                        rules={[{ required: true, message: 'Please set the challenge visibility' }]}
-                        initialValue="false"
-                    >
-                        <Select style={{ width: "20ch" }}>
-                            <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
-                            <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
-                        </Select>
+                        <h1>Visibility</h1>
+                        <Form.Item
+                            name="visibility"
+                            rules={[{ required: true, message: 'Please set the challenge visibility' }]}
+                            initialValue="false"
+                        >
+                            <Select style={{ width: "20ch" }}>
+                                <Option value="false"><span style={{ color: "#d32029" }}>Hidden <EyeInvisibleOutlined /></span></Option>
+                                <Option value="true"><span style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span></Option>
+                            </Select>
 
-                    </Form.Item>
+                        </Form.Item>
                     </Card>
                 </div>
 
                 <Divider type="vertical" style={{ height: "inherit" }} />
 
-                <div style={{display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
 
-                <Card>
-                    <h1>Challenge Required: </h1>
-                    <Form.Item
-                        name="requires"
-                    >
+                    <Card>
+                        <h1>Challenge Required: </h1>
+                        <Form.Item
+                            name="requires"
+                        >
 
-                        <Cascader
-                            options={finalSortedChalls}
-                            allowClear
-                            showSearch
-                            placeholder="Select an existing challenge" />
+                            <Cascader
+                                options={finalSortedChalls}
+                                allowClear
+                                showSearch
+                                placeholder="Select an existing challenge" />
 
-                    </Form.Item>
-                    <p>Locks this challenge until the provided challenge above has been solved.</p>
+                        </Form.Item>
+                        <p>Locks this challenge until the provided challenge above has been solved.</p>
                     </Card>
-                    
-                <Card>
-                    <h1>Dynamic Scoring</h1>
-                    <Form.Item
-                        name="dynamic"
-                        rules={[{ required: true, message: 'Please set whether the challenge uses dynamic scoring' }]}
-                        initialValue="false"
-                    >
-                        <Select onSelect={(option) => { option === "false" ? props.setState({dynamic: false}) : props.setState({dynamic: true})}} style={{ width: "20ch" }}>
-                            <Option value="false"><span style={{ color: "#d32029" }}>Disabled</span></Option>
-                            <Option value="true"><span style={{ color: "#49aa19" }}>Enabled</span></Option>
-                        </Select>
 
-                    </Form.Item>
+                    <Card>
+                        <h1>Dynamic Scoring</h1>
+                        <Form.Item
+                            name="dynamic"
+                            rules={[{ required: true, message: 'Please set whether the challenge uses dynamic scoring' }]}
+                            initialValue="false"
+                        >
+                            <Select onSelect={(option) => { option === "false" ? props.setState({ dynamic: false }) : props.setState({ dynamic: true }) }} style={{ width: "20ch" }}>
+                                <Option value="false"><span style={{ color: "#d32029" }}>Disabled</span></Option>
+                                <Option value="true"><span style={{ color: "#49aa19" }}>Enabled</span></Option>
+                            </Select>
 
-                    <h1>Initial Points:</h1>
-                    <Form.Item
-                        name="initial"
-                        rules={[{ required: props.state.dynamic,  message: 'Please enter the initial challenge points' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 1-100000",
-                        },]}
-                        initialValue={500}
-                    >
-                        <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
-                    </Form.Item>
-                    <p>Initial number of points when there are 0/1 solves on a challenge</p>
+                        </Form.Item>
 
-                    <h1>Minimum Points:</h1>
-                    <Form.Item
-                        name="minimum"
-                        rules={[{ required: props.state.dynamic,  message: 'Please enter the minimum challenge points' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 0-100000",
-                        },]}
-                        initialValue={100}
-                    >
-                        <InputNumber disabled={!props.state.dynamic} min={0} max={100000} ></InputNumber>
-                    </Form.Item>
-                    <p>Minimum amount of points that the challenge can decay too</p>
+                        <h1>Initial Points:</h1>
+                        <Form.Item
+                            name="initial"
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the initial challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={500}
+                        >
+                            <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Initial number of points when there are 0/1 solves on a challenge</p>
 
-                    <h1>Solves to Minimum:</h1>
-                    <Form.Item
-                        name="minSolves"
-                        rules={[{ required: props.state.dynamic,  message: 'Please enter the solves to minimum' }, {
-                            type: 'integer',
-                            message: "Please enter a valid integer between 1-100000",
-                        },]}
-                        initialValue={50}
-                    >
-                        <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
-                    </Form.Item>
-                    <p>Number of solves on the challenge till it decays to the minimum point.</p>
-                </Card>
+                        <h1>Minimum Points:</h1>
+                        <Form.Item
+                            name="minimum"
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the minimum challenge points' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 0-100000",
+                            },]}
+                            initialValue={100}
+                        >
+                            <InputNumber disabled={!props.state.dynamic} min={0} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Minimum amount of points that the challenge can decay too</p>
+
+                        <h1>Solves to Minimum:</h1>
+                        <Form.Item
+                            name="minSolves"
+                            rules={[{ required: props.state.dynamic, message: 'Please enter the solves to minimum' }, {
+                                type: 'integer',
+                                message: "Please enter a valid integer between 1-100000",
+                            },]}
+                            initialValue={50}
+                        >
+                            <InputNumber disabled={!props.state.dynamic} min={1} max={100000} ></InputNumber>
+                        </Form.Item>
+                        <p>Number of solves on the challenge till it decays to the minimum point.</p>
+                    </Card>
                 </div>
 
             </div>

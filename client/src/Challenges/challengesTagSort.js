@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Popover, Card, Divider } from 'antd';
+import React, { Suspense } from 'react';
+import { Layout, List, message, Modal, Tag, Input, Button, Tabs, Avatar, Form, notification, Tooltip, Card, Divider } from 'antd';
 import {
   UnlockOutlined,
   ProfileOutlined,
@@ -18,7 +18,7 @@ const MarkdownRender = React.lazy(() => import('./../Misc/MarkdownRenderer.js'))
 import { Link } from 'react-router-dom';
 import ChallengesTagSortList from './challengesTagSortList.js';
 import orderBy from 'lodash.orderby';
-
+import { Ellipsis } from 'react-spinners-css';
 
 const { TabPane } = Tabs;
 const { confirm } = Modal;
@@ -46,20 +46,6 @@ const SubmitFlagForm = (props) => {
       </Form.Item>
     </Form>
   );
-}
-
-const CopyLinkInput = (props) => {
-  const copyInput = useRef(null)
-
-  useEffect(() => {
-    copyInput.current.select()
-    document.execCommand('copy')
-    message.success('Challenge link copied to clipboard.')
-  })
-
-  return (
-    <Input ref={copyInput} value={window.location.href} />
-  )
 }
 
 
@@ -426,7 +412,7 @@ class ChallengesTagSort extends React.Component {
       })
     }).then((results) => {
       return results.json(); //return data in JSON (since its JSON data)
-    }).then((data) => {
+    }).then(async (data) => {
       //console.log(data)
       if (data.success === true) {
         if (data.data === "correct") {
@@ -438,7 +424,7 @@ class ChallengesTagSort extends React.Component {
           });
           this.setState({ challengeModal: false })
           this.props.history.push("/Challenges/" + this.props.category)
-          this.props.handleRefresh()
+          await this.props.handleRefresh()
           this.sortByTags()
 
         }
@@ -545,22 +531,35 @@ class ChallengesTagSort extends React.Component {
                   <Button shape="circle" size="large" style={{ position: "absolute", right: "2ch", color: "#13a8a8" }} icon={<SolutionOutlined />} />
                 </Tooltip>
               )}
+              <Suspense fallback={<div style={{ height: "100%", width: "100%", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 15 }}>
+                <Ellipsis color="#177ddc" size={120} ></Ellipsis>
+              </div>}>
 
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name} <Popover destroyTooltipOnHide trigger="click" placement="bottomRight" content={<CopyLinkInput />} ><LinkOutlined style={{ color: "#1890ff" }} /></Popover></h1>
-              </div>
-              <div>
-                {this.state.challengeTags}
-              </div>
-              <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
-              <div className="challengeModal">
-                <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
-              </div>
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name}
+                    <Tooltip title="Copy challenge link to clipboard.">
+                      <LinkOutlined style={{ color: "#1890ff", marginLeft: "0.5ch" }} onClick={
+                      async () => {
+                        await navigator.clipboard.writeText(window.location.href);
+                        message.success("Challenge link copied to clipboard.")
+                      }} /></Tooltip>
+                  </h1>
+                </div>
+                <div>
+                  {this.state.challengeTags}
+                </div>
+                <h2 style={{ color: "#1765ad", marginTop: "2vh", marginBottom: "6vh", fontSize: "200%" }}>{this.state.viewingChallengeDetails.points}</h2>
+
+                <div className="challengeModal">
+                  <MarkdownRender >{this.state.viewingChallengeDetails.description}</MarkdownRender>
+                </div>
 
 
-              <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
-                {this.state.challengeHints}
-              </div>
+
+                <div style={{ marginTop: "6vh", display: "flex", flexDirection: "column" }}>
+                  {this.state.challengeHints}
+                </div>
+              </Suspense>
 
 
               <div style={{ display: "flex" }}>
@@ -592,7 +591,7 @@ class ChallengesTagSort extends React.Component {
                   return (
                     <List.Item key={item}>
                       <List.Item.Meta
-                        avatar={<Avatar src={"/static/profile/" + item + ".webp"} icon={<img src={require("./../assets/defaultCatPhoto.webp").default}/>} />}
+                        avatar={<Avatar src={"/static/profile/" + item + ".webp"} />}
                         title={<Link to={"/Profile/" + item}><a style={{ fontSize: "110%", fontWeight: 700 }} onClick={() => { this.setState({ challengeModal: false }) }}>{item}</a></Link>}
                       />
                     </List.Item>

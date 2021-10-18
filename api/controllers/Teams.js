@@ -1,15 +1,16 @@
 const Connection = require('./../utils/mongoDB.js')
 const crypto = require('crypto');
-const { broadCastNewSolve } = require('./Sockets.js')
+const { broadCastNewTeamChange } = require('./Sockets.js')
 
 const list = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         let filteredData = []
         const teamList = NodeCacheObj.get("teamListCache")
-        for (let i = 0; i < teamList.length; i++) {
+        for (const team in teamList) {
+            const current = teamList[team]
             filteredData.push({
-                name: teamList[i].name,
-                members: teamList[i].members
+                name: current.name,
+                members: current.members
             })
         }
         res.send({
@@ -26,29 +27,38 @@ const list = async (req, res) => {
 const get = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         const transactionsCache = NodeCacheObj.get("transactionsCache")
-        if (req.body.name in teamList) {
-            const team = teamList[req.body.name]
+        if (req.params.team in teamList) {
+            const team = teamList[req.params.team]
             let changes = []
             for (let i = 0; i < transactionsCache.length; i++) {
                 const current = transactionsCache[i]
-                if (current.author in usernameTeamCache && usernameTeamCache[current.author] === req.body.name) changes.push({ points: current.points, challenge: current.challenge, timestamp: current.timestamp, type: current.type, challengeID: current.challengeID })
+                if ("originalAuthor" in current && current.author === req.params.team && current.points !== 0) {
+                    changes.push({
+                        _id: current.id,
+                        author: current.originalAuthor,
+                        points: current.points,
+                        challenge: current.challenge,
+                        timestamp: current.timestamp,
+                        challengeID: current.challengeID,
+                        type: current.type
+                    })
+                }
             }
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
-                res.send({
+                return res.send({
                     success: true,
                     changes: changes,
                     code: team.code,
-                    members: teamList[req.body.name]
+                    members: team.members
                 })
             }
             else {
-                res.send({
+                return res.send({
                     success: true,
                     changes: changes,
-                    members: teamList[req.body.name]
+                    members: team.members
                 })
             }
 
@@ -74,15 +84,54 @@ const userTeam = (req, res) => {
         else {
             res.send({
                 success: true,
-                team: ""
+                team: false
             })
         }
-       
+
     }
     else res.send({
         success: false,
         error: "teams-disabled"
     })
+}
+
+const linkInfo = async (req, res) => {
+    if (NodeCacheObj.get("teamMode")) {
+        const teamList = NodeCacheObj.get("teamListCache")
+        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+        let currentTeam = {}
+        let found = false
+
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.code === req.body.code) {
+                currentTeam = current
+                currentTeam.name = team
+                found = true
+                break
+            }
+        }
+        if (!found) return res.send({ success: false, error: "invalid-code" })
+        // Is user already in another team?
+        if (req.locals.username in usernameTeamCache) {
+            return res.send({
+                success: false,
+                error: "in-team"
+            })
+        }
+        // Is current team full?
+        if (currentTeam.members.length > NodeCacheObj.get("teamMaxSize")) {
+            return res.send({
+                success: false,
+                error: "team-full"
+            })
+        }
+        res.send({
+            success: true,
+            name: currentTeam.name
+        })
+    }
+    else res.send({ succcess: false, error: "teams-disabled" })
 }
 
 const join = async (req, res) => {
@@ -93,26 +142,21 @@ const join = async (req, res) => {
         // Does a team exist for this team code, and is it correct?
         let currentTeam = {}
         let found = false
-        for (let i = 0; i < teamList.length; i++) {
-            if (teamList[i].code === req.body.code) {
-                currentTeam = teamList[i]
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.code === req.body.code) {
+                currentTeam = current
+                currentTeam.name = team
                 found = true
                 break
             }
         }
         if (!found) return res.send({ success: false, error: "invalid-code" })
         // Is user already in another team?
-        if (!(req.locals.username in usernameTeamCache)) {
+        if (req.locals.username in usernameTeamCache) {
             return res.send({
                 success: false,
-                error: "in-other-team"
-            })
-        }
-        // Is user already in said team?
-        if (currentTeam.members.includes(req.locals.username)) {
-            return res.send({
-                success: false,
-                error: "already-in"
+                error: "in-team"
             })
         }
         // Is current team full?
@@ -130,8 +174,16 @@ const join = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].author === req.locals.username) {
+                transactionCache[i].author = currentTeam.name
+                transactionCache[i].originalAuthor = req.locals.username
+            }
+        }
+        await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: currentTeam.name, originalAuthor: req.locals.username } })
+        broadCastNewTeamChange()
         res.send({ success: true })
     }
     else res.send({ succcess: false, error: "teams-disabled" })
@@ -144,10 +196,10 @@ const create = async (req, res) => {
         let teamList = NodeCacheObj.get("teamListCache")
         let usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         // Is user already in a team?
-        if (!(req.locals.username in usernameTeamCache)) {
+        if (req.locals.username in usernameTeamCache) {
             return res.send({
                 success: false,
-                error: "in-other-team"
+                error: "in-team"
             })
         }
         if (req.body.name in teamList) {
@@ -159,7 +211,7 @@ const create = async (req, res) => {
         const newTeam = {
             name: req.body.name,
             members: [req.locals.username],
-            code: crypto.randomBytes(32).toString('hex')
+            code: crypto.randomBytes(16).toString('hex')
         }
         teamList[req.body.name] = newTeam
         usernameTeamCache[req.locals.username] = req.body.name
@@ -168,8 +220,17 @@ const create = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        // Edit transactions and change author to the team name
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].author === req.locals.username) {
+                transactionCache[i].author = req.body.name
+                transactionCache[i].originalAuthor = req.locals.username
+            }
+        }
+        await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: req.body.name, originalAuthor: req.locals.username } })
+        broadCastNewTeamChange()
         res.send({ success: true })
     }
     else res.send({ succcess: false, error: "teams-disabled" })
@@ -183,9 +244,11 @@ const leave = async (req, res) => {
         let currentTeam = {}
         let found = false
         // Find the team the user is in
-        for (let i = 0; i < teamList.length; i++) {
-            if (teamList[i].members.includes(req.locals.username)) {
-                currentTeam = teamList[i]
+        for (const team in teamList) {
+            const current = teamList[team]
+            if (current.members.includes(req.locals.username)) {
+                currentTeam = current
+                currentTeam.name = team
                 found = true
                 break
             }
@@ -207,10 +270,18 @@ const leave = async (req, res) => {
         let teamUpdateID = NodeCacheObj.get("teamUpdateID")
         teamUpdateID += 1
         NodeCacheObj.set("teamUpdateID", teamUpdateID)
-        broadCastNewSolve(NodeCacheObj.get("transactionsCache"))
-       
+        await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
+        let transactionCache = NodeCacheObj.get("transactionsCache")
+        for (let i = 0; i < transactionCache.length; i++) {
+            if (transactionCache[i].originalAuthor === req.locals.username) {
+                transactionCache[i].author = req.locals.username
+                delete transactionCache[i].originalAuthor
+            }
+        }
+        await collections.transactions.updateMany({ originalAuthor: req.locals.username }, { $set: { author: req.locals.username }, $unset: { originalAuthor: 0 } })
+        broadCastNewTeamChange()
     }
     else res.send({ succcess: false, error: "teams-disabled" })
 }
 
-module.exports = { list, join, create, get, leave, userTeam }
+module.exports = { list, join, create, get, leave, userTeam, linkInfo }

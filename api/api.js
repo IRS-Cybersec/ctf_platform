@@ -13,6 +13,7 @@ const scoreboard = require('./controllers/Scoreboard.js')
 const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
+const teams = require('./controllers/Teams.js')
 const { createSigner } = require('./utils/permissionUtils.js')
 const NodeCache = require('node-cache');
 
@@ -80,22 +81,25 @@ const startCache = async () => {
 	const transactionsCursor = collections.transactions.find({})
     let transactionsCache = []
     await transactionsCursor.forEach((doc) => {
-        transactionsCache.push({
-            _id: doc._id,
+		const insertDoc = {
+			_id: doc._id,
             author: doc.author,
             points: doc.points,
             challenge: doc.challenge,
             timestamp: doc.timestamp,
             challengeID: doc.challengeID,
-			lastChallengeID: doc.lastChallengeID
-        })
+			lastChallengeID: doc.lastChallengeID,
+			type: doc.type
+		}
+		if ("originalAuthor" in doc) insertDoc.originalAuthor = doc.originalAuthor
+        transactionsCache.push(insertDoc)
     })
 	NodeCacheObj.set("transactionsCache", transactionsCache)
 
 	// Create teams cache
 	let usernameTeamCache = {}
 	let teamListCache = {}
-	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1 } })
+	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1, code: 1 } })
 	await userCursor.forEach((doc) => {
 		teamListCache[doc.name] = { members: doc.members, code: doc.code }
 		// create username-team mapping
@@ -182,10 +186,18 @@ const main = async () => {
 			instance.get('/v1/scoreboard/:username', scoreboard.userScoreboard);
 			instance.get('/v1/userPoints/:username', scoreboard.userPoints);
 
+			// Team endpoints
+			instance.get('/v1/team/userTeam', teams.userTeam);
+			instance.post('/v1/team/join', teams.join);
+			instance.post('/v1/team/create', teams.create);
+			instance.post('/v1/team/leave', teams.leave);
+			instance.get('/v1/team/info/:team', teams.get);
+			instance.post('/v1/team/linkInfo', teams.linkInfo);
+
 			// Misc endpoints
-			instance.get('/v1/backup/', misc.downloadBackup)
-			instance.post('/v1/uploadBackup/', misc.uploadBackup)
-			instance.post('/v1/adminSettings/', misc.adminSettings)
+			instance.get('/v1/backup', misc.downloadBackup)
+			instance.post('/v1/uploadBackup', misc.uploadBackup)
+			instance.post('/v1/adminSettings', misc.adminSettings)
 			instance.get('/v1/submissions', submissions.submissions);
 			instance.post('/v1/submissions/new', submissions.newSubmission);
 			instance.post('/v1/submissions/edit', submissions.editSubmission);
