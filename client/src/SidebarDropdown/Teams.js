@@ -46,6 +46,9 @@ const CreateTeamForm = (props) => {
                     else if (data.error === "name-taken") {
                         message.error("Team name has been taken. Please select another name.")
                     }
+                    else if (data.error === "in-team") {
+                        message.error("Already in a team. Please leave your team to create a new team")
+                    }
                     else {
                         message.error({ content: "Oops. Unknown error." })
                     }
