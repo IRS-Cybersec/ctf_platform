@@ -122,9 +122,9 @@ class Teams extends React.Component {
                 this.loadTeamDetails(team)
             }
             else if (this.props.team && this.props.team != "loading") { // Load own team if user is in a team
-                this.loadTeamDetails(this.props.team)
+                this.loadTeamDetails(this.props.team )
             } // User is not in any team
-            else this.setState({ loading: false })
+            else if (this.props.team != "loading") this.setState({ loading: false })
         }
     }
 
@@ -401,7 +401,7 @@ class Teams extends React.Component {
                     <CreateTeamForm setState={this.setState.bind(this)} obtainScore={this.props.obtainScore.bind(this)} loadTeamDetails={this.loadTeamDetails.bind(this)} setTeam={this.props.setTeam.bind(this)} />
                 </Modal>
 
-                {this.state.loading || this.state.team == "loading" ? (
+                {this.state.loading ? (
                     <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
