@@ -401,7 +401,7 @@ class Teams extends React.Component {
                     <CreateTeamForm setState={this.setState.bind(this)} obtainScore={this.props.obtainScore.bind(this)} loadTeamDetails={this.loadTeamDetails.bind(this)} setTeam={this.props.setTeam.bind(this)} />
                 </Modal>
 
-                {this.state.loading ? (
+                {this.state.loading || this.state.team == "loading" ? (
                     <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
                         <Ellipsis color="#177ddc" size={120} ></Ellipsis>
                     </div>
