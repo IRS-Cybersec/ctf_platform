@@ -8,7 +8,14 @@ const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        states: { registerDisable: NodeCacheObj.get("registerDisable"), adminShowDisable: NodeCacheObj.get("adminShowDisable"), uploadSize: NodeCacheObj.get("uploadSize"), uploadPath: NodeCacheObj.get("uploadPath"), teamSize: NodeCacheObj.get("teamMaxSize"), teamMode: NodeCacheObj.get("teamMode")  }
+        states: {
+            registerDisable: NodeCacheObj.get("registerDisable"),
+            adminShowDisable: NodeCacheObj.get("adminShowDisable"),
+            uploadSize: NodeCacheObj.get("uploadSize"),
+            uploadPath: NodeCacheObj.get("uploadPath"),
+            teamSize: NodeCacheObj.get("teamMaxSize"),
+            teamMode: NodeCacheObj.get("teamMode")
+        }
     });
 }
 
@@ -17,6 +24,26 @@ const type = async (req, res) => {
         success: true,
         type: req.locals.perms
     });
+}
+
+const forgotPassword = async (req, res) => {
+    if (NodeCacheObj.get("forgotPass")) {
+
+    }
+    else res.send({
+        success: false,
+        error: "disabled"
+    })
+}
+
+const forgotUsername = async (req, res) => {
+    if (NodeCacheObj.get("forgotUser")) {
+        const transport = NodeCacheObj.get("NodemailerT")
+    }
+    else res.send({
+        success: false,
+        error: "disabled"
+    })
 }
 
 const login = async (req, res) => {
@@ -137,7 +164,7 @@ const create = async (req, res) => {
                             throw new Error(err)
                     }
                 default:
-                    throw new Error(err)   
+                    throw new Error(err)
             }
         }
         else throw new Error("Unknown")
@@ -322,4 +349,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { forgotUsername, forgotPassword, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }

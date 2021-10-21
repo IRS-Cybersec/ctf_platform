@@ -46,6 +46,9 @@ const CreateTeamForm = (props) => {
                     else if (data.error === "name-taken") {
                         message.error("Team name has been taken. Please select another name.")
                     }
+                    else if (data.error === "in-team") {
+                        message.error("Already in a team. Please leave your team to create a new team")
+                    }
                     else {
                         message.error({ content: "Oops. Unknown error." })
                     }
@@ -102,6 +105,12 @@ class Teams extends React.Component {
         }
     }
 
+    componentDidUpdate(prevProps) {
+        if (window.location.pathname === "/Team" && prevProps.team !== this.props.team) {
+            this.loadTeamDetails(this.props.team) // Sometimes the main component does not load this.props.team before the component mounts. Hence it fails to load the user's team on page refresh
+        }
+    }
+
     componentDidMount() {
         const code = this.props.match.params.code
         if (typeof code !== "undefined") {
@@ -113,10 +122,10 @@ class Teams extends React.Component {
             if (typeof team !== "undefined") { // User is viewing another team
                 this.loadTeamDetails(team)
             }
-            else if (this.props.team) { // Load own team if user is in a team
-                this.loadTeamDetails(this.props.team)
+            else if (this.props.team && this.props.team != "loading") { // Load own team if user is in a team
+                this.loadTeamDetails(this.props.team )
             } // User is not in any team
-            else this.setState({ loading: false })
+            else if (this.props.team != "loading") this.setState({ loading: false })
         }
     }
 

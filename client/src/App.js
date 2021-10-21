@@ -52,7 +52,7 @@ class App extends React.Component {
       loading: true,
       mobileBreakpoint: false,
       scoreboardSocket: false,
-      team: false
+      team: "loading"
     };
   }
 
@@ -154,8 +154,8 @@ class App extends React.Component {
     this.setState({ token: receivedToken, permissions: permissions, username: username, logined: true })
     message.success({ content: "Logged In! Welcome back " + username })
 
-    this.obtainScore()
-
+    this.obtainScore(username)
+    this.obtainTeam()
   }
 
   handleLogout = async (close) => {
@@ -163,7 +163,7 @@ class App extends React.Component {
     delete window.scoreboardData
     delete window.lastChallengeID
     localStorage.removeItem("IRSCTF-token")
-    this.setState({ token: false, logined: false })
+    this.setState({ token: false, logined: false, team: false, userScore: "Loading..." })
 
     message.info({ content: "Logged out. See you next time :D!" })
   }
@@ -217,7 +217,7 @@ class App extends React.Component {
                         </div>
                         <Dropdown overlay={
                           <Menu>
-                            {this.state.team !== "teams-disabled" && (
+                            {this.state.team != "teams-disabled" && this.state.team != "loading" && (
                               <div>
                                 <Menu.Item key="Team">
                                   <NavLink to="/Team">
@@ -264,7 +264,7 @@ class App extends React.Component {
                               <Avatar size="large" src={"/static/profile/" + this.state.username + ".webp"} />
                             </div>
                             <div>
-                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}>{this.state.team !== "teams-disabled" && this.state.team ? <b>Team Score:</b> : <b>Score:</b>} {this.state.userScore}</h3>
+                              <h3 style={{ color: "#d89614", fontSize: "2.3ch" }}>{this.state.team !== "teams-disabled" && this.state.team != "loading" && this.state.team ? <b>Team Score:</b> : <b>Score:</b>} {this.state.userScore}</h3>
                             </div>
                           </div>
                         </Dropdown>
