@@ -3,7 +3,10 @@ import { Input, Button, Icon, Layout, Form, Checkbox, message } from 'antd';
 import {
     UserOutlined,
     LockOutlined,
-    MailOutlined
+    MailOutlined,
+    QuestionCircleOutlined,
+    RightCircleOutlined,
+    LeftCircleOutlined
 } from '@ant-design/icons';
 
 const { Content } = Layout
@@ -86,7 +89,7 @@ class Login extends React.Component {
             else {
 
                 if (data.error === "wrong-details") {
-                    message.error({ content: "Oops. Your Username/Password was incorrect." })
+                    message.error({ content: "Oops. Your username/email or password was incorrect." })
                 }
                 else {
                     message.error({ content: "Oops. Unknown error" })
@@ -106,7 +109,7 @@ class Login extends React.Component {
 
         return (
 
-            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh"}}>
+            <Layout style={{ maxWidth: "100vw", maxHeight: "100vh" }}>
                 <Content style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0)", backgroundImage: "url(" + require("./../assets/mainBG.webp").default + ")" }}>
                     <div className="login-banner login-banner-responsive">
                         <div style={{ fontSize: "7ch", color: "#595959" }}>
@@ -123,20 +126,20 @@ class Login extends React.Component {
                             <img src={require("./../assets/sieberrsec_ctf.svg").default} style={{ width: "100%" }}></img>
                         </div>
                         {this.state.login && (
-                            <div style={{width: "100%"}}>
+                            <div style={{ width: "100%" }}>
                                 <h1 style={{ color: "white", fontSize: "3ch" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="normal_login"
                                     className="login-form"
                                     initialValues={{ remember: true }}
                                     onFinish={this.handleLogin}
-                                    style={{ width: "95%"}}
+                                    style={{ width: "95%" }}
                                 >
                                     <Form.Item
                                         name="username"
-                                        rules={[{ required: true, message: 'Please enter your username.' }]}
+                                        rules={[{ required: true, message: 'Please enter your username/email' }]}
                                     >
-                                        <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
+                                        <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username/Email" />
                                     </Form.Item>
                                     <Form.Item
                                         name="password"
@@ -149,33 +152,38 @@ class Login extends React.Component {
                                             allowClear
                                         />
                                     </Form.Item>
-                                    <Form.Item>
-                                        <Form.Item name="remember" valuePropName="checked" noStyle>
-                                            <Checkbox>Remember me</Checkbox>
-                                        </Form.Item>
+                                    <Form.Item >
+                                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                            <Form.Item name="remember" valuePropName="checked" noStyle>
+                                                <Checkbox>Remember me</Checkbox>
+                                            </Form.Item>
 
-                                        <a className="login-form-forgot" href="">Forgot password</a>
+                                            <a className="login-form-forgot" href=""><b>I forgot my password <QuestionCircleOutlined /></b></a>
+                                        </div>
                                     </Form.Item>
 
                                     <Form.Item>
-                                        <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "1vw" }} loading={this.state.loading}>Log in</Button>
-                                        Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} >Register now!</a>
+                                        <div style={{display: "flex", alignItems: "center"}}>
+                                            <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "2ch" }} loading={this.state.loading}>Log in</Button>
+                                            <span>Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} ><b>Register now <RightCircleOutlined /></b></a></span>
+                                        </div>
                                     </Form.Item>
                                 </Form>
                             </div>
                         )}
                         {this.state.register && (
-                            <div style={{width: "100%"}}>
+                            <div style={{ width: "100%" }}>
                                 <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
                                 <Form
                                     name="register_form"
                                     className="register-form"
                                     onFinish={this.handleRegister}
                                     style={{ width: "95%" }}
+                                    requiredMark="optional"
                                 >
                                     <Form.Item
                                         name="username"
-                                        rules={[{ required: true, message: 'Please enter a username' }]}
+                                        rules={[{ required: true, message: 'Please enter a username' }, { message: "Please enter an alphanumeric username (without spaces)", pattern: /^[a-zA-Z0-9_]+$/ }]}
                                     >
                                         <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
                                     </Form.Item>
@@ -228,7 +236,7 @@ class Login extends React.Component {
                                     <Form.Item>
                                         <Button loading={this.state.loading} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
 
-                                        <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}>Login Here!</a></p>
+                                        <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}><b>Login Here <LeftCircleOutlined/></b></a></p>
                                     </Form.Item>
                                 </Form>
                             </div>

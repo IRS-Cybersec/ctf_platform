@@ -156,7 +156,6 @@ const main = async () => {
 		fastify.register((instance, opts, done) => {
 			fastify.post('/v1/account/login', accounts.login);
 			fastify.post('/v1/account/create', accounts.create);
-			fastify.post('/v1/account/forgot/user', accounts.forgotUsername);
 			fastify.post('/v1/account/forgot/pass', accounts.forgotPassword)
 			done()
 		})

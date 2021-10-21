@@ -36,27 +36,19 @@ const forgotPassword = async (req, res) => {
     })
 }
 
-const forgotUsername = async (req, res) => {
-    if (NodeCacheObj.get("forgotUser")) {
-        const transport = NodeCacheObj.get("NodemailerT")
-    }
-    else res.send({
-        success: false,
-        error: "disabled"
-    })
-}
-
 const login = async (req, res) => {
     const collections = Connection.collections
     try {
-        const user = await collections.users.findOne({ username: req.body.username.toLowerCase() }, { projection: { password: 1, type: 1, _id: 0 } });
+        let user = null
+        if (/^[a-zA-Z0-9_]+$/.test(req.body.username)) user = await collections.users.findOne({ username: req.body.username.toLowerCase() }, { projection: { username: 1, password: 1, type: 1, _id: 0 } });
+        else user = await collections.users.findOne({ email: req.body.username.toLowerCase() }, { projection: { username: 1, password: 1, type: 1, _id: 0 } });
         if (!user) throw new Error('WrongDetails');
         else if (await argon2.verify(user.password, req.body.password)) {
-            setPermissions(req.body.username, user.type)
+            setPermissions(user.username, user.type)
             res.send({
                 success: true,
                 permissions: user.type,
-                token: signToken(req.body.username.toLowerCase())
+                token: signToken(user.username.toLowerCase())
             });
         }
         else throw new Error('WrongDetails');
@@ -88,6 +80,10 @@ const create = async (req, res) => {
         }
 
         if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
+        if (!/^[a-zA-Z0-9_]+$/.test(req.body.username)) return res.send({
+            success: false,
+            error: "bad-username"
+        })
         await collections.users.insertOne({
             username: req.body.username.toLowerCase(),
             email: req.body.email.toLowerCase(),
@@ -349,4 +345,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { forgotUsername, forgotPassword, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { forgotPassword, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
