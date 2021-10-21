@@ -16,6 +16,7 @@ const authenticated = require('./middlewares/authentication.js')
 const teams = require('./controllers/Teams.js')
 const { createSigner } = require('./utils/permissionUtils.js')
 const NodeCache = require('node-cache');
+const nodemailer = require('nodemailer');
 
 global.NodeCacheObj = new NodeCache({ checkperiod: 0, useClones: false })
 
@@ -35,7 +36,13 @@ const startCache = async () => {
 		categoryMeta: {},
 		teamMode: false,
 		teamMaxSize: 3,
-		teamUpdateID: 0
+		teamUpdateID: 0,
+		forgotPass: false,
+		SMTPHost: "example.host.com",
+		SMTPUser: "user",
+		SMTPPass: "examplepass",
+		SMTPSecure: false,
+		SMTPPort: 587
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -111,6 +118,18 @@ const startCache = async () => {
 	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
 	NodeCacheObj.set("teamListCache", teamListCache)
 
+	// Create nodemailer object
+	NodeCacheObj.set("NodemailerT", nodemailer.createTransport({
+		host: NodeCacheObj.get("SMTPHost"),
+		port: NodeCacheObj.get("SMTPPort"),
+		secure: NodeCacheObj.get("SMTPSecure"),
+		auth: {
+			user: NodeCacheObj.get("SMTPUser"),
+			pass: NodeCacheObj.get("SMTPPass")
+		}
+	}))
+
+
 	return true
 }
 
@@ -137,6 +156,8 @@ const main = async () => {
 		fastify.register((instance, opts, done) => {
 			fastify.post('/v1/account/login', accounts.login);
 			fastify.post('/v1/account/create', accounts.create);
+			fastify.post('/v1/account/forgot/user', accounts.forgotUsername);
+			fastify.post('/v1/account/forgot/pass', accounts.forgotPassword)
 			done()
 		})
 
