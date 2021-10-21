@@ -199,7 +199,8 @@ class AdminUsers extends React.Component {
             uploadPathLoading: false,
             passwordResetModal: false,
             teamMode: false,
-            teamMaxSize: 3
+            teamMaxSize: 3,
+            forgotPass: false
         }
     }
 
@@ -218,7 +219,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({ forgotPass: data.states.forgotPass, disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -379,6 +380,10 @@ class AdminUsers extends React.Component {
             settingName = "Team mode"
             this.setState({ disableLoading3: true })
         }
+        else if (setting === "forgotPass") {
+            settingName = "Forgot password reset"
+            this.setState({ disableLoading2: true })
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -390,14 +395,16 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                if (setting === "teamMode") {
+                if (setting === "teamMode" || setting === "forgotPass") {
                     if (!value) {
                         message.success(settingName + " disabled")
                     }
                     else {
                         message.success(settingName + " enabled")
                     }
-                    this.setState({ teamMode: value })
+                    let setObj = {}
+                    setObj[setting] = value
+                    this.setState(setObj)
                 }
                 else {
                     if (value) {
@@ -661,14 +668,14 @@ class AdminUsers extends React.Component {
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <Card>
-                        <h3>Profile Picture Max Upload Size:
-                            <InputNumber
+                        <h3>Profile Picture Max Upload Size: <InputNumber
                                 formatter={value => `${value}B`}
                                 parser={value => value.replace('B', '')}
                                 value={this.state.uploadSize}
                                 disabled={this.state.uploadLoading}
                                 onChange={(value) => this.setState({ uploadSize: value })}
                                 onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
+                        
                         <p>Sets the maximum file upload size for profile pictures (in Bytes). Press <b>Enter</b> to save</p>
                     </Card>
 
@@ -689,11 +696,11 @@ class AdminUsers extends React.Component {
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <Card>
-                        <h3>Max Team Size
-                            <InputNumber
+                        <h3>Max Team Size: <InputNumber
                                 value={this.state.teamMaxSize}
                                 onChange={(value) => this.setState({ teamMaxSize: value })}
-                                onPressEnter={(e) => { this.changeSetting("teamMaxSize", this.state.teamMaxSize) }} /></h3>
+                                onPressEnter={(e) => { this.changeSetting("teamMaxSize", this.state.teamMaxSize) }} />
+                                </h3>
                         <p>Sets the maximum number of members in a team. Press <b>Enter</b> to save</p>
                     </Card>
 
@@ -702,6 +709,16 @@ class AdminUsers extends React.Component {
                     <Card>
                         <h3>Enable Teams:  <Switch disabled={this.state.disableLoading3} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.teamMode} /></h3>
                         <p>Enable teams for the platform. Users in a team will have their scores combined on the scoreboard <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
+                    </Card>
+                </div>
+
+                <Divider />
+
+                <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
+
+                    <Card>
+                        <h3>Enable Password Reset  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("forgotPass", value)} checked={this.state.forgotPass} /></h3>
+                        <p>Allow users to use the "Forgot Password" option to reset their password. <br/>Please ensure that you have connected to an SMTP server correctly in the "Email" tab</p>
                     </Card>
                 </div>
 

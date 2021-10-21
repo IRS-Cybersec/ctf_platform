@@ -14,6 +14,7 @@ const submissions = require('./controllers/Submissions.js')
 const sockets = require('./controllers/Sockets.js')
 const authenticated = require('./middlewares/authentication.js')
 const teams = require('./controllers/Teams.js')
+const emails = require('./controllers/Emails.js')
 const { createSigner } = require('./utils/permissionUtils.js')
 const NodeCache = require('node-cache');
 const nodemailer = require('nodemailer');
@@ -213,6 +214,9 @@ const main = async () => {
 			instance.post('/v1/team/leave', teams.leave);
 			instance.get('/v1/team/info/:team', teams.get);
 			instance.post('/v1/team/linkInfo', teams.linkInfo);
+
+			// Email endpoints
+			instance.get('/v1/email/disableStates', emails.disableStates);
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)

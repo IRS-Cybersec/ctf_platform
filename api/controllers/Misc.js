@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
-    const allowedSettings = ["forgotPass", "forgotUser", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
+    const allowedSettings = ["forgotPass", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
     if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
     NodeCacheObj.set(req.body.setting, req.body.disable)
 

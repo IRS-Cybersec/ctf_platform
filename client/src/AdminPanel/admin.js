@@ -7,12 +7,14 @@ import {
   NotificationOutlined,
   DownloadOutlined,
   UploadOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  MailOutlined
 } from '@ant-design/icons';
 import AdminUsers from "./adminUsers.js";
 import AdminChallenges from "./adminChallenges.js";
 import AdminSubmissions from "./adminSubmissions.js";
 import AdminManageAnnouncements from "./adminManageAnnouncements.js";
+import AdminEmails from "./adminEmails.js";
 
 const { TabPane } = Tabs;
 const { Dragger } = Upload;
@@ -178,6 +180,12 @@ class Admin extends React.Component {
             key="Submissions"
           >
             <AdminSubmissions></AdminSubmissions>
+          </TabPane>
+          <TabPane
+            tab={<span><MailOutlined />Emails</span>}
+            key="Emails"
+          >
+            <AdminEmails></AdminEmails>
           </TabPane>
         </Tabs>
 

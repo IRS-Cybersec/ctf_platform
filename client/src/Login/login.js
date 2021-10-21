@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input, Button, Icon, Layout, Form, Checkbox, message } from 'antd';
+import { Input, Button, Layout, Form, Checkbox, message } from 'antd';
 import {
     UserOutlined,
     LockOutlined,
@@ -23,6 +23,7 @@ class Login extends React.Component {
             login: true,
             register: false,
             loading: false,
+            forgotPass: false
         };
     }
 
@@ -105,6 +106,34 @@ class Login extends React.Component {
         })
     }
 
+    handleForgot = values => {
+        this.setState({ loading: true })
+        fetch(window.ipAddress + "/v1/account/forgot/pass", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                "email": values.email
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then(async (data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success("Request sent successfully.")
+            }
+            else {
+                if (data.error === "disabled") message.error({ content: "Oops. It seems like the forgot password function is disabled." })
+                else message.error({ content: "Oops. Unknown error" })
+            }
+            this.setState({ loading: false })
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting to the server" })
+            this.setState({ loading: false })
+        })
+    }
+
     render() {
 
         return (
@@ -127,7 +156,7 @@ class Login extends React.Component {
                         </div>
                         {this.state.login && (
                             <div style={{ width: "100%" }}>
-                                <h1 style={{ color: "white", fontSize: "3ch" }}>Sign In <Icon type="unlock" theme="twoTone" /> </h1>
+                                <h1 style={{ color: "white", fontSize: "3ch" }}>Sign In</h1>
                                 <Form
                                     name="normal_login"
                                     className="login-form"
@@ -158,12 +187,12 @@ class Login extends React.Component {
                                                 <Checkbox>Remember me</Checkbox>
                                             </Form.Item>
 
-                                            <a className="login-form-forgot" href=""><b>I forgot my password <QuestionCircleOutlined /></b></a>
+                                            <a href="#" onClick={() => { this.setState({ login: false, forgotPass: true }) }}><b>I forgot my password <QuestionCircleOutlined /></b></a>
                                         </div>
                                     </Form.Item>
 
                                     <Form.Item>
-                                        <div style={{display: "flex", alignItems: "center"}}>
+                                        <div style={{ display: "flex", alignItems: "center" }}>
                                             <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "2ch" }} loading={this.state.loading}>Log in</Button>
                                             <span>Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} ><b>Register now <RightCircleOutlined /></b></a></span>
                                         </div>
@@ -173,7 +202,7 @@ class Login extends React.Component {
                         )}
                         {this.state.register && (
                             <div style={{ width: "100%" }}>
-                                <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account <Icon type="unlock" theme="twoTone" /> </h1>
+                                <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account</h1>
                                 <Form
                                     name="register_form"
                                     className="register-form"
@@ -236,7 +265,31 @@ class Login extends React.Component {
                                     <Form.Item>
                                         <Button loading={this.state.loading} type="primary" htmlType="submit" className="login-form-button" style={{ marginBottom: "1.5vh" }}>Register</Button>
 
-                                        <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}><b>Login Here <LeftCircleOutlined/></b></a></p>
+                                        <p>Already have an account? <a href="#" onClick={() => { this.setState({ login: true, register: false }) }}><b>Login Here <LeftCircleOutlined /></b></a></p>
+                                    </Form.Item>
+                                </Form>
+                            </div>
+                        )}
+                        {this.state.forgotPass && (
+                            <div style={{ width: "100%" }}>
+                                <h1 style={{ color: "white", fontSize: "3ch" }}>Forgot Password</h1>
+                                <Form
+                                    onFinish={this.handleForgot}
+                                    style={{ width: "95%" }}
+                                >
+                                    <Form.Item
+                                        name="email"
+                                        rules={[{ required: true, message: 'Please enter your email' }, { type: "email", message: "Please enter a valid email" }]}
+                                    >
+                                        <Input allowClear prefix={<MailOutlined />} placeholder="Email" />
+                                    </Form.Item>
+                                    <p>If an account associated with the email above exists. You will receive a password reset email in your inbox</p>
+
+                                    <Form.Item>
+                                        <div style={{ display: "flex", alignItems: "center", marginTop: "4ch" }}>
+                                            <Button type="primary" htmlType="submit" style={{ marginRight: "2ch" }} loading={this.state.loading}>Send Email</Button>
+                                            <span>Or <a href="#" onClick={() => { this.setState({ login: true, forgotPass: false }) }} ><b>Remember your password? <LeftCircleOutlined /></b></a></span>
+                                        </div>
                                     </Form.Item>
                                 </Form>
                             </div>

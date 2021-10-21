@@ -34,6 +34,16 @@ const startValidation = async () => {
         collections.transactions.createIndex({ "author": 1, "challenge": 1, "type": 1 }, { name: "userchall" })
         console.log("Transcations indexes created")
     }
+    if ((await collections.transactions.indexes()).length === 1) {
+        // Transcations indexes
+        collections.transactions.createIndex({ "author": 1, "challenge": 1, "type": 1 }, { name: "userchall" })
+        console.log("Transcations indexes created")
+    }
+    if ((await collections.passResetCode.indexes()).length === 1) {
+        // Password reset codes indexes
+        collections.passResetCode.createIndex({ "timestamp": 1 }, { expireAfterSeconds: 600 })
+        console.log("Password reset code indexes created")
+    }
 
     await createDefaultAdminAccount(collections.users, collections.transactions);
     await loadConfigFile(collections.cache);

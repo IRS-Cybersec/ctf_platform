@@ -17,7 +17,8 @@ class Connection {
                 pages: db.collection('pages'),
                 announcements: db.collection('announcements'),
                 cache: db.collection('cache'),
-                team: db.collection('team')
+                team: db.collection('team'),
+                passResetCode: db.collection('passResetCode')
             }
             this.db = db
             this.collections = collections
