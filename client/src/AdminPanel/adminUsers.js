@@ -650,14 +650,14 @@ class AdminUsers extends React.Component {
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
                         <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges. <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
                     </Card>
@@ -667,7 +667,7 @@ class AdminUsers extends React.Component {
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Profile Picture Max Upload Size: <InputNumber
                                 formatter={value => `${value}B`}
                                 parser={value => value.replace('B', '')}
@@ -681,7 +681,7 @@ class AdminUsers extends React.Component {
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Profile Picture Upload Path
                             <Input
                                 value={this.state.uploadPath}
@@ -695,7 +695,7 @@ class AdminUsers extends React.Component {
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Max Team Size: <InputNumber
                                 value={this.state.teamMaxSize}
                                 onChange={(value) => this.setState({ teamMaxSize: value })}
@@ -706,7 +706,7 @@ class AdminUsers extends React.Component {
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Enable Teams:  <Switch disabled={this.state.disableLoading3} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.teamMode} /></h3>
                         <p>Enable teams for the platform. Users in a team will have their scores combined on the scoreboard <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
                     </Card>
@@ -716,7 +716,7 @@ class AdminUsers extends React.Component {
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Enable Password Reset  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("forgotPass", value)} checked={this.state.forgotPass} /></h3>
                         <p>Allow users to use the "Forgot Password" option to reset their password. <br/>Please ensure that you have connected to an SMTP server correctly in the "Email" tab</p>
                     </Card>

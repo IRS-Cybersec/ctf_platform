@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, message, Card, Input, Divider, InputNumber, Switch } from 'antd';
+import { Layout, message, Card, Input, Divider, InputNumber, Switch, Form } from 'antd';
 
 class AdminEmails extends React.Component {
     constructor(props) {
@@ -130,7 +130,7 @@ class AdminEmails extends React.Component {
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>SMTP Host:
                             <Input
                                 disabled={this.state.disableLoading}
@@ -141,7 +141,7 @@ class AdminEmails extends React.Component {
                     </Card>
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>SMTP Port: <InputNumber
                             value={this.state.SMTPPort}
                             disabled={this.state.disableLoading}
@@ -156,14 +156,14 @@ class AdminEmails extends React.Component {
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>SMTP Secure:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("SMTPSecure", value)} checked={this.state.SMTPSecure} /></h3>
                         <p>Use TLS to transfer emails (TLS must be setup on your SMTP server, otherwise this will fail).</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>SMTP Username: <Input
                             value={this.state.SMTPUser}
                             disabled={this.state.disableLoading}
@@ -175,7 +175,7 @@ class AdminEmails extends React.Component {
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>SMTP Password:<Input
                             value={this.state.SMTPPass}
                             disabled={this.state.disableLoading}

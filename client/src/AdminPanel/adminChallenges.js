@@ -662,7 +662,7 @@ class AdminChallenges extends React.Component {
                         <h1 style={{ fontSize: "150%" }}>Category Management </h1>{this.state.transferDisabled && (<Ellipsis color="#177ddc" size={50} />)}
                     </div>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Category Meta Information Editor <EyeOutlined /></h3>
                         <p>Select a category to edit info such as Name, Cover Pictures etc.</p>
 
@@ -676,7 +676,7 @@ class AdminChallenges extends React.Component {
                             </div>
                         )}
                     </Card>
-                    <Card>
+                    <Card className="settings-card">
                         <h3>Category Visibility <EyeOutlined /></h3>
                         <Transfer
                             dataSource={this.state.allCat}
@@ -695,14 +695,14 @@ class AdminChallenges extends React.Component {
 
                     <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
-                        <Card>
+                        <Card className="settings-card">
                             <h3>Disable Submissions:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("submissionDisabled", value)} checked={this.state.submissionDisabled} /></h3>
                             <p>Prevents users from submitting any new submissions for all challenges. Hints can still be bought</p>
                         </Card>
 
                         <Divider type="vertical" style={{ height: "inherit" }} />
 
-                        <Card>
+                        <Card className="settings-card">
                             <h3>Set Socket Limit:  <InputNumber
                                 value={this.state.maxSockets}
                                 disabled={this.state.disableLoading}

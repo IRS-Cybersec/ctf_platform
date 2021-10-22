@@ -117,14 +117,14 @@ class Admin extends React.Component {
             <h1>Click on any of the tabs above to manage different parts of the portal.</h1>
 
             <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
-              <Card>
+              <Card className="settings-card">
                 <Button type='primary' onClick={this.downloadBackup} loading={this.state.backupLoading}><DownloadOutlined /> Download Backup</Button>
                 <p>Download all the data stored in the platform's database. Data can be uploaded onto a different platform/a later date to restore all the data</p>
               </Card>
 
               <Divider type="vertical" style={{ height: "inherit" }} />
 
-              <Card>
+              <Card className="settings-card">
                 <div style={{width: "50%"}}>
                   <Dragger
                     fileList={this.state.fileList}
