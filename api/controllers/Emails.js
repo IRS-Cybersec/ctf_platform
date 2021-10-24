@@ -2,6 +2,9 @@ const Connection = require('./../utils/mongoDB.js')
 const { deletePermissions } = require('./../utils/permissionUtils.js')
 const crypto = require('crypto');
 const argon2 = require('argon2');
+const dayjs = require('dayjs')
+const relativeTime = require('dayjs/plugin/relativeTime')
+dayjs.extend(relativeTime)
 
 const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
@@ -16,6 +19,8 @@ const disableStates = async (req, res) => {
             websiteLink: NodeCacheObj.get("websiteLink"),
             emailSenderAddr: NodeCacheObj.get("emailSenderAddr"),
             emailSender: NodeCacheObj.get("emailSender"),
+            emailResetTime: NodeCacheObj.get("emailResetTime"),
+            emailCooldown: NodeCacheObj.get("emailCooldown")
         }
     });
 }
@@ -47,7 +52,7 @@ const forgotPassword = async (req, res) => {
             const passReset = await collections.passResetCode.findOne({ username: user.username })
             if (passReset) {
                 // If the code was created less than 2 mins ago, refuse to create & resend another one
-                if (new Date() - passReset.timestamp < 120 * 1000) tooRecent = true
+                if (new Date() - passReset.timestamp < NodeCacheObj.get("emailCooldown") * 1000) tooRecent = true
                 else await collections.passResetCode.deleteOne({ username: user.username })
             }
             if (!tooRecent) {
@@ -57,6 +62,8 @@ const forgotPassword = async (req, res) => {
                 // Send email using nodemailer
                 try {
                     const link = NodeCacheObj.get("websiteLink") + "/reset/password/" + user.username + "/" + code
+                    const timeLeft = dayjs().add(NodeCacheObj.get("emailResetTime"), "s").toNow(true)
+                    console.log(timeLeft)
 
                     const response = await NodemailerT.sendMail({
                         from: '"' + NodeCacheObj.get("emailSender") + '"' + ' <' + NodeCacheObj.get("emailSenderAddr") + '>', // sender address
@@ -66,7 +73,7 @@ const forgotPassword = async (req, res) => {
                         html: `
                         Dear ${user.username},<br><br>  Someone has requested a password reset for your Sieberrsec CTF Platform account. To reset your password, click <a href='${link}'>here</a>. 
                         <br><br>
-                        The password link will expire in <b>10 minutes</b>. If you did not request this email, you can safely ignore this email.
+                        The password link will expire in <b>${timeLeft}</b>. If you did not request this email, you can safely ignore this email.
                         `, // html body
                     })
                 }
@@ -86,9 +93,12 @@ const forgotPassword = async (req, res) => {
 const checkPassResetLink = async (req, res) => {
     const collections = Connection.collections
     if (NodeCacheObj.get("forgotPass")) {
-        const user = await collections.passResetCode.findOne({ code: await argon2.hash(req.body.code), username: req.body.username })
-        if (user) return res.send({ success: true })
-        else throw new Error("NotFound")
+        const user = await collections.passResetCode.findOne({ username: req.body.username })
+        if (user && await argon2.verify(user.code, req.body.code)) return res.send({ success: true })
+        else return res.send({
+            success: false,
+            error: "invalid-code"
+        })
     }
     else res.send({
         success: false,
@@ -99,9 +109,10 @@ const checkPassResetLink = async (req, res) => {
 const resetForgottenPassword = async (req, res) => {
     const collections = Connection.collections
     if (NodeCacheObj.get("forgotPass")) {
-        const user = await collections.passResetCode.findOne({ code: await argon2.hash(req.body.code), username: req.body.username }, { projection: { username: 1, _id: 0 } });
-        if (user) {
+        const user = await collections.passResetCode.findOne({ username: req.body.username }, { projection: { code: 1, username: 1, _id: 0 } });
+        if (user && await argon2.verify(user.code, req.body.code)) {
             await collections.users.updateOne({ username: user.username }, { $set: { password: await argon2.hash(req.body.password) } })
+            await collections.passResetCode.deleteOne({ username: user.username })
             deletePermissions(user.username) // force user to re-login
             res.send({ success: true })
         }

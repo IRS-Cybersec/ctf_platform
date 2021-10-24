@@ -41,7 +41,7 @@ const startValidation = async () => {
     }
     if ((await collections.passResetCode.indexes()).length === 1) {
         // Password reset codes indexes
-        collections.passResetCode.createIndex({ "timestamp": 1 }, { expireAfterSeconds: 600 })
+        collections.passResetCode.createIndex({ "timestamp": 1 }, { expireAfterSeconds: 600, name: "expiryTime" })
         console.log("Password reset code indexes created")
     }
 

@@ -15,7 +15,9 @@ class AdminEmails extends React.Component {
             emailFrom: "",
             websiteLink: "",
             emailSenderAddr: "",
-            emailSender: ""
+            emailSender: "",
+            emailResetTime: 0,
+            emailCooldown: 0
         }
     }
 
@@ -33,7 +35,7 @@ class AdminEmails extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ emailSenderAddr: data.states.emailSenderAddr, emailSender: data.states.emailSender, websiteLink: data.states.websiteLink, SMTPHost: data.states.host, SMTPPort: data.states.port, SMTPSecure: data.states.secure, SMTPUser: data.states.user, SMTPPass: data.states.pass })
+                this.setState({ emailResetTime: data.states.emailResetTime, emailCooldown: data.states.emailCooldown, emailSenderAddr: data.states.emailSenderAddr, emailSender: data.states.emailSender, websiteLink: data.states.websiteLink, SMTPHost: data.states.host, SMTPPort: data.states.port, SMTPSecure: data.states.secure, SMTPUser: data.states.user, SMTPPass: data.states.pass })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -93,6 +95,12 @@ class AdminEmails extends React.Component {
         }
         else if (setting === "emailSenderAddr") {
             settingName = "Email sender address"
+        }
+        else if (setting === "emailCooldown") {
+            settingName = "Time between emails"
+        }
+        else if (setting === "emailResetTime") {
+            settingName = "Password reset expiry time"
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
@@ -274,9 +282,35 @@ class AdminEmails extends React.Component {
                             onPressEnter={(e) => { this.changeSetting("emailSenderAddr", this.state.emailSenderAddr) }} />
                         </h3>
                         <p>
-                            This is the <b>full email address</b> of the sender. <br/>
+                            This is the <b>full email address</b> of the sender. <br />
                             (<b>Note:</b> The email domain here should <b>match the domain the emails are sent out from</b>. Otherwise, there is a chance that your emails will not reach the user)
                         </p>
+                    </Card>
+                </div>
+
+                <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around", marginTop: "2ch" }}>
+
+                    <Card className="settings-card">
+                        <h3>Time Between Emails <InputNumber
+                            value={this.state.emailCooldown}
+                            disabled={this.state.disableLoading}
+                            onChange={(value) => this.setState({ emailCooldown: value })}
+                            onPressEnter={(e) => { this.changeSetting("emailCooldown", this.state.emailCooldown) }} />
+                        </h3>
+                        <p>This is the minimum time <b>in seconds</b> between password reset/email verification emails that a user has to wait.</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>Password Reset Expiry
+                            <InputNumber
+                                value={this.state.emailResetTime}
+                                disabled={this.state.disableLoading}
+                                onChange={(value) => this.setState({ emailResetTime: value })}
+                                onPressEnter={(e) => { this.changeSetting("emailResetTime", this.state.emailResetTime) }} />
+                        </h3>
+                        <p>This is the time <b>in seconds</b> a password reset link lasts till it expires.</p>
                     </Card>
                 </div>
 

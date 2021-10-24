@@ -46,7 +46,9 @@ const startCache = async () => {
 		SMTPPort: 587,
 		websiteLink: "https://ctf.example.com",
 		emailSenderAddr: "noreply@ctf.example.com",
-		emailSender: "John Smith"
+		emailSender: "John Smith",
+		emailCooldown: 180,
+		emailResetTime: 600
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -162,6 +164,7 @@ const main = async () => {
 			fastify.post('/v1/account/create', accounts.create);
 			fastify.post('/v1/account/forgot/pass', emails.forgotPassword)
 			fastify.post('/v1/account/forgot/check', emails.checkPassResetLink)
+			fastify.post('/v1/account/forgot/reset', emails.resetForgottenPassword)
 			done()
 		})
 
