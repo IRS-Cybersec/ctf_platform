@@ -39,11 +39,14 @@ const startCache = async () => {
 		teamMaxSize: 3,
 		teamUpdateID: 0,
 		forgotPass: false,
-		SMTPHost: "example.host.com",
+		SMTPHost: "ctf.example.com",
 		SMTPUser: "user",
 		SMTPPass: "examplepass",
 		SMTPSecure: false,
-		SMTPPort: 587
+		SMTPPort: 587,
+		websiteLink: "https://ctf.example.com",
+		emailSenderAddr: "noreply@ctf.example.com",
+		emailSender: "John Smith"
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -157,7 +160,8 @@ const main = async () => {
 		fastify.register((instance, opts, done) => {
 			fastify.post('/v1/account/login', accounts.login);
 			fastify.post('/v1/account/create', accounts.create);
-			fastify.post('/v1/account/forgot/pass', accounts.forgotPassword)
+			fastify.post('/v1/account/forgot/pass', emails.forgotPassword)
+			fastify.post('/v1/account/forgot/check', emails.checkPassResetLink)
 			done()
 		})
 
@@ -217,6 +221,7 @@ const main = async () => {
 
 			// Email endpoints
 			instance.get('/v1/email/disableStates', emails.disableStates);
+			instance.get('/v1/email/test', emails.testConnection);
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)

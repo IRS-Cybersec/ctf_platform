@@ -1,7 +1,6 @@
 const { checkPermissions, deletePermissions, setPermissions, signToken } = require('./../utils/permissionUtils.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
-const crypto = require('crypto');
 const argon2 = require('argon2');
 
 
@@ -14,7 +13,7 @@ const disableStates = async (req, res) => {
             adminShowDisable: NodeCacheObj.get("adminShowDisable"),
             uploadSize: NodeCacheObj.get("uploadSize"),
             uploadPath: NodeCacheObj.get("uploadPath"),
-            teamSize: NodeCacheObj.get("teamMaxSize"),
+            teamMaxSize: NodeCacheObj.get("teamMaxSize"),
             teamMode: NodeCacheObj.get("teamMode"),
             forgotPass: NodeCacheObj.get("forgotPass")
         }
@@ -26,28 +25,6 @@ const type = async (req, res) => {
         success: true,
         type: req.locals.perms
     });
-}
-
-const forgotPassword = async (req, res) => {
-    const collections = Connection.collections
-    if (NodeCacheObj.get("forgotPass")) {
-        res.send({ success: true }) // send request first so that they can't check if an email exists by time brute forcing
-        const user = await collections.users.findOne({ email: req.body.email.toLowerCase() }, { projection: { username: 1, _id: 0 } });
-        if (user) {
-            const NodemailerT = NodeCacheObj.get('NodemailerT')
-            // Check if an existing code for that username already exists, if so, invalidate it
-            if ((await collections.passResetCode.countDocuments({ username: user.username })) > 0) {
-                collections.passResetCode.deleteOne({ username: user.username })
-            }
-            let code = crypto.randomBytes(64).toString('hex')
-            await collections.passResetCode.insertOne({ username: user.username, code: await argon2.hash(code), timestamp: new Date() })
-            // Send email using nodemailer
-        }
-    }
-    else res.send({
-        success: false,
-        error: "disabled"
-    })
 }
 
 const login = async (req, res) => {
@@ -359,4 +336,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { forgotPassword, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }

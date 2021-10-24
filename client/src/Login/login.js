@@ -283,7 +283,11 @@ class Login extends React.Component {
                                     >
                                         <Input allowClear prefix={<MailOutlined />} placeholder="Email" />
                                     </Form.Item>
-                                    <p>If an account associated with the email above exists. You will receive a password reset email in your inbox</p>
+                                    <p>
+                                        If an account associated with the email above exists. You will receive a password reset email in your inbox <br/><br/>
+                                        Please note that there is a limit of 1 password reset email every <b>2 minutes</b>. A new email will <b>not be sent if you have just requested for one</b>.
+
+                                    </p>
 
                                     <Form.Item>
                                         <div style={{ display: "flex", alignItems: "center", marginTop: "4ch" }}>

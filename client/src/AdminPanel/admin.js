@@ -182,7 +182,7 @@ class Admin extends React.Component {
             <AdminSubmissions></AdminSubmissions>
           </TabPane>
           <TabPane
-            tab={<span><MailOutlined />Emails</span>}
+            tab={<span><MailOutlined />Email Settings</span>}
             key="Emails"
           >
             <AdminEmails></AdminEmails>

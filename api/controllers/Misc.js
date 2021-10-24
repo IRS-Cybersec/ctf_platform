@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
-    const allowedSettings = ["forgotPass", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
+    const allowedSettings = ["websiteLink", "emailSender", "emailSenderAddr", "forgotPass", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
     if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
     NodeCacheObj.set(req.body.setting, req.body.disable)
 
@@ -41,7 +41,7 @@ const adminSettings = async (req, res) => {
 
             }
         } // re-create nodemailer transport
-        else if (req.body.setting === "SMTPUser" || req.body.setting === "SMTPHost" || req.body.setting === "SMTPPass") {
+        else if (req.body.setting === "SMTPPort" || req.body.setting === "SMTPSecure" || req.body.setting === "SMTPUser" || req.body.setting === "SMTPHost" || req.body.setting === "SMTPPass") {
             NodeCacheObj.set("NodemailerT", nodemailer.createTransport({
                 host: NodeCacheObj.get("SMTPHost"),
                 port: NodeCacheObj.get("SMTPPort"),
