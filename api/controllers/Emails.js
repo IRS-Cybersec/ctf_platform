@@ -63,8 +63,7 @@ const forgotPassword = async (req, res) => {
                 try {
                     const link = NodeCacheObj.get("websiteLink") + "/reset/password/" + user.username + "/" + code
                     const timeLeft = dayjs().add(NodeCacheObj.get("emailResetTime"), "s").toNow(true)
-                    console.log(timeLeft)
-
+                    
                     const response = await NodemailerT.sendMail({
                         from: '"' + NodeCacheObj.get("emailSender") + '"' + ' <' + NodeCacheObj.get("emailSenderAddr") + '>', // sender address
                         to: user.email,
