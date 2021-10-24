@@ -106,7 +106,9 @@ const downloadBackup = async (req, res) => {
         cache: await collections.cache.find({}).toArray(),
         challs: await collections.challs.find({}).toArray(),
         transactions: await collections.transactions.find({}).toArray(),
-        users: await collections.users.find({}).toArray()
+        users: await collections.users.find({}).toArray(),
+        team: await collections.team.find({}).toArray(),
+        passResetCode: await collections.passResetCode.find({}).toArray()
     }
     return res.send({ success: true, data: backupData })
 }
@@ -119,7 +121,9 @@ const uploadBackup = async (req, res) => {
         cache: req.body.cache.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
         challs: req.body.challs.map((document) => { document._id = MongoDB.ObjectId(document._id); document.created = new Date(document.created); return document }),
         transactions: req.body.transactions.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
-        users: req.body.users.map((document) => { document._id = MongoDB.ObjectId(document._id); return document })
+        users: req.body.users.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
+        team: req.body.team.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
+        passResetCode: req.body.passResetCode.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
     }
 
     await collections.announcements.deleteMany({})
@@ -127,6 +131,8 @@ const uploadBackup = async (req, res) => {
     await collections.challs.deleteMany({})
     await collections.transactions.deleteMany({})
     await collections.users.deleteMany({})
+    await collections.team.deleteMany({})
+    await collections.passResetCode.deleteMany({})
 
     await collections.announcements.insertMany(backupData.announcements)
     await collections.cache.insertMany(backupData.cache)
