@@ -1,6 +1,7 @@
 const { checkPermissions, deletePermissions, setPermissions, signToken } = require('./../utils/permissionUtils.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
+const crypto = require('crypto');
 const argon2 = require('argon2');
 
 
@@ -15,7 +16,8 @@ const disableStates = async (req, res) => {
             uploadPath: NodeCacheObj.get("uploadPath"),
             teamMaxSize: NodeCacheObj.get("teamMaxSize"),
             teamMode: NodeCacheObj.get("teamMode"),
-            forgotPass: NodeCacheObj.get("forgotPass")
+            forgotPass: NodeCacheObj.get("forgotPass"),
+            emailVerify: NodeCacheObj.get("emailVerify")
         }
     });
 }
@@ -31,16 +33,21 @@ const login = async (req, res) => {
     const collections = Connection.collections
     try {
         let user = null
-        if (/^[a-zA-Z0-9_]+$/.test(req.body.username)) user = await collections.users.findOne({ username: req.body.username.toLowerCase() }, { projection: { username: 1, password: 1, type: 1, _id: 0 } });
-        else user = await collections.users.findOne({ email: req.body.username.toLowerCase() }, { projection: { username: 1, password: 1, type: 1, _id: 0 } });
+        if (/^[a-zA-Z0-9_]+$/.test(req.body.username)) user = await collections.users.findOne({ username: req.body.username.toLowerCase() });
+        else user = await collections.users.findOne({ email: req.body.username.toLowerCase() });
         if (!user) throw new Error('WrongDetails');
         else if (await argon2.verify(user.password, req.body.password)) {
-            setPermissions(user.username, user.type)
-            res.send({
-                success: true,
-                permissions: user.type,
-                token: signToken(user.username.toLowerCase())
-            });
+            if (NodeCacheObj.get("emailVerify") && "code" in user) {
+                res.send({ success: false, error: "need-verify", emailVerify: user.email })
+            }
+            else {
+                setPermissions(user.username, user.type)
+                res.send({
+                    success: true,
+                    permissions: user.type,
+                    token: signToken(user.username)
+                });
+            }
         }
         else throw new Error('WrongDetails');
     }
@@ -75,12 +82,36 @@ const create = async (req, res) => {
             success: false,
             error: "bad-username"
         })
-        await collections.users.insertOne({
+        let responseObj = { success: true }
+        let insertObj = {
             username: req.body.username.toLowerCase(),
             email: req.body.email.toLowerCase(),
             password: await argon2.hash(req.body.password),
             type: 0
-        });
+        }
+        if (NodeCacheObj.get("emailVerify")) {
+            responseObj.success = false
+            responseObj.error = "email-verify"
+            responseObj.emailVerify = req.body.email.toLowerCase()
+            insertObj.code = crypto.randomBytes(32).toString('hex')
+            insertObj.codeTimestamp = new Date()
+            const link = NodeCacheObj.get("websiteLink") + "/verify/" + insertObj.username + "/" + insertObj.code
+
+            const NodemailerT = NodeCacheObj.get('NodemailerT')
+            await NodemailerT.sendMail({
+                from: '"' + NodeCacheObj.get("emailSender") + '"' + ' <' + NodeCacheObj.get("emailSenderAddr") + '>', // sender address
+                to: insertObj.email,
+                subject: "Email Verification for Sieberrsec CTF Platform", // Subject line
+                text: "Dear " + insertObj.username + ",\n\n  Please verify your email here: \n" + link + "\n\n  If you did not request this email, you can safely ignore this email. You will be able to login immediately after verifying your email.", // plain text body
+                html: `
+                Dear ${insertObj.username},<br><br>  Please verify your email by clicking <a href='${link}'>here</a>.
+                <br><br>
+                If you did not request this email, you can safely ignore this email. You will be able to login immediately after verifying your email.
+                `, // html body
+            })
+        }
+        await collections.users.insertOne(insertObj);
+
         const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID") + 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
         const GTimestamp = new Date()
@@ -115,7 +146,7 @@ const create = async (req, res) => {
             perms: 0,
             lastChallengeID: latestSolveSubmissionID
         }])
-        res.send({ success: true });
+        res.send(responseObj);
     }
     catch (err) {
         if (err.message == 'BadEmail') {

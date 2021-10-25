@@ -48,7 +48,8 @@ const startCache = async () => {
 		emailSenderAddr: "noreply@ctf.example.com",
 		emailSender: "John Smith",
 		emailCooldown: 180,
-		emailResetTime: 600
+		emailResetTime: 600,
+		emailVerify: false,
 	}
 	const collections = Connection.collections
 	createCache = async () => {
@@ -92,21 +93,21 @@ const startCache = async () => {
 
 	// Create transactions cache
 	const transactionsCursor = collections.transactions.find({})
-    let transactionsCache = []
-    await transactionsCursor.forEach((doc) => {
+	let transactionsCache = []
+	await transactionsCursor.forEach((doc) => {
 		const insertDoc = {
 			_id: doc._id,
-            author: doc.author,
-            points: doc.points,
-            challenge: doc.challenge,
-            timestamp: doc.timestamp,
-            challengeID: doc.challengeID,
+			author: doc.author,
+			points: doc.points,
+			challenge: doc.challenge,
+			timestamp: doc.timestamp,
+			challengeID: doc.challengeID,
 			lastChallengeID: doc.lastChallengeID,
 			type: doc.type
 		}
 		if ("originalAuthor" in doc) insertDoc.originalAuthor = doc.originalAuthor
-        transactionsCache.push(insertDoc)
-    })
+		transactionsCache.push(insertDoc)
+	})
 	NodeCacheObj.set("transactionsCache", transactionsCache)
 
 	// Create teams cache
@@ -165,6 +166,8 @@ const main = async () => {
 			fastify.post('/v1/account/forgot/pass', emails.forgotPassword)
 			fastify.post('/v1/account/forgot/check', emails.checkPassResetLink)
 			fastify.post('/v1/account/forgot/reset', emails.resetForgottenPassword)
+			fastify.post('/v1/account/verify', emails.verifyEmail)
+			fastify.post('/v1/account/verify/resend', emails.resendVerifyEmail)
 			done()
 		})
 

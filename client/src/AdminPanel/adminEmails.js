@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layout, message, Card, Input, Divider, InputNumber, Switch, Button } from 'antd';
+import { Link } from 'react-router-dom';
 
 class AdminEmails extends React.Component {
     constructor(props) {
@@ -177,7 +178,7 @@ class AdminEmails extends React.Component {
                 <p>
                     The platform requires an SMTP server to use to send emails such as verifications emails and password reset emails. You can also broadcast emails from here to all registered accounts.
                     <br />
-                    If you want to enable the "Forgot Password" option or email verifications, please enable it <a href="/Admin/Users">here</a>.
+                    If you want to enable the "Forgot Password" option or email verifications, please enable it in the <b>Users</b> tab.
                 </p>
 
                 <div>

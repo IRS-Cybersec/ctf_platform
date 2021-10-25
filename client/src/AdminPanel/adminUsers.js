@@ -200,7 +200,8 @@ class AdminUsers extends React.Component {
             passwordResetModal: false,
             teamMode: false,
             teamMaxSize: 3,
-            forgotPass: false
+            forgotPass: false,
+            emailVerify: false
         }
     }
 
@@ -219,7 +220,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ forgotPass: data.states.forgotPass, disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({ emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -384,6 +385,10 @@ class AdminUsers extends React.Component {
             settingName = "Forgot password reset"
             this.setState({ disableLoading2: true })
         }
+        else if (setting === "emailVerify") {
+            settingName = "Email verification"
+            this.setState({ disableLoading2: true })
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -395,7 +400,7 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                if (setting === "teamMode" || setting === "forgotPass") {
+                if (setting === "teamMode" || setting === "forgotPass" || setting === "emailVerify") {
                     if (!value) {
                         message.success(settingName + " disabled")
                     }
@@ -669,13 +674,13 @@ class AdminUsers extends React.Component {
 
                     <Card className="settings-card">
                         <h3>Profile Picture Max Upload Size: <InputNumber
-                                formatter={value => `${value}B`}
-                                parser={value => value.replace('B', '')}
-                                value={this.state.uploadSize}
-                                disabled={this.state.uploadLoading}
-                                onChange={(value) => this.setState({ uploadSize: value })}
-                                onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
-                        
+                            formatter={value => `${value}B`}
+                            parser={value => value.replace('B', '')}
+                            value={this.state.uploadSize}
+                            disabled={this.state.uploadLoading}
+                            onChange={(value) => this.setState({ uploadSize: value })}
+                            onPressEnter={(e) => { this.changeSetting("uploadSize", this.state.uploadSize) }} /></h3>
+
                         <p>Sets the maximum file upload size for profile pictures (in Bytes). Press <b>Enter</b> to save</p>
                     </Card>
 
@@ -697,10 +702,10 @@ class AdminUsers extends React.Component {
 
                     <Card className="settings-card">
                         <h3>Max Team Size: <InputNumber
-                                value={this.state.teamMaxSize}
-                                onChange={(value) => this.setState({ teamMaxSize: value })}
-                                onPressEnter={(e) => { this.changeSetting("teamMaxSize", this.state.teamMaxSize) }} />
-                                </h3>
+                            value={this.state.teamMaxSize}
+                            onChange={(value) => this.setState({ teamMaxSize: value })}
+                            onPressEnter={(e) => { this.changeSetting("teamMaxSize", this.state.teamMaxSize) }} />
+                        </h3>
                         <p>Sets the maximum number of members in a team. Press <b>Enter</b> to save</p>
                     </Card>
 
@@ -718,7 +723,14 @@ class AdminUsers extends React.Component {
 
                     <Card className="settings-card">
                         <h3>Enable Password Reset  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("forgotPass", value)} checked={this.state.forgotPass} /></h3>
-                        <p>Allow users to use the "Forgot Password" option to reset their password. <br/>Please ensure that you have connected to an SMTP server correctly in the "Email" tab</p>
+                        <p>Allow users to use the "Forgot Password" option to reset their password. <br />Please ensure that you have connected to an SMTP server correctly in the "Email" tab</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>Enable Email Verification  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("emailVerify", value)} checked={this.state.emailVerify} /></h3>
+                        <p>Forces newly registered users to <b>verify their email</b> before being able to access the site.</p>
                     </Card>
                 </div>
 
