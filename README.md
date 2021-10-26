@@ -34,6 +34,7 @@ _Please exercise caution and do not use any personal emails/passwords/usernames/
 - **Writeup links** 🔗 per challenge (along with the option to only release writeups after submitting the flag)
 - **Challenge Creator Role** 🧔 so as to allow challenge authors to submit challenges without having full admin access
 - **Set Required Challenges** 🔐 to unlock other challenges
+- **Email password reset & verification** 📧 using any SMTP server
 - **Easy Docker Deployment** 📮 in a few steps
 - Links to each challenge so that individual challenges can be shared
 - Easy management of the platform via an integrated Admin Panel
