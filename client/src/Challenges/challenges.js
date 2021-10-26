@@ -39,9 +39,10 @@ class Challenges extends React.Component {
     this.fetchCategories()
   }
 
-  parseCategories(data) {
+  parseCategories(data, usernameTeamCache) {
     //iterate through categories
     let countDownTimerStrings = {}
+    let challengeMetaInfo = []
     for (let x = 0; x < data.length; x++) {
       let currentCategory = data[x].challenges
       let solvedStats = {
@@ -52,13 +53,24 @@ class Challenges extends React.Component {
 
       //iterate through each category's challenges
       for (let y = 0; y < currentCategory.length; y++) {
-        if (currentCategory[y].solved === true) {
-          solvedStats.solved += 1
+        // Iterate through the solve list of each challenge
+        currentCategory[y].solved = false
+        for (let i = 0; i < currentCategory[y].solves.length; i++) {
+          if (currentCategory[y].solves[i] in usernameTeamCache && usernameTeamCache[currentCategory[y].solves[i]] === this.props.team) {
+            solvedStats.solved += 1
+            currentCategory[y].solved = true
+            break
+          }
+          else if (currentCategory[y].solves[i] === this.props.username) {
+            solvedStats.solved += 1
+            currentCategory[y].solved = true
+            break
+          }
         }
       }
 
       solvedStats.percentage = Math.round((solvedStats.solved / solvedStats.challenges) * 100)
-      data[x].challenges = solvedStats
+      challengeMetaInfo.push({ challenges: solvedStats, _id: data[x]._id, meta: data[x].meta })
       if ("time" in data[x].meta) {
         const startTime = new Date(data[x].meta.time[0])
         const endTime = new Date(data[x].meta.time[1])
@@ -78,7 +90,7 @@ class Challenges extends React.Component {
     }
     this.setState({ countDownTimerStrings: countDownTimerStrings })
     setInterval(this.countDownTicker.bind(this), 1000 * 10)
-    return data;
+    return [challengeMetaInfo, data];
   }
 
   countDownTicker() {
@@ -154,9 +166,7 @@ class Challenges extends React.Component {
       return results.json(); //return data in JSON (since its JSON data)
     }).then(async (data) => {
       if (data.success === true) {
-
-        let originalData = JSON.parse(JSON.stringify(data.challenges))
-        const newData = this.parseCategories(data.challenges) //this statement changes the object data
+        const [categoryMetaInfo, originalData] = this.parseCategories(data.challenges, data.usernameTeamCache) //this statement changes the object data
 
         //convert array to dict
 
@@ -164,8 +174,9 @@ class Challenges extends React.Component {
         for (let i = 0; i < originalData.length; i++) {
           originalDataDictionary[originalData[i]._id] = originalData[i].challenges
         }
-
-        this.setState({ categories: newData, originalData: originalDataDictionary, loadingChall: false })
+        console.log(originalDataDictionary)
+        console.log(categoryMetaInfo)
+        this.setState({ categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
         let categoryChall = this.props.match.params.categoryChall;
         const mongoID = /^[a-f\d]{24}$/i
         if (typeof categoryChall !== "undefined") {
@@ -337,7 +348,7 @@ class Challenges extends React.Component {
                                           {"time" in item.meta && (
                                             <span style={{
                                               color: "#d89614",
-                                               letterSpacing: ".1rem",
+                                              letterSpacing: ".1rem",
                                               fontWeight: 300,
                                               whiteSpace: "initial"
                                             }}>{this.state.countDownTimerStrings[item._id]}</span>

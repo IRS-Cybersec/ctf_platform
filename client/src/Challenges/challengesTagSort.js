@@ -446,6 +446,14 @@ class ChallengesTagSort extends React.Component {
             duration: 0
           });
         }
+        else if (data.error === "submitted") {
+          notification["error"]({
+            message: 'Challenge already solved.',
+            description:
+              'Your teammate might have already solved the challenge. Please refresh the page to see the latest solve status.',
+            duration: 0
+          });
+        }
         else if (data.error === "admin-hidden") {
           notification["error"]({
             message: 'The challenge is hidden.',

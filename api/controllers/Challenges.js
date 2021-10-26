@@ -30,7 +30,7 @@ const list = async (req, res) => {
                         _id: "$_id",
                         name: '$name',
                         points: '$points',
-                        solved: { $in: [req.locals.username.toLowerCase(), '$solves'] },
+                        solves: '$solves',
                         firstBlood: { $arrayElemAt: ['$solves', 0] },
                         tags: '$tags',
                         requires: '$requires'
@@ -62,7 +62,7 @@ const list = async (req, res) => {
                         _id: "$_id",
                         name: '$name',
                         points: '$points',
-                        solved: { $in: [req.locals.username.toLowerCase(), '$solves'] },
+                        solves: '$solves',
                         firstBlood: { $arrayElemAt: ['$solves', 0] },
                         tags: '$tags',
                         visibility: '$visibility',
@@ -82,7 +82,8 @@ const list = async (req, res) => {
     }
     res.send({
         success: true,
-        challenges: challenges
+        challenges: challenges,
+        usernameTeamCache: NodeCacheObj.get("usernameTeamCache")
     });
 }
 
@@ -175,17 +176,37 @@ const show = async (req, res) => {
         if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
         if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
     }
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    const team = usernameTeamCache[req.locals.username]
     if (chall.hints != undefined)
         chall.hints.forEach(hint => {
-            if (hint.purchased.includes(req.locals.username)) {
-                hint.bought = true;
-                delete hint.cost;
+            let bought = false
+            if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+                for (let i = 0; i < hint.purchased.length; i++) {
+                    const current = hint.purchased[i]
+                    if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                        hint.bought = true;
+                        delete hint.cost;
+
+                        bought = true
+                        break
+                    }
+                }
+                if (!bought) {
+                    hint.bought = false;
+                    delete hint.hint;
+                }
             }
             else {
-                hint.bought = false;
-                delete hint.hint;
+                if (hint.purchased.includes(req.locals.username)) {
+                    hint.bought = true;
+                    delete hint.cost;
+                }
+                else {
+                    hint.bought = false;
+                    delete hint.hint;
+                }
             }
-            delete hint.purchased;
         });
     if (chall.writeup != undefined) {
         //If only send writeup after submitting flag option is ticked, check if challenge is completed before sending writeup link
@@ -257,7 +278,23 @@ const hint = async (req, res) => {
 
     if (!hints.hints[0]) throw new Error('OutOfRange');
     let Gtimestamp = new Date()
-    if (!hints.hints[0].purchased.includes(req.locals.username)) {
+
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    let purchased = false
+    if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+        const team = usernameTeamCache[req.locals.username]
+        for (let i = 0; i < hints.hints[0].purchased.length; i++) {
+            const current = hints.hints[0].purchased[i]
+            if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                purchased = true
+                break
+            }
+        }
+    }
+    else purchased = hints.hints[0].purchased.includes(req.locals.username)
+
+
+    if (!purchased) {
         await collections.challs.updateOne({
             _id: MongoDB.ObjectId(req.body.chall)
         }, {
@@ -268,7 +305,6 @@ const hint = async (req, res) => {
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         let insertDoc = {
             author: req.locals.username,
             challenge: hints.name,
@@ -279,10 +315,10 @@ const hint = async (req, res) => {
             hint_id: parseInt(req.body.id),
             lastChallengeID: latestSolveSubmissionID
         }
-        if (req.locals.username in usernameTeamCache) {
+        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
             insertDoc.author = usernameTeamCache[req.locals.username]
             insertDoc.originalAuthor = req.locals.username
-        } 
+        }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         await collections.transactions.insertOne(insertDoc);
         await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
@@ -299,7 +335,7 @@ const hint = async (req, res) => {
         transactionsCache.push(transactionDoc)
         broadCastNewSolve([{
             _id: insertDoc._id,
-            author: req.locals.username in usernameTeamCache ? usernameTeamCache[req.locals.username] : req.locals.username,
+            author: "originalAuthor" in insertDoc ? usernameTeamCache[req.locals.username] : req.locals.username,
             timestamp: Gtimestamp,
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
@@ -354,6 +390,23 @@ const submit = async (req, res) => {
                 type: 'submission'
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }
+        let submitted = false
+        let challengeCache = NodeCacheObj.get("challengeCache")
+        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+            const team = usernameTeamCache[req.locals.username]
+            for (let i = 0; i < challengeCache[req.body.chall].solves.length; i++) {
+                const current = challengeCache[req.body.chall].solves[i]
+                if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                    submitted = true
+                    break
+                }
+            }
+        }
+        else submitted = challengeCache[req.body.chall].solves.includes(req.locals.username)
+
+        if (submitted) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
+
         let Gtimestamp = new Date()
         let latestSolveSubmissionID = 0
         let calculatedPoints = 0
@@ -363,7 +416,7 @@ const submit = async (req, res) => {
         async function insertTransaction(correct = false) {
             const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
             let transactionsCache = NodeCacheObj.get("transactionsCache")
-           
+
             let insertDocument = {
                 author: req.locals.username,
                 challenge: chall.name,
@@ -378,7 +431,7 @@ const submit = async (req, res) => {
             if (req.locals.username in usernameTeamCache) {
                 insertDocument.author = usernameTeamCache[req.locals.username]
                 insertDocument.originalAuthor = req.locals.username
-            } 
+            }
             if (correct) {
                 await collections.challs.updateOne({
                     _id: MongoDB.ObjectId(req.body.chall)
@@ -430,10 +483,8 @@ const submit = async (req, res) => {
         latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
-        let challengeCache = NodeCacheObj.get("challengeCache")
         if (chall.flags.includes(req.body.flag)) {
-            solved = true;
-            if (challengeCache[req.body.chall].solves.includes(req.locals.username)) throw new Error('Submitted'); // "solves" has a uniqueItem validation. Hence, the same solve cannot be inserted twice even if the find has yet to update.
+            solved = true
             challengeCache[req.body.chall].solves.push(req.locals.username) // add no. of solve to memory immediately so it won't double solve
 
 
@@ -572,8 +623,8 @@ const newChall = async (req, res) => {
                             });
                             throw new Error(err)
                     }
-            default:
-                throw new Error(err)
+                default:
+                    throw new Error(err)
             }
         }
         if (err.message == 'MissingHintCost') {
@@ -671,12 +722,12 @@ const edit = async (req, res) => {
                             });
                             return;
                     }
-                    default:
-                        res.send({
-                            success: false,
-                            error: 'validation'
-                        });
-                        throw new Error(err)
+                default:
+                    res.send({
+                        success: false,
+                        error: 'validation'
+                    });
+                    throw new Error(err)
             }
         }
     }
