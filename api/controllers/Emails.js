@@ -31,7 +31,7 @@ const verifyEmail = async (req, res) => {
         const user = await collections.users.findOne({ username: req.body.username });
         if (user) {
             if ("code" in user) { // successfully verified, let user login immediately
-                if (user.code === req.body.code) {
+                if (await argon2.verify(user.code, req.body.code)) {
                     await collections.users.updateOne({ username: user.username }, { $unset: { code: 0, codeTimestamp: 0 } })
                     setPermissions(user.username, user.type)
                     res.send({
@@ -66,9 +66,11 @@ const resendVerifyEmail = async (req, res) => {
             const collections = Connection.collections
             const user = await collections.users.findOne({ email: req.body.email });
             if (user && "code" in user) {
-                const link = NodeCacheObj.get("websiteLink") + "/verify/" + user.username + "/" + user.code
                 if (new Date() - user.codeTimestamp > NodeCacheObj.get("emailCooldown") * 1000) {
-                    await collections.users.updateOne({ email: user.email }, { $set: { codeTimestamp: new Date() } })
+                    // regenerate code and re-hash
+                    const code = crypto.randomBytes(32).toString('hex')
+                    const link = NodeCacheObj.get("websiteLink") + "/verify/" + user.username + "/" + code
+                    await collections.users.updateOne({ email: user.email }, { $set: { codeTimestamp: new Date(), code: await argon2.hash(code) } })
                     const NodemailerT = NodeCacheObj.get('NodemailerT')
                     await NodemailerT.sendMail({
                         from: '"' + NodeCacheObj.get("emailSender") + '"' + ' <' + NodeCacheObj.get("emailSenderAddr") + '>', // sender address

@@ -93,9 +93,10 @@ const create = async (req, res) => {
             responseObj.success = false
             responseObj.error = "email-verify"
             responseObj.emailVerify = req.body.email.toLowerCase()
-            insertObj.code = crypto.randomBytes(32).toString('hex')
+            const code = crypto.randomBytes(32).toString('hex')
             insertObj.codeTimestamp = new Date()
-            const link = NodeCacheObj.get("websiteLink") + "/verify/" + insertObj.username + "/" + insertObj.code
+            const link = NodeCacheObj.get("websiteLink") + "/verify/" + insertObj.username + "/" + code
+            insertObj.code = await argon2.hash(code)
 
             const NodemailerT = NodeCacheObj.get('NodemailerT')
             await NodemailerT.sendMail({
