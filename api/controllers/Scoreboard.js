@@ -66,9 +66,11 @@ const userScoreboard = async (req, res) => {
         for (let i = 0; i < transactionsCache.length; i++) {
             const current = transactionsCache[i]
 
-            if ("originalAuthor" in current && current.originalAuthor === req.params.username) {
-                found = true
-                if (current.points !== 0) scores.push(current)
+            if ("originalAuthor" in current) {
+                if (current.originalAuthor === req.params.username) {
+                    found = true
+                    if (current.points !== 0) scores.push(current)
+                }
             }
             else if (current.author === req.params.username) {
                 found = true
