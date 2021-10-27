@@ -390,7 +390,7 @@ class AdminUsers extends React.Component {
                 const settingObj = settingList[setting]
                 let setObj = {}
                 setObj[setting] = value
-                this.setState({ setObj })
+                this.setState(setObj)
 
                 let suffix = " disabled"
                 if (settingObj.disable) {
@@ -436,7 +436,7 @@ class AdminUsers extends React.Component {
                 const settingObj = settingList[setting]
                 let setObj = {}
                 setObj[setting] = value
-                this.setState({ setObj })
+                this.setState(setObj)
                 message.success(settingObj.name + " changed to " + value.toString() + settingObj.suffix)
             }
             else {
