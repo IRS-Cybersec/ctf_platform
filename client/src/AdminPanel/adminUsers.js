@@ -245,6 +245,7 @@ class AdminUsers extends React.Component {
             if (data.success === true) {
                 for (let i = 0; i < data.list.length; i++) {
                     data.list[i].key = data.list[i].username
+                    data.list[i].team = data.list[i].username in data.usernameTeamCache ? data.usernameTeamCache[data.list[i].username] : "N/A"
                 }
                 this.setState({ dataSource: data.list })
             }
@@ -567,6 +568,41 @@ class AdminUsers extends React.Component {
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                         sorter={(a, b) => {
                             if (a.username < b.username) return -1
+                            else return 1
+                        }}
+                    />
+                    <Column title="Team" dataIndex="team" key="team"
+                        render={(text, row, index) => {
+                            return <Link to={"/Team/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                        }}
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Team"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                    autoFocus
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                        sorter={(a, b) => {
+                            if (a.team < b.team) return -1
                             else return 1
                         }}
                     />

@@ -351,7 +351,8 @@ const list = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        list: (await collections.users.find(null, { projection: { password: 0, _id: 0 } }).toArray())
+        list: (await collections.users.find(null, { projection: { password: 0, _id: 0 } }).toArray()),
+        usernameTeamCache: NodeCacheObj.get("usernameTeamCache")
     });
 }
 
