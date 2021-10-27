@@ -30,6 +30,19 @@ const type = async (req, res) => {
     });
 }
 
+const changeEmail = async (req, res) => {
+    const collections = Connection.collections
+    if (req.body.email && req.body.email.length > 0) {
+        if ((await collections.users.updateOne({username: req.locals.username}, {$set: {email: req.body.email}})).matchedCount > 0) {
+            res.send({success: true})
+        }
+        else throw new Error("NotFound")
+
+    }
+    else res.send({success: false, error: "empty-email"})
+    
+}
+
 const login = async (req, res) => {
     const collections = Connection.collections
     try {
@@ -370,4 +383,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
