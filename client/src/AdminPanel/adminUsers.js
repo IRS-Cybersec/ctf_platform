@@ -245,6 +245,7 @@ class AdminUsers extends React.Component {
             if (data.success === true) {
                 for (let i = 0; i < data.list.length; i++) {
                     data.list[i].key = data.list[i].username
+                    data.list[i].verified = "code" in data.list[i] ? "False" : "True"
                     data.list[i].team = data.list[i].username in data.usernameTeamCache ? data.usernameTeamCache[data.list[i].username] : "N/A"
                 }
                 this.setState({ dataSource: data.list })
@@ -571,6 +572,35 @@ class AdminUsers extends React.Component {
                             else return 1
                         }}
                     />
+                    <Column title="Email" dataIndex="email" key="email"
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Email"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                    autoFocus
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+                    />
+                    <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column title="Team" dataIndex="team" key="team"
                         render={(text, row, index) => {
                             return <Link to={"/Team/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
@@ -606,35 +636,7 @@ class AdminUsers extends React.Component {
                             else return 1
                         }}
                     />
-                    <Column title="Email" dataIndex="email" key="email"
-                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-                            <div style={{ padding: 8 }}>
-                                <Input
-                                    placeholder="Search Email"
-                                    value={selectedKeys[0]}
-                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                                    onPressEnter={() => confirm()}
-                                    style={{ marginBottom: 8, display: 'block' }}
-                                    autoFocus
-                                />
-                                <Space>
-                                    <Button
-                                        type="primary"
-                                        onClick={() => { confirm() }}
-                                        icon={<SearchOutlined />}
-                                    >
-                                        Search
-                                    </Button>
-                                    <Button onClick={() => clearFilters()}>
-                                        Reset
-                                    </Button>
-                                </Space>
-                            </div>
-                        )}
-                        onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
-                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
-                    />
-                    <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
+                    <Column title="Verified" dataIndex="verified" key="verified" filters={[{ text: "Verified", value: "True" }, { text: "Unverified", value: "False" }]} onFilter={(value, record) => { return value === record.verified }} />
                     <Column
                         title=""
                         key="action"
