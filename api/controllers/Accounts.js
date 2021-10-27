@@ -17,7 +17,8 @@ const disableStates = async (req, res) => {
             teamMaxSize: NodeCacheObj.get("teamMaxSize"),
             teamMode: NodeCacheObj.get("teamMode"),
             forgotPass: NodeCacheObj.get("forgotPass"),
-            emailVerify: NodeCacheObj.get("emailVerify")
+            emailVerify: NodeCacheObj.get("emailVerify"),
+            teamChangeDisable: NodeCacheObj.get("teamChangeDisable")
         }
     });
 }

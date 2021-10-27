@@ -186,11 +186,11 @@ class AdminUsers extends React.Component {
             createUserModal: false,
             username: "",
             modalLoading: false,
-            disableRegisterState: false,
+            registerDisable: false,
             disableLoading: false,
             disableLoading2: false,
             disableLoading3: false,
-            disableAdminShow: false,
+            adminShowDisable: false,
             selectedTableKeys: [],
             disableEditButtons: true,
             uploadSize: 512000,
@@ -201,7 +201,8 @@ class AdminUsers extends React.Component {
             teamMode: false,
             teamMaxSize: 3,
             forgotPass: false,
-            emailVerify: false
+            emailVerify: false,
+            teamChangeDisable: false
         }
     }
 
@@ -220,7 +221,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, disableRegisterState: data.states.registerDisable, disableAdminShow: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({ teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -367,27 +368,13 @@ class AdminUsers extends React.Component {
     }
 
     disableSetting = async (setting, value) => {
-
-        let settingName = ""
-        if (setting === "registerDisable") {
-            settingName = "User registration"
-            this.setState({ disableLoading: true })
-        }
-        else if (setting === "adminShowDisable") {
-            settingName = "Admin scores"
-            this.setState({ disableLoading2: true })
-        }
-        else if (setting === "teamMode") {
-            settingName = "Team mode"
-            this.setState({ disableLoading3: true })
-        }
-        else if (setting === "forgotPass") {
-            settingName = "Forgot password reset"
-            this.setState({ disableLoading2: true })
-        }
-        else if (setting === "emailVerify") {
-            settingName = "Email verification"
-            this.setState({ disableLoading2: true })
+        const settingList = {
+            "registerDisable": { name: "User registration", loading: "disableLoading", disable: true },
+            "adminShowDisable": { name: "Admin scores", loading: "disableLoading2", disable: true },
+            "teamMode": { name: "Team mode", loading: "disableLoading3", disable: false },
+            "forgotPass": { name: "Forgot password reset", loading: "disableLoading2", disable: false },
+            "emailVerify": { name: "Email verification", loading: "disableLoading2", disable: false },
+            "disableTeamChange": { name: "Team changing", loading: "disableLoading2", disable: true },
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
@@ -400,30 +387,21 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                if (setting === "teamMode" || setting === "forgotPass" || setting === "emailVerify") {
-                    if (!value) {
-                        message.success(settingName + " disabled")
-                    }
-                    else {
-                        message.success(settingName + " enabled")
-                    }
-                    let setObj = {}
-                    setObj[setting] = value
-                    this.setState(setObj)
+                const settingObj = settingList[setting]
+                let setObj = {}
+                setObj[setting] = value
+                this.setState({ setObj })
+
+                let suffix = " disabled"
+                if (settingObj.disable) {
+                    if (value) suffix = " disabled"
+                    else suffix = " enabled"
                 }
                 else {
-                    if (value) {
-                        message.success(settingName + " disabled")
-                    }
-                    else {
-                        message.success(settingName + " enabled")
-                    }
-                    if (setting === "registerDisable") this.setState({ disableRegisterState: value })
-                    else if (setting === "adminShowDisable") this.setState({ disableAdminShow: value })
+                    if (value) suffix = " enabled"
+                    else suffix = " disabled"
                 }
-
-
-
+                message.success(settingObj.name + suffix)
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -438,18 +416,12 @@ class AdminUsers extends React.Component {
 
     changeSetting = async (setting, value) => {
 
-        let settingName = ""
-        if (setting === "uploadSize") {
-            settingName = "Upload size"
-            this.setState({ uploadLoading: true })
+        const settingList = {
+            "uploadSize": { name: "Upload Size", loading: "uploadLoading", suffix: "B" },
+            "uploadPath": { name: "Profile pictures upload path", loading: "uploadPathLoading", suffix: "" },
+            "teamMaxSize": { name: "Team mode", loading: "Maximum size of teams", suffix: "" }
         }
-        else if (setting === "uploadPath") {
-            settingName = "Profile pictures upload path"
-            this.setState({ uploadPathLoading: true })
-        }
-        else if (setting === "teamMaxSize") {
-            settingName = "Maximum size of teams"
-        }
+        
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -461,8 +433,11 @@ class AdminUsers extends React.Component {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                if (setting === "uploadSize") message.success(settingName + " changed to " + value.toString() + "B")
-                else message.success(settingName + " changed to " + value.toString())
+                const settingObj = settingList[setting]
+                let setObj = {}
+                setObj[setting] = value
+                this.setState({ setObj })
+                message.success(settingObj.name + " changed to " + value.toString() + settingObj.suffix)
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -656,14 +631,14 @@ class AdminUsers extends React.Component {
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
 
                     <Card className="settings-card">
-                        <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.disableRegisterState} /></h3>
+                        <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.registerDisable} /></h3>
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
                     <Card className="settings-card">
-                        <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.disableAdminShow} /></h3>
+                        <h3>Disable Admin Scores:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("adminShowDisable", value)} checked={this.state.adminShowDisable} /></h3>
                         <p>Prevents admin scores from showing up on scoreboards and profile pages. Admin solves will still appear under the solve list in challenges. <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
                     </Card>
                 </div>
@@ -714,6 +689,13 @@ class AdminUsers extends React.Component {
                     <Card className="settings-card">
                         <h3>Enable Teams:  <Switch disabled={this.state.disableLoading3} onClick={(value) => this.disableSetting("teamMode", value)} checked={this.state.teamMode} /></h3>
                         <p>Enable teams for the platform. Users in a team will have their scores combined on the scoreboard <br /> Please note that disabling/enabling this will require users to reopen ctfx to resync the scoreboard.</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>Disable Team Switching:  <Switch disabled={this.state.disableLoading3} onClick={(value) => this.disableSetting("teamChangeDisable", value)} checked={this.state.teamChangeDisable} /></h3>
+                        <p>Prevents users from leaving, joining & creating a team. Enable this option if you want to prevent any team changes during a competition</p>
                     </Card>
                 </div>
 

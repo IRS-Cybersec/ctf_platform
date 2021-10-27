@@ -123,7 +123,7 @@ class Teams extends React.Component {
                 this.loadTeamDetails(team)
             }
             else if (this.props.team && this.props.team != "loading") { // Load own team if user is in a team
-                this.loadTeamDetails(this.props.team )
+                this.loadTeamDetails(this.props.team)
             } // User is not in any team
             else if (this.props.team != "loading") this.setState({ loading: false })
         }
@@ -159,6 +159,9 @@ class Teams extends React.Component {
             else if (data.error === "teams-disabled") {
                 message.error("Teams are disabled")
             }
+            else if (data.error === "team-change-disabled") {
+                message.error("Changing of teams (creating/leaving/joining) of teams have been disabled.")
+            }
             else {
                 message.error("Unknown error.")
             }
@@ -188,6 +191,10 @@ class Teams extends React.Component {
             }
             else if (data.error === "not-in-any-team") {
                 message.error("You are not in any team. Please refresh the page to see if you are still in a team.")
+            }
+
+            else if (data.error === "team-change-disabled") {
+                message.error("Changing of teams (creating/leaving/joining) of teams have been disabled.")
             }
             else {
                 message.error("Unknown error.")
@@ -219,6 +226,10 @@ class Teams extends React.Component {
                 }
                 else if (data.error === "teams-disabled") {
                     message.error("Teams are disabled")
+                }
+
+                else if (data.error === "team-change-disabled") {
+                    message.error("Changing of teams (creating/leaving/joining) of teams have been disabled.")
                 }
                 else {
                     message.error("Unknown error.")
@@ -566,14 +577,14 @@ class Teams extends React.Component {
                                                         <div style={{ marginTop: "3ch" }}>
                                                             <span>Got an <b>invite link <LinkOutlined />?</b></span>
                                                             <div>
-                                                                <Button style={{marginTop: "1ch"}} size="large" type="primary" icon={<LinkOutlined />} onClick={() => {
+                                                                <Button style={{ marginTop: "1ch" }} size="large" type="primary" icon={<LinkOutlined />} onClick={() => {
                                                                     navigator.clipboard.readText().then(text => {
                                                                         if (!(/^.*\/Team\/Join\/[0-9a-fA-F]{32}$/.test(text))) message.error("Invalid link. Please check that you have copied the link correctly.", 3)
                                                                         else {
                                                                             const code = text.split("/Team/Join/")
                                                                             this.getCodeDetails(code[1])
                                                                         }
-                                                                       
+
                                                                     }).catch(err => {
                                                                         console.log(err)
                                                                         message.error("Failed to read link from your clipboard.", 5)

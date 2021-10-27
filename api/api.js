@@ -50,6 +50,7 @@ const startCache = async () => {
 		emailCooldown: 180,
 		emailResetTime: 600,
 		emailVerify: false,
+		teamChangeDisable: false,
 	}
 	const collections = Connection.collections
 	createCache = async () => {
