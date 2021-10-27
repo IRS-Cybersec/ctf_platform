@@ -603,7 +603,8 @@ class AdminUsers extends React.Component {
                     <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column title="Team" dataIndex="team" key="team"
                         render={(text, row, index) => {
-                            return <Link to={"/Team/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            if (text != "N/A") return <Link to={"/Team/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                            else return text;
                         }}
                         filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                             <div style={{ padding: 8 }}>
@@ -631,10 +632,6 @@ class AdminUsers extends React.Component {
                         )}
                         onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
-                        sorter={(a, b) => {
-                            if (a.team < b.team) return -1
-                            else return 1
-                        }}
                     />
                     <Column title="Verified" dataIndex="verified" key="verified" filters={[{ text: "Verified", value: "True" }, { text: "Unverified", value: "False" }]} onFilter={(value, record) => { return value === record.verified }} />
                     <Column
