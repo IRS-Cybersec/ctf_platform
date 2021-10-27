@@ -351,6 +351,10 @@ class AdminUsers extends React.Component {
             else if (data.error === "email-taken") {
                 message.warn({ content: "Oops. Email already taken" })
             }
+            else if (data.error === "email-verify") {
+                message.success("Created user " + values.username + " successfully!")
+                message.info("The user will be required to verify his/her email " + data.emailVerify + " before being able to log into the platform", 5)
+            }
             else if (data.error === "username-taken") {
                 message.warn({ content: "Oops. Username already taken" })
             }
