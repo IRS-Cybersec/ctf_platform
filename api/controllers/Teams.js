@@ -174,6 +174,7 @@ const join = async (req, res) => {
                 let duplicate = false
                 for (let x = 0; x < teamTransacList.length; x++) {
                     console.log(teamTransacList[x])
+                    console.log(userTransactions[i])
                     if (teamTransacList[x].challengeID.toString() === userTransactions[i].challengeID.toString() && teamTransacList[x].type === userTransactions[i].type) {
                         if ("hint_id" in userTransactions[i] && "hint_id" in teamTransacList[x]) {
                             if (userTransactions[i].hint_id === teamTransacList[x].hint_id) {
