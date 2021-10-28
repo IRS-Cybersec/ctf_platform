@@ -106,7 +106,7 @@ class Teams extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (window.location.pathname === "/Team" && prevProps.team !== this.props.team) {
+        if (window.location.pathname === "/Team" && prevProps.team !== this.props.team && this.props.team !== false) {
             this.loadTeamDetails(this.props.team) // Sometimes the main component does not load this.props.team before the component mounts. Hence it fails to load the user's team on page refresh
         }
     }
@@ -262,8 +262,8 @@ class Teams extends React.Component {
         for (let x = 0; x < challengeArray.length; x++) {
             //Plot graph
             scoreTotal += challengeArrayReversed[x].points
-            if (challengeArrayReversed[x].author in userScores) userScores[challengeArrayReversed[x].author] += challengeArrayReversed[x].points
-            else userScores[challengeArrayReversed[x].author] = 0
+            if (challengeArrayReversed[x].originalAuthor in userScores) userScores[challengeArrayReversed[x].originalAuthor] += challengeArrayReversed[x].points
+            else userScores[challengeArrayReversed[x].originalAuthor] = 0
 
             graphPoint = {
                 Score: scoreTotal,
@@ -279,7 +279,7 @@ class Teams extends React.Component {
                 score: currentStuff.points,
                 time: "",
                 challengeID: "",
-                username: currentStuff.author
+                username: currentStuff.originalAuthor
             }
 
             //Current record is a hint

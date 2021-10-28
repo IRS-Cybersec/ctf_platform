@@ -5,6 +5,7 @@ const path = require('path');
 const MongoDB = require('mongodb');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
+const createTransactionsCache = require('./../utils/createTransactionsCache.js')
 
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
@@ -20,26 +21,34 @@ const adminSettings = async (req, res) => {
             if (req.body.disable) { // Enable team mode
                 const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
                 let transactionsCache = NodeCacheObj.get("transactionsCache")
-                for (let i = 0; i < transactionsCache.length; i++) {
-                    if (transactionsCache[i].author in usernameTeamCache) {
-                        transactionsCache[i].originalAuthor = transactionsCache[i].author
-                        transactionsCache[i].author = usernameTeamCache[transactionsCache[i].author] // set author to the team the user is in
-                        await collections.transactions.updateOne({ _id: transactionsCache[i]._id }, { $set: { author: transactionsCache[i].author, originalAuthor: transactionsCache[i].originalAuthor } })
+                for (username in transactionsCache) {
+                    const current = transactionsCache[username].changes
+                    for (let i = 0; i < current.length; i++) {
+                        if (current[i].author in usernameTeamCache) {
+                            current[i].originalAuthor = current[i].author
+                            current[i].author = usernameTeamCache[current[i].author] // set author to the team the user is in
+                            await collections.transactions.updateOne({ _id: current[i]._id }, { $set: { author: current[i].author, originalAuthor: current[i].originalAuthor } })
+                        }
                     }
                 }
+
 
             }
             else { // team mode disabled
                 let transactionsCache = NodeCacheObj.get("transactionsCache")
-                for (let i = 0; i < transactionsCache.length; i++) {
-                    if ("originalAuthor" in transactionsCache[i]) {
-                        transactionsCache[i].author = transactionsCache[i].originalAuthor
-                        await collections.transactions.updateOne({ _id: transactionsCache[i]._id }, { $set: { author: transactionsCache[i].author }, $unset: { originalAuthor: 0 } })
-                        delete transactionsCache[i].originalAuthor
+                for (username in transactionsCache) {
+                    const current = transactionsCache[username].changes
+                    for (let i = 0; i < current.length; i++) {
+                        if ("originalAuthor" in current[i]) {
+                            current[i].author = current[i].originalAuthor
+                            await collections.transactions.updateOne({ _id: current[i]._id }, { $set: { author: current[i].author }, $unset: { originalAuthor: 0 } })
+                            delete current[i].originalAuthor
+                        }
                     }
                 }
 
             }
+            NodeCacheObj.set("transactionsCache", await createTransactionsCache())
         } // re-create nodemailer transport
         else if (req.body.setting === "SMTPPort" || req.body.setting === "SMTPSecure" || req.body.setting === "SMTPUser" || req.body.setting === "SMTPHost" || req.body.setting === "SMTPPass") {
             NodeCacheObj.set("NodemailerT", nodemailer.createTransport({
@@ -56,6 +65,7 @@ const adminSettings = async (req, res) => {
             await collections.passResetCode.dropIndex("expiryTime")
             await collections.passResetCode.createIndex({ "timestamp": 1 }, { expireAfterSeconds: req.body.disable, name: "expiryTime" })
         }
+        else if (req.body.setting === "adminShowDisable") NodeCacheObj.set("transactionsCache", await createTransactionsCache())
         res.send({
             success: true
         });

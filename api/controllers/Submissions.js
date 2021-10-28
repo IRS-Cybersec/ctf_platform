@@ -34,21 +34,40 @@ const newSubmission = async (req, res) => {
         insertDoc.correct = req.body.correct
         insertDoc.submission = req.body.submission
     }
+
     let transactionsCache = NodeCacheObj.get("transactionsCache")
-    transactionsCache.push({
-        _id: insertDoc._id,
-        challenge: insertDoc.challenge,
-        challengeID: insertDoc.challengeID,
-        timestamp: insertDoc.timestamp,
-        points: insertDoc.points,
-        lastChallengeID: insertDoc.lastChallengeID,
-        author: insertDoc.author
-    })
+    if (NodeCacheObj.get("teamMode") && req.body.author in usernameTeamCache) {
+        // User is in a team
+        insertDoc.author = usernameTeamCache[req.body.author]
+        insertDoc.originalAuthor = req.body.author
+
+        // Check if the transaction the admin is inserting is a duplicate
+        const teamTransacList = transactionsCache[insertDoc.author].changes
+        let replacedDuplicateWithOlderSolve = false
+        let duplicate = false
+        for (let i = 0; i < teamTransacList.length; i++) {
+            if ( teamTransacList[i].challengeID.toString() === insertDoc.challengeID.toString() && teamTransacList[i].type === insertDoc.type) {
+                duplicate = true
+                // Current insertDoc is a duplicate transaction for this team
+                // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it
+                if (insertDoc.timestamp < teamTransacList[i].timestamp) {
+                    replacedDuplicateWithOlderSolve = true
+                    teamTransacList[i].timestamp = insertDoc.timestamp
+                }
+                break
+            }
+        }
+        if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(insertDoc)
+
+        transactionsCache[insertDoc.originalAuthor].changes.push(insertDoc)
+    }
+    else transactionsCache[insertDoc.author].changes.push(insertDoc)
+
     await collections.transactions.insertOne(insertDoc)
 
     broadCastNewSolve([{
         _id: insertDoc._id,
-        author: req.body.author,
+        author: "originalAuthor" in insertDoc ? usernameTeamCache[req.body.author] : req.body.author,
         timestamp: GTime,
         points: req.body.points,
         lastChallengeID: latestSolveSubmissionID
@@ -77,23 +96,55 @@ const editSubmission = async (req, res) => {
         updateDoc.correct = req.body.correct
         updateDoc.submission = req.body.submission
     }
-    await collections.transactions.updateOne({ _id: MongoDB.ObjectId(req.body.id) }, { $set: updateDoc })
+
     let transactionsCache = NodeCacheObj.get("transactionsCache")
     let time = null
-    for (let i = 0; i < transactionsCache.length; i++) {
-        if (transactionsCache[i]._id.toString() === req.body.id) {
-            time = transactionsCache[i].timestamp
-            for (key in updateDoc) {
-                transactionsCache[i][key] = updateDoc[key]
+    if (NodeCacheObj.get("teamMode") && req.body.author in usernameTeamCache) {
+        // User is in a team
+        updateDoc.author = usernameTeamCache[req.body.author]
+        updateDoc.originalAuthor = req.body.author
+
+        // update team transaction
+        const current = transactionsCache[updateDoc.author].changes
+        for (let i = 0; i < current.length; i++) {
+            if (current[i]._id.toString() === req.body.id) {
+                time = current[i].timestamp
+                for (key in updateDoc) {
+                    current[i][key] = updateDoc[key]
+                }
+                break
             }
-            break
+        }
+        // update user transaction
+        const current2 = transactionsCache[updateDoc.author].changes
+        for (let i = 0; i < current2.length; i++) {
+            if (current2[i]._id.toString() === req.body.id) {
+                time = current2[i].timestamp
+                for (key in updateDoc) {
+                    current2[i][key] = updateDoc[key]
+                }
+                break
+            }
         }
     }
+    else {
+        const current = transactionsCache[updateDoc.author].changes
 
+        for (let i = 0; i < current.length; i++) {
+            if (current[i]._id.toString() === req.body.id) {
+                time = current[i].timestamp
+                for (key in updateDoc) {
+                    current[i][key] = updateDoc[key]
+                }
+                break
+            }
+        }
+    }
+    await collections.transactions.updateOne({ _id: MongoDB.ObjectId(req.body.id) }, { $set: updateDoc })
 
     broadCastNewSolve([{
         _id: req.body.id,
-        author: req.body.author,
+        author: "originalAuthor" in updateDoc ? usernameTeamCache[req.body.author] : req.body.author,
         timestamp: time,
         points: req.body.points,
         lastChallengeID: latestSolveSubmissionID
@@ -135,11 +186,16 @@ const deleteSubmission = async (req, res) => {
 
     }
     let transactionsCache = NodeCacheObj.get("transactionsCache")
-    for (let i = 0; i < transactionsCache.length; i++) {
-        if (req.body.ids.includes(transactionsCache[i]._id.toString())) {
-            transactionsCache.splice(i, 1)
+    for (username in transactionsCache) {
+        const current = transactionsCache[username].changes
+        for (let i = 0; i < current.length; i++) {
+            if (req.body.ids.includes(current[i]._id.toString())) {
+                current.splice(i, 1)
+            }
         }
     }
+    NodeCacheObj.set("transactionsCache", await createTransactionsCache())
+
 
     if (notFoundList.length === 0) {
         res.send({

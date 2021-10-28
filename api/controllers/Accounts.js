@@ -33,14 +33,14 @@ const type = async (req, res) => {
 const changeEmail = async (req, res) => {
     const collections = Connection.collections
     if (req.body.email && req.body.email.length > 0) {
-        if ((await collections.users.updateOne({username: req.locals.username}, {$set: {email: req.body.email}})).matchedCount > 0) {
-            res.send({success: true})
+        if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { email: req.body.email } })).matchedCount > 0) {
+            res.send({ success: true })
         }
         else throw new Error("NotFound")
 
     }
-    else res.send({success: false, error: "empty-email"})
-    
+    else res.send({ success: false, error: "empty-email" })
+
 }
 
 const login = async (req, res) => {
@@ -142,15 +142,20 @@ const create = async (req, res) => {
             lastChallengeID: latestSolveSubmissionID
         }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
-        transactionsCache.push({
-            _id: insertDoc._id,
-            challenge: insertDoc.challenge,
-            challengeID: insertDoc.challengeID,
-            timestamp: insertDoc.timestamp,
-            points: insertDoc.points,
-            lastChallengeID: insertDoc.lastChallengeID,
-            author: insertDoc.author
-        })
+        transactionsCache[insertDoc.author] = {
+            _id: insertDoc.author,
+            changes: [{
+                _id: insertDoc._id,
+                challenge: insertDoc.challenge,
+                challengeID: insertDoc.challengeID,
+                timestamp: insertDoc.timestamp,
+                points: insertDoc.points,
+                lastChallengeID: insertDoc.lastChallengeID,
+                author: insertDoc.author
+            }],
+            members: [insertDoc.author],
+            isTeam: false
+        }
         await collections.transactions.insertOne(insertDoc)
         // Send out to scoreboards that there is a new user
         broadCastNewSolve([{

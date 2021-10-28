@@ -228,13 +228,13 @@ class Scoreboard extends React.Component {
   }
 
   sortPlotRenderData(data) {
+    console.log(data)
     let formattedData = []
     let finalPoint = {}
     let scoreArray = []
     let tempScoreTimeStampDict = {}
     //Process timestamps - find the last solve timing and create scoreArray
     for (let i = 0; i < data.users.length; i++) {
-
       let scores2 = data.users[i].changes
 
       // some users might have empty "changes" as they have yet to solve anything

@@ -30,21 +30,7 @@ const get = async (req, res) => {
         const transactionsCache = NodeCacheObj.get("transactionsCache")
         if (req.params.team in teamList) {
             const team = teamList[req.params.team]
-            let changes = []
-            for (let i = 0; i < transactionsCache.length; i++) {
-                const current = transactionsCache[i]
-                if ("originalAuthor" in current && current.author === req.params.team && current.points !== 0) {
-                    changes.push({
-                        _id: current.id,
-                        author: current.originalAuthor,
-                        points: current.points,
-                        challenge: current.challenge,
-                        timestamp: current.timestamp,
-                        challengeID: current.challengeID,
-                        type: current.type
-                    })
-                }
-            }
+            let changes = transactionsCache[req.params.team].changes
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
                 return res.send({
@@ -99,7 +85,7 @@ const linkInfo = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
         const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-        let currentTeam = {}
+        let currentTeam = null
         let found = false
 
         for (const team in teamList) {
@@ -141,12 +127,12 @@ const join = async (req, res) => {
             let teamList = NodeCacheObj.get("teamListCache")
             let usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
             // Does a team exist for this team code, and is it correct?
-            let currentTeam = {}
+            let currentTeam = null
             let found = false
             for (const team in teamList) {
                 const current = teamList[team]
                 if (current.code === req.body.code) {
-                    currentTeam = current
+                    currentTeam = teamList[team]
                     currentTeam.name = team
                     found = true
                     break
@@ -177,12 +163,45 @@ const join = async (req, res) => {
             NodeCacheObj.set("teamUpdateID", teamUpdateID)
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
             let transactionCache = NodeCacheObj.get("transactionsCache")
-            for (let i = 0; i < transactionCache.length; i++) {
-                if (transactionCache[i].author === req.locals.username) {
-                    transactionCache[i].author = currentTeam.name
-                    transactionCache[i].originalAuthor = req.locals.username
+            const userTransactions = transactionCache[req.locals.username].changes
+            const teamTransacList = transactionCache[currentTeam.name].changes
+            for (let i = 0; i < userTransactions.length; i++) {
+                userTransactions[i].author = currentTeam.name
+                userTransactions[i].originalAuthor = req.locals.username
+
+                // Add this user's transactions to the team's transactions, and also check for duplicates
+                let replacedDuplicateWithOlderSolve = false
+                let duplicate = false
+                for (let x = 0; x < teamTransacList.length; x++) {
+                    if (teamTransacList[x].challengeID.toString() === userTransactions[i].challengeID.toString() && teamTransacList[x].type === userTransactions[i].type) {
+                        if ("hint_id" in userTransactions[i] && "hint_id" in teamTransacList[x]) {
+                            if (userTransactions[i].hint_id === teamTransacList[x].hint_id) {
+                                duplicate = true
+                                // Current insertDoc is a duplicate transaction for this team
+                                // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it
+                                if (userTransactions[i].timestamp < teamTransacList[x].timestamp) {
+                                    replacedDuplicateWithOlderSolve = true
+                                    teamTransacList[x].timestamp = userTransactions[i].timestamp
+                                }
+                                break
+                            }
+                        }
+                        else {
+                            duplicate = true
+                            // Current insertDoc is a duplicate transaction for this team
+                            // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it
+                            if (userTransactions[i].timestamp < teamTransacList[x].timestamp) {
+                                replacedDuplicateWithOlderSolve = true
+                                teamTransacList[x].timestamp = userTransactions[i].timestamp
+                            }
+                            break
+                        }
+
+                    }
                 }
+                if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(userTransactions[i])
             }
+
             await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: currentTeam.name, originalAuthor: req.locals.username } })
             broadCastNewTeamChange()
             res.send({ success: true })
@@ -227,11 +246,13 @@ const create = async (req, res) => {
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
             // Edit transactions and change author to the team name
             let transactionCache = NodeCacheObj.get("transactionsCache")
-            for (let i = 0; i < transactionCache.length; i++) {
-                if (transactionCache[i].author === req.locals.username) {
-                    transactionCache[i].author = req.body.name
-                    transactionCache[i].originalAuthor = req.locals.username
-                }
+            const userTransactions = transactionCache[req.locals.username].changes
+            for (let i = 0; i < userTransactions.length; i++) {
+                userTransactions[i].author = req.body.name
+                userTransactions[i].originalAuthor = req.locals.username
+
+                // Insert the user's transactions into the new team's transactions
+                transactionCache[req.body.name] = { _id: req.body.name, changes: userTransactions, members: [req.locals.username], isTeam: true }
             }
             await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: req.body.name, originalAuthor: req.locals.username } })
             broadCastNewTeamChange()
@@ -248,28 +269,34 @@ const leave = async (req, res) => {
             const collections = Connection.collections
             let teamList = NodeCacheObj.get("teamListCache")
             let usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-            let currentTeam = {}
+            let currentTeam = null
             let found = false
             // Find the team the user is in
             for (const team in teamList) {
                 const current = teamList[team]
                 if (current.members.includes(req.locals.username)) {
-                    currentTeam = current
+                    currentTeam = teamList[team]
                     currentTeam.name = team
                     found = true
                     break
                 }
             }
             if (!found) return res.send({ success: false, error: "not-in-any-team" })
+
             delete usernameTeamCache[req.locals.username]
+            let transactionCache = NodeCacheObj.get("transactionsCache")
+            let lastMember = false
             // last member is leaving the team
             if (currentTeam.members.length === 1) {
                 delete teamList[currentTeam.name]
+                delete transactionCache[currentTeam.name]
                 await collections.team.deleteOne({ name: currentTeam.name })
+                lastMember = true
                 res.send({ success: true, msg: "last-member" })
             }
             else {
                 currentTeam.members.splice(currentTeam.members.indexOf(req.locals.username), 1)
+                transactionCache[currentTeam.name].members.splice(transactionCache[currentTeam.name].members.indexOf(req.locals.username), 1)
                 await collections.team.updateOne({ name: currentTeam.name }, { $set: { members: currentTeam.members } })
                 res.send({ success: true })
             }
@@ -278,13 +305,59 @@ const leave = async (req, res) => {
             teamUpdateID += 1
             NodeCacheObj.set("teamUpdateID", teamUpdateID)
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
-            let transactionCache = NodeCacheObj.get("transactionsCache")
-            for (let i = 0; i < transactionCache.length; i++) {
-                if (transactionCache[i].originalAuthor === req.locals.username) {
-                    transactionCache[i].author = req.locals.username
-                    delete transactionCache[i].originalAuthor
-                }
+
+            const userTransactions = transactionCache[req.locals.username].changes
+            for (let i = 0; i < userTransactions.length; i++) {
+                userTransactions[i].author = req.locals.username
+                delete userTransactions[i].originalAuthor
             }
+            // When a player leaves the team, we need to re-calculate the team transactions since any duplicate transactions would have been removed.
+            // If the player with a duplicate transaction leaves, there won't be any of that transaction left
+            if (!lastMember) {
+                let teamTransacList = []
+                for (let i = 0; i < currentTeam.members.length; i++) {
+                    const currentUserTransc = transactionCache[currentTeam.members[i]].changes
+
+                    for (let x = 0; x < currentUserTransc.length; x++) {
+                        const current = currentUserTransc[x]
+                        let replacedDuplicateWithOlderSolve = false
+                        let duplicate = false
+                        for (let y = 0; y < teamTransacList.length; y++) {
+                            if (teamTransacList[y].challengeID.toString() === current.challengeID.toString() && teamTransacList[y].type === current.type) {
+                                if ("hint_id" in current && "hint_id" in teamTransacList[y]) {
+                                    if (current.hint_id === teamTransacList[y].hint_id) {
+                                        duplicate = true
+                                        // Current insertDoc is a duplicate transaction for this team
+                                        // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it
+                                        if (current.timestamp < teamTransacList[y].timestamp) {
+                                            replacedDuplicateWithOlderSolve = true
+                                            teamTransacList[y].timestamp = current.timestamp
+                                        }
+                                        break
+                                    }
+                                }
+                                else {
+                                    duplicate = true
+                                    // Current insertDoc is a duplicate transaction for this team
+                                    // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it
+                                    if (current.timestamp < teamTransacList[y].timestamp) {
+                                        replacedDuplicateWithOlderSolve = true
+                                        teamTransacList[y].timestamp = current.timestamp
+                                    }
+                                    break
+                                }
+
+                            }
+                        }
+                        if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(current)
+                    }
+
+                }
+                //console.log(teamTransacList)
+                transactionCache[currentTeam.name].changes = teamTransacList
+                //console.log(transactionCache[currentTeam.name])
+            }
+
             await collections.transactions.updateMany({ originalAuthor: req.locals.username }, { $set: { author: req.locals.username }, $unset: { originalAuthor: 0 } })
             broadCastNewTeamChange()
         }

@@ -331,11 +331,15 @@ const hint = async (req, res) => {
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
         }
-        if ("originalAuthor" in insertDoc) transactionDoc.originalAuthor = insertDoc.originalAuthor
-        transactionsCache.push(transactionDoc)
+        if ("originalAuthor" in insertDoc) {
+            transactionDoc.originalAuthor = insertDoc.originalAuthor
+            // Add hint to user's team transactions - this hint is new as above checks whether the team already owns this hint
+            transactionsCache[insertDoc.author].changes.push(transactionDoc)
+        }
+        transactionsCache[req.locals.username].changes.push(transactionDoc)
         broadCastNewSolve([{
             _id: insertDoc._id,
-            author: "originalAuthor" in insertDoc ? usernameTeamCache[req.locals.username] : req.locals.username,
+            author: "originalAuthor" in insertDoc ? insertDoc.author : req.locals.username,
             timestamp: Gtimestamp,
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
@@ -442,19 +446,23 @@ const submit = async (req, res) => {
 
                 if (gotDecay) {
                     await collections.transactions.updateMany({ challengeID: MongoDB.ObjectId(req.body.chall), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
-                    for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache (in memory)
-                        if (transactionsCache[i].challengeID == req.body.chall && transactionsCache[i].correct == true) {
-                            transactionsCache[i].points = calculatedPoints
-                            transactionsCache[i].lastChallengeID = latestSolveSubmissionID
-                            transactionDocumentsUpdated.push({
-                                _id: transactionsCache[i]._id,
-                                author: transactionsCache[i].author,
-                                timestamp: transactionsCache[i].timestamp,
-                                points: transactionsCache[i].points,
-                                lastChallengeID: latestSolveSubmissionID
-                            })
+                    for (username in transactionsCache) {
+                        const current = transactionsCache[username].changes
+                        for (let i = 0; i < current.length; i++) { // update transaction document cache (in memory)
+                            if (current[i].challengeID == req.body.chall && current[i].correct == true) {
+                                current[i].points = calculatedPoints
+                                current[i].lastChallengeID = latestSolveSubmissionID
+                                transactionDocumentsUpdated.push({
+                                    _id: current[i]._id,
+                                    author: current[i].author,
+                                    timestamp: current[i].timestamp,
+                                    points: current[i].points,
+                                    lastChallengeID: latestSolveSubmissionID
+                                })
+                            }
                         }
                     }
+
                 }
                 await collections.transactions.insertOne(insertDocument);
                 transactionDocumentsUpdated.push({
@@ -476,7 +484,9 @@ const submit = async (req, res) => {
                 lastChallengeID: insertDocument.lastChallengeID,
             }
             if ("originalAuthor" in insertDocument) transactionDoc.originalAuthor = insertDocument.originalAuthor
-            transactionsCache.push(transactionDoc)
+            transactionsCache[req.locals.username].changes.push(transactionDoc)
+            // Push new solve to team's transactions. Duplicate solves would already have been filtered out
+            transactionsCache[insertDocument.author].changes.push(transactionDoc)
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
@@ -669,19 +679,23 @@ const edit = async (req, res) => {
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         let transactionDocumentsUpdated = []
         await collections.transactions.updateMany({ challengeID: MongoDB.ObjectId(req.body.id), correct: true }, { $set: { points: calculatedPoints, lastChallengeID: latestSolveSubmissionID } }) // update db transactions
-        for (let i = 0; i < transactionsCache.length; i++) { // update transaction document cache
-            if (transactionsCache[i].challengeID == req.body.id && transactionsCache[i].correct == true) {
-                transactionsCache[i].points = calculatedPoints
-                transactionsCache[i].lastChallengeID = latestSolveSubmissionID
-                transactionDocumentsUpdated.push({
-                    _id: transactionsCache[i]._id,
-                    author: transactionsCache[i].author,
-                    timestamp: transactionsCache[i].timestamp,
-                    points: transactionsCache[i].points,
-                    lastChallengeID: latestSolveSubmissionID
-                })
+        for (username in transactionsCache) {
+            const current = transactionsCache[username].changes
+            for (let i = 0; i < current.length; i++) { // update transaction document cache
+                if (current[i].challengeID == req.body.id && current[i].correct == true) {
+                    current[i].points = calculatedPoints
+                    current[i].lastChallengeID = latestSolveSubmissionID
+                    transactionDocumentsUpdated.push({
+                        _id: current[i]._id,
+                        author: current[i].author,
+                        timestamp: current[i].timestamp,
+                        points: current[i].points,
+                        lastChallengeID: latestSolveSubmissionID
+                    })
+                }
             }
         }
+
         broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
             updateObj.hints.forEach(hint => {

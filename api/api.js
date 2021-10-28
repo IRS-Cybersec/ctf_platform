@@ -3,6 +3,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const fastifyFileUpload = require('fastify-file-upload');
 
 const Connection = require('./utils/mongoDB.js')
+const createTransactionsCache = require('./utils/createTransactionsCache.js')
 const errorHandling = require('./middlewares/errorHandling.js');
 const startupChecks = require('./utils/startupChecks.js')
 const accounts = require('./controllers/Accounts.js')
@@ -53,7 +54,21 @@ const startCache = async () => {
 		teamChangeDisable: false,
 	}
 	const collections = Connection.collections
-	createCache = async () => {
+
+	// Applies any data changes to documents from older versions
+
+	// 1. Update all transaction docs with challengeID
+	const challengeList = await collections.challs.find().toArray();
+	await collections.transactions.find({ challengeID: { $exists: false } }).forEach(async (doc) => {
+		for (let i = 0; i < challengeList.length; i++) {
+			if (challengeList[i].name === doc.challenge) {
+				await collections.transactions.updateOne({ _id: doc._id }, { $set: { challengeID: challengeList[i]._id } })
+				break
+			}
+		}
+
+	})
+	const createCache = async () => {
 		try {
 			await collections.cache.insertOne(cache);
 			console.info("Cache created")
@@ -92,25 +107,6 @@ const startCache = async () => {
 	})
 	NodeCacheObj.set("challengeCache", challengeCache)
 
-	// Create transactions cache
-	const transactionsCursor = collections.transactions.find({})
-	let transactionsCache = []
-	await transactionsCursor.forEach((doc) => {
-		const insertDoc = {
-			_id: doc._id,
-			author: doc.author,
-			points: doc.points,
-			challenge: doc.challenge,
-			timestamp: doc.timestamp,
-			challengeID: doc.challengeID,
-			lastChallengeID: doc.lastChallengeID,
-			type: doc.type
-		}
-		if ("originalAuthor" in doc) insertDoc.originalAuthor = doc.originalAuthor
-		transactionsCache.push(insertDoc)
-	})
-	NodeCacheObj.set("transactionsCache", transactionsCache)
-
 	// Create teams cache
 	let usernameTeamCache = {}
 	let teamListCache = {}
@@ -125,6 +121,10 @@ const startCache = async () => {
 	})
 	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
 	NodeCacheObj.set("teamListCache", teamListCache)
+
+	// Create transactions cache
+	let transactionsCache = await createTransactionsCache()
+	NodeCacheObj.set("transactionsCache", transactionsCache)
 
 	// Create nodemailer object
 	NodeCacheObj.set("NodemailerT", nodemailer.createTransport({

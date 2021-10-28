@@ -62,51 +62,34 @@ const startup = async (server) => {
 
                 const latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
                 const teamUpdateID = NodeCacheObj.get("teamUpdateID")
-                const teamList = NodeCacheObj.get("teamListCache")
-                const transactionCache = NodeCacheObj.get("transactionsCache")
-                
+                const transactionsCache = NodeCacheObj.get("transactionsCache")
+                const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+
                 let finalChallenges = []
                 // Outdated team update, update everything
                 if (payload.teamUpdateID < NodeCacheObj.get("teamUpdateID")) {
-                    let changes = {}
                     let finalData = []
 
-                    for (let i = 0; i < transactionCache.length; i++) {
-                        const current = transactionCache[i]
-                
-                        if (current.author in changes) changes[current.author].changes.push(current)
-                        else {
-                            let members = [current.author]
-                            let isTeam = false
-                            if ("originalAuthor" in current) { // user is in a team
-                                members = teamList[current.author].members
-                                isTeam = true
-                            }
-                            changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
+                    if (NodeCacheObj.get("teamMode"))
+                        for (username in transactionsCache) {
+                            if (!(username in usernameTeamCache)) finalData.push(transactionsCache[username])
                         }
-                    }
+                    else
+                        for (username in transactionsCache) {
+                            finalData.push(transactionsCache[username].changes)
+                        }
 
-                    for (username in changes) {
-                        finalData.push(changes[username])
-                    }
 
-                    socket.send(JSON.stringify({ type: "init", msg: "team-update", data: {users: finalData}, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
+                    socket.send(JSON.stringify({ type: "init", msg: "team-update", data: { users: finalData }, lastChallengeID: latestSolveSubmissionID, teamUpdateID: teamUpdateID }))
                 }
                 else {
                     // Some transactions are outdated, only update those
                     if (payload.lastChallengeID < latestSolveSubmissionID) {
-                        if (NodeCacheObj.get("adminShowDisable")) {
-                            for (let i = 0; i < transactionCache.length; i++) {
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID && checkUsernamePerms(transactionCache[i].author) !== 2) {
-                                    finalChallenges.push(transactionCache[i])
-                                }
-
-                            }
-                        }
-                        else {
-                            for (let i = 0; i < transactionCache.length; i++) {
-                                if (transactionCache[i].lastChallengeID > payload.lastChallengeID) {
-                                    finalChallenges.push(transactionCache[i])
+                        for (username in transactionsCache) {
+                            const current = transactionsCache[username].changes
+                            for (let i = 0; i < current.length; i++) {
+                                if (current[i].lastChallengeID > payload.lastChallengeID) {
+                                    finalChallenges.push(current[i])
                                 }
                             }
                         }
@@ -169,29 +152,12 @@ const broadCastNewSolve = (solveDetails) => {
 }
 
 const broadCastNewTeamChange = () => {
-    let changes = {}
     let finalData = []
     const teamUpdateID = NodeCacheObj.get("teamUpdateID")
-    const teamList = NodeCacheObj.get("teamListCache")
     const transactionsCache = NodeCacheObj.get("transactionsCache")
-
-    for (let i = 0; i < transactionsCache.length; i++) {
-        const current = transactionsCache[i]
-
-        if (current.author in changes) changes[current.author].changes.push(current)
-        else {
-            let members = [current.author]
-            let isTeam = false
-            if ("originalAuthor" in current) { // user is in a team
-                members = teamList[current.author].members
-                isTeam = true
-            }
-            changes[current.author] = { _id: current.author, changes: [current], members: members, isTeam: isTeam }
-        }
-    }
-
-    for (username in changes) {
-        finalData.push(changes[username])
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    for (username in transactionsCache) {
+        if (!(username in usernameTeamCache)) finalData.push(transactionsCache[username])
     }
 
     wss.clients.forEach((client) => {
