@@ -153,17 +153,20 @@ const join = async (req, res) => {
                     error: "team-full"
                 })
             }
+            let transactionCache = NodeCacheObj.get("transactionsCache")
+            console.table(transactionCache["tkaixiang"].changes)
+
             currentTeam.members.push(req.locals.username)
             await collections.team.updateOne({ name: currentTeam.name }, { $set: { members: currentTeam.members } })
             usernameTeamCache[req.locals.username] = currentTeam.name
-
+            transactionCache[currentTeam.name].members = JSON.parse(JSON.stringify(currentTeam.members)) // have to make a deep copy if not when we edit this members list, the other list is also edited
             // Broadcast a new transaction to signal a new team join
             let teamUpdateID = NodeCacheObj.get("teamUpdateID")
             teamUpdateID += 1
             NodeCacheObj.set("teamUpdateID", teamUpdateID)
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
-            let transactionCache = NodeCacheObj.get("transactionsCache")
-            const userTransactions = transactionCache[req.locals.username].changes
+
+            const userTransactions = JSON.parse(JSON.stringify(transactionCache[req.locals.username].changes))
             const teamTransacList = transactionCache[currentTeam.name].changes
             for (let i = 0; i < userTransactions.length; i++) {
                 userTransactions[i].author = currentTeam.name
@@ -173,8 +176,6 @@ const join = async (req, res) => {
                 let replacedDuplicateWithOlderSolve = false
                 let duplicate = false
                 for (let x = 0; x < teamTransacList.length; x++) {
-                    console.log(teamTransacList[x])
-                    console.log(userTransactions[i])
                     if (teamTransacList[x].challengeID.toString() === userTransactions[i].challengeID.toString() && teamTransacList[x].type === userTransactions[i].type && teamTransacList[x].points === userTransactions[i].points) {
                         if ("hint_id" in userTransactions[i] && "hint_id" in teamTransacList[x]) {
                             if (userTransactions[i].hint_id === teamTransacList[x].hint_id) {
@@ -204,6 +205,9 @@ const join = async (req, res) => {
                 if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(userTransactions[i])
             }
 
+            //console.table(userTransactions)
+            //console.table(teamTransacList)
+            console.table(transactionCache["tkaixiang"].changes)
             await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: currentTeam.name, originalAuthor: req.locals.username } })
             broadCastNewTeamChange()
             res.send({ success: true })
@@ -252,10 +256,9 @@ const create = async (req, res) => {
             for (let i = 0; i < userTransactions.length; i++) {
                 userTransactions[i].author = req.body.name
                 userTransactions[i].originalAuthor = req.locals.username
-
-                // Insert the user's transactions into the new team's transactions
-                transactionCache[req.body.name] = { _id: req.body.name, changes: userTransactions, members: [req.locals.username], isTeam: true }
             }
+            // Insert the user's transactions into the new team's transactions
+            transactionCache[req.body.name] = { _id: req.body.name, changes: JSON.parse(JSON.stringify(userTransactions)), members: [req.locals.username], isTeam: true }
             await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: req.body.name, originalAuthor: req.locals.username } })
             broadCastNewTeamChange()
             res.send({ success: true })
@@ -318,7 +321,7 @@ const leave = async (req, res) => {
             if (!lastMember) {
                 let teamTransacList = []
                 for (let i = 0; i < currentTeam.members.length; i++) {
-                    const currentUserTransc = transactionCache[currentTeam.members[i]].changes
+                    const currentUserTransc = JSON.parse(JSON.stringify(transactionCache[currentTeam.members[i]].changes))
 
                     for (let x = 0; x < currentUserTransc.length; x++) {
                         const current = currentUserTransc[x]
@@ -355,9 +358,9 @@ const leave = async (req, res) => {
                     }
 
                 }
-                //console.log(teamTransacList)
+                //console.table(teamTransacList)
                 transactionCache[currentTeam.name].changes = teamTransacList
-                //console.log(transactionCache[currentTeam.name])
+                //console.table(transactionCache[currentTeam.name])
             }
 
             await collections.transactions.updateMany({ originalAuthor: req.locals.username }, { $set: { author: req.locals.username }, $unset: { originalAuthor: 0 } })
