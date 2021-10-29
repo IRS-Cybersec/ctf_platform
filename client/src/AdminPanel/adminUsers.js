@@ -245,7 +245,7 @@ class AdminUsers extends React.Component {
             if (data.success === true) {
                 for (let i = 0; i < data.list.length; i++) {
                     data.list[i].key = data.list[i].username
-                    data.list[i].verified = "code" in data.list[i] ? "False" : "True"
+                    data.list[i].verified = "code" in data.list[i] ? "❌" : "✅"
                     data.list[i].team = data.list[i].username in data.usernameTeamCache ? data.usernameTeamCache[data.list[i].username] : "N/A"
                 }
                 this.setState({ dataSource: data.list })
@@ -342,7 +342,6 @@ class AdminUsers extends React.Component {
             //console.log(results)
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
-            console.log(data)
             if (data.success === true) {
                 message.success({ content: "Created user " + values.username + " successfully!" })
                 this.setState({ modalLoading: false, createUserModal: false })
@@ -532,6 +531,15 @@ class AdminUsers extends React.Component {
                             onCancel: () => { },
                         });
                     }}>Delete Users</Button>
+                    <Button type="default" disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<DeleteOutlined />} onClick={() => {
+                        confirm({
+                            confirmLoading: this.state.disableEditButtons,
+                            title: 'Are you sure you want to verify the user(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
+                            icon: <ExclamationCircleOutlined />,
+                            onOk: (close) => { this.deleteAccounts(close.bind(this), this.state.selectedTableKeys) },
+                            onCancel: () => { },
+                        });
+                    }}>Verify Users</Button>
                 </div>
                 <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (

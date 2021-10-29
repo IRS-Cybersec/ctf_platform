@@ -1,6 +1,7 @@
 const Connection = require('./../utils/mongoDB.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const MongoDB = require('mongodb')
+const createTransactionsCache = require('./../utils/createTransactionsCache.js')
 
 const submissions = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
@@ -36,6 +37,7 @@ const newSubmission = async (req, res) => {
     }
 
     let transactionsCache = NodeCacheObj.get("transactionsCache")
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     if (NodeCacheObj.get("teamMode") && req.body.author in usernameTeamCache) {
         // User is in a team
         insertDoc.author = usernameTeamCache[req.body.author]
@@ -61,7 +63,10 @@ const newSubmission = async (req, res) => {
 
         transactionsCache[insertDoc.originalAuthor].changes.push(insertDoc)
     }
-    else transactionsCache[insertDoc.author].changes.push(insertDoc)
+    else {
+        if (!(insertDoc.author in transactionsCache)) throw new Error("NotFound")
+        transactionsCache[insertDoc.author].changes.push(insertDoc)
+    }
 
     await collections.transactions.insertOne(insertDoc)
 
@@ -99,6 +104,7 @@ const editSubmission = async (req, res) => {
 
     let transactionsCache = NodeCacheObj.get("transactionsCache")
     let time = null
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     if (NodeCacheObj.get("teamMode") && req.body.author in usernameTeamCache) {
         // User is in a team
         updateDoc.author = usernameTeamCache[req.body.author]

@@ -55,6 +55,9 @@ const CreateT = (props) => {
                         props.refresh()
                         form.resetFields()
                     }
+                    else if (data.error === "not-found") {
+                        message.error("Oops. User not found.")
+                    }
                     else {
                         message.error({ content: "Oops. Unknown error" })
                     }
@@ -172,7 +175,7 @@ const EditT = (props) => {
     const [correctValue, setCorrectValue] = useState(true)
     const [form] = Form.useForm();
 
-    
+
 
     if (typeof form.getFieldValue("author") === "undefined") {
         let initialData = JSON.parse(JSON.stringify(props.initialData))
@@ -181,7 +184,7 @@ const EditT = (props) => {
         if (initialData.points !== 0) setNonZero(true)
         form.setFieldsValue(initialData)
     }
-    
+
 
     return (
         <Form
@@ -365,14 +368,20 @@ class AdminSubmissions extends React.Component {
                 for (let i = 0; i < data.submissions.length; i++) {
 
                     if ("correct" in data.submissions[i]) {
-                        if (data.submissions[i].correct === true) data.submissions[i].correct = "True"
-                        else data.submissions[i].correct = "False"
+                        if (data.submissions[i].correct === true) data.submissions[i].correct = "✅"
+                        else data.submissions[i].correct = "❌"
                         data.submissions[i].hint_id = "N/A"
                     }
                     else {
                         data.submissions[i].correct = "N/A"
                         data.submissions[i].submission = "N/A"
                     }
+                    if ("originalAuthor" in data.submissions[i]) {
+                        const temp = JSON.parse(JSON.stringify(data.submissions[i]))
+                        data.submissions[i].author = temp.originalAuthor
+                        data.submissions[i].team = temp.author
+                    }
+                    else data.submissions[i].team = "N/A"
                     data.submissions[i].key = data.submissions[i]._id
                     data.submissions[i].timestamp = new Date(data.submissions[i].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
                 }
@@ -558,7 +567,37 @@ class AdminSubmissions extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.author.includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.author.toLowerCase().includes(value.toLowerCase())}
+                        filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
+
+                    />
+                    <Column title="Team" dataIndex="team" key="team" render={(text, row, index) => {
+                        return <Link to={"/Team/" + text}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                    }}
+                        filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+                            <div style={{ padding: 8 }}>
+                                <Input
+                                    placeholder="Search Team"
+                                    value={selectedKeys[0]}
+                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                    onPressEnter={() => confirm()}
+                                    style={{ marginBottom: 8, display: 'block' }}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => { confirm() }}
+                                        icon={<SearchOutlined />}
+                                    >
+                                        Search
+                                    </Button>
+                                    <Button onClick={() => clearFilters()}>
+                                        Reset
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                        onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
 
                     />
@@ -591,28 +630,28 @@ class AdminSubmissions extends React.Component {
                         onFilter={(value, record) => record.challenge.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Hint ID" dataIndex="hint_id" key="hint_id" filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-                            <div style={{ padding: 8 }}>
-                                <Input
-                                    placeholder="Search Hint ID"
-                                    value={selectedKeys[0]}
-                                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                                    onPressEnter={() => confirm()}
-                                    style={{ marginBottom: 8, display: 'block' }}
-                                />
-                                <Space>
-                                    <Button
-                                        type="primary"
-                                        onClick={() => { confirm() }}
-                                        icon={<SearchOutlined />}
-                                    >
-                                        Search
-                                    </Button>
-                                    <Button onClick={() => clearFilters()}>
-                                        Reset
-                                    </Button>
-                                </Space>
-                            </div>
-                        )}
+                        <div style={{ padding: 8 }}>
+                            <Input
+                                placeholder="Search Hint ID"
+                                value={selectedKeys[0]}
+                                onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                onPressEnter={() => confirm()}
+                                style={{ marginBottom: 8, display: 'block' }}
+                            />
+                            <Space>
+                                <Button
+                                    type="primary"
+                                    onClick={() => { confirm() }}
+                                    icon={<SearchOutlined />}
+                                >
+                                    Search
+                                </Button>
+                                <Button onClick={() => clearFilters()}>
+                                    Reset
+                                </Button>
+                            </Space>
+                        </div>
+                    )}
                         onFilter={(value, record) => record.hint_id == parseInt(value)}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Type" dataIndex="type" key="type" filters={[{ text: "Submission", value: "submission" }, { text: "Hint", value: "hint" }, { text: "Blocked Submission", value: "blocked_submission" }, { text: "Initial Register", value: "initial_register" }]} onFilter={(value, record) => { return value === record.type }} />
