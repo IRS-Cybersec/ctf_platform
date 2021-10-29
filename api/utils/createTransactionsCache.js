@@ -76,7 +76,7 @@ const createCache = async () => {
                     }
                     if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(insertDoc)
                 }
-                else transactionsCache[insertDoc.author] = { _id: insertDoc.author, changes: [insertDoc], members: teamList[insertDoc.author].members, isTeam: true }
+                else transactionsCache[insertDoc.author] = { _id: insertDoc.author, changes: [insertDoc], members: teamList[insertDoc.author], isTeam: true }
             }
             else { // Person is not in a team
                 if (insertDoc.author in transactionsCache) transactionsCache[insertDoc.author].changes.push(insertDoc)
