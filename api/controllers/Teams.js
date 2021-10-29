@@ -154,8 +154,6 @@ const join = async (req, res) => {
                 })
             }
             let transactionCache = NodeCacheObj.get("transactionsCache")
-            console.table(transactionCache["tkaixiang"].changes)
-
             currentTeam.members.push(req.locals.username)
             await collections.team.updateOne({ name: currentTeam.name }, { $set: { members: currentTeam.members } })
             usernameTeamCache[req.locals.username] = currentTeam.name
@@ -166,7 +164,9 @@ const join = async (req, res) => {
             NodeCacheObj.set("teamUpdateID", teamUpdateID)
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
 
-            const userTransactions = JSON.parse(JSON.stringify(transactionCache[req.locals.username].changes))
+            const userTransactions = JSON.parse(JSON.stringify(transactionCache[req.locals.username].changes)) 
+            // have to make a deep copy so that the transactions inside the team transactions are not linked to the user's transactions
+            // if not, when adding a new user's transactions, you are actually pushing to the OTHER USER'S TRANSACTIONS LIST instead of only the team list
             const teamTransacList = transactionCache[currentTeam.name].changes
             for (let i = 0; i < userTransactions.length; i++) {
                 userTransactions[i].author = currentTeam.name
@@ -204,10 +204,6 @@ const join = async (req, res) => {
                 }
                 if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(userTransactions[i])
             }
-
-            //console.table(userTransactions)
-            //console.table(teamTransacList)
-            console.table(transactionCache["tkaixiang"].changes)
             await collections.transactions.updateMany({ author: req.locals.username }, { $set: { author: currentTeam.name, originalAuthor: req.locals.username } })
             broadCastNewTeamChange()
             res.send({ success: true })
