@@ -185,6 +185,7 @@ const main = async () => {
 			instance.get('/v1/account/type', accounts.type);
 			instance.post('/v1/account/change/password', accounts.password);
 			instance.post('/v1/account/adminChangePassword', accounts.adminChangePassword);
+			instance.post('/v1/account/adminChangeEmail', accounts.adminChangeEmail)
 			instance.get('/v1/account/list', accounts.list);
 			instance.get('/v1/account/settings', accounts.getSettings);
 			instance.post('/v1/account/permissions', accounts.permissions);
@@ -232,6 +233,9 @@ const main = async () => {
 			// Email endpoints
 			instance.get('/v1/email/disableStates', emails.disableStates);
 			instance.get('/v1/email/test', emails.testConnection);
+			instance.post('/v1/email/adminVerify', emails.adminVerifyEmail)
+			instance.post('/v1/email/adminUnVerify', emails.adminUnVerifyEmail)
+			
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)

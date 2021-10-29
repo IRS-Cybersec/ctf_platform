@@ -10,7 +10,9 @@ import {
     LockOutlined,
     RedoOutlined,
     SearchOutlined,
-    KeyOutlined
+    KeyOutlined,
+    CheckOutlined,
+    CloseOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -172,6 +174,70 @@ const ChangePasswordForm = (props) => {
     );
 }
 
+const ChangeEmailForm = (props) => {
+    const [form] = Form.useForm();
+
+    return (
+        <Form
+            form={form}
+            onFinish={(values) => {
+                fetch(window.ipAddress + "/v1/account/adminChangeEmail", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "username": props.username,
+                        "email": values.email,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Email changed successfully." })
+                        form.resetFields()
+                        props.setState({ emailChangeModal: false })
+                        props.fillTableData()
+                    }
+                    else if (data.error === "email-taken") {
+                        message.error("Email is already in use. Please try another email.")
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%" }}
+        >
+            <h3>New Email</h3>
+            <Form.Item
+                name="email"
+                rules={[
+                    {
+                        required: true,
+                        message: 'Please input the new email',
+                    },
+                    {
+                        type: 'email',
+                        message: 'Please enter a valid email'
+                    }
+                ]}
+                hasFeedback
+            >
+
+                <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
+            </Form.Item>
+
+            <Form.Item>
+                <Button style={{ marginRight: "1.5vw" }} onClick={() => { props.setState({ emailChangeModal: false }) }}>Cancel</Button>
+                <Button type="primary" htmlType="submit" icon={<MailOutlined />}>Change Email</Button>
+            </Form.Item>
+        </Form>
+    );
+}
+
 
 class AdminUsers extends React.Component {
     constructor(props) {
@@ -202,7 +268,8 @@ class AdminUsers extends React.Component {
             teamMaxSize: 3,
             forgotPass: false,
             emailVerify: false,
-            teamChangeDisable: false
+            teamChangeDisable: false,
+            emailChangeModal: false
         }
     }
 
@@ -426,7 +493,7 @@ class AdminUsers extends React.Component {
             "uploadPath": { name: "Profile pictures upload path", loading: "uploadPathLoading", suffix: "" },
             "teamMaxSize": { name: "Team mode", loading: "Maximum size of teams", suffix: "" }
         }
-        
+
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -453,6 +520,60 @@ class AdminUsers extends React.Component {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         this.setState({ uploadLoading: false })
+    }
+
+    verifyAccounts = async (close, users) => {
+        this.setState({ disableEditButtons: true })
+        await fetch(window.ipAddress + "/v1/email/adminVerify", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+            body: JSON.stringify({
+                "users": users,
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "User(s) [" + users.join(', ') + "] verified successfully" })
+                this.fillTableData()
+            }
+            else message.error("Oops. Unknown error")
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+
+        })
+        close()
+        this.setState({ selectedTableKeys: [] })
+    }
+
+    unverifyAccounts = async (close, users) => {
+        this.setState({ disableEditButtons: true })
+        await fetch(window.ipAddress + "/v1/email/adminUnVerify", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+            body: JSON.stringify({
+                "users": users,
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "User(s) [" + users.join(', ') + "] un-verified successfully" })
+                this.fillTableData()
+            }
+            else message.error("Oops. Unknown error")
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+
+        })
+        close()
+        this.setState({ selectedTableKeys: [] })
     }
 
 
@@ -495,7 +616,7 @@ class AdminUsers extends React.Component {
                     onCancel={() => { this.setState({ createUserModal: false }) }}
                 >
 
-                    <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)}></RegisterForm>
+                    <RegisterForm createAccount={this.createAccount.bind(this)} setState={this.setState.bind(this)} />
                 </Modal>
 
                 <Modal
@@ -505,7 +626,16 @@ class AdminUsers extends React.Component {
                     onCancel={() => { this.setState({ passwordResetModal: false }) }}
                 >
 
-                    <ChangePasswordForm username={this.state.username} setState={this.setState.bind(this)}></ChangePasswordForm>
+                    <ChangePasswordForm  username={this.state.username} setState={this.setState.bind(this)} />
+                </Modal>
+                <Modal
+                    title={"Changing Email For: " + this.state.username}
+                    visible={this.state.emailChangeModal}
+                    footer={null}
+                    onCancel={() => { this.setState({ emailChangeModal: false }) }}
+                >
+
+                    <ChangeEmailForm fillTableData={this.fillTableData.bind(this)} username={this.state.username} setState={this.setState.bind(this)} />
                 </Modal>
 
 
@@ -531,15 +661,25 @@ class AdminUsers extends React.Component {
                             onCancel: () => { },
                         });
                     }}>Delete Users</Button>
-                    <Button type="default" disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<DeleteOutlined />} onClick={() => {
+                    <Button type="default" disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<CheckOutlined style={{ color: "#49aa19" }} />} onClick={() => {
                         confirm({
                             confirmLoading: this.state.disableEditButtons,
-                            title: 'Are you sure you want to verify the user(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
+                            title: 'Are you sure you want to verify the user(s) (' + this.state.selectedTableKeys.join(", ") + ')?',
                             icon: <ExclamationCircleOutlined />,
-                            onOk: (close) => { this.deleteAccounts(close.bind(this), this.state.selectedTableKeys) },
+                            onOk: (close) => { this.verifyAccounts(close.bind(this), this.state.selectedTableKeys) },
                             onCancel: () => { },
                         });
                     }}>Verify Users</Button>
+                    <Button type="default" disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<CloseOutlined style={{ color: "#a61d24" }} />} onClick={() => {
+                        confirm({
+                            confirmLoading: this.state.disableEditButtons,
+                            title: 'Are you sure you want to un-verify the user(s) (' + this.state.selectedTableKeys.join(", ") + ')?',
+                            content: 'Please note that this action will send a new email per user asking them to re-verify.',
+                            icon: <ExclamationCircleOutlined />,
+                            onOk: (close) => { this.unverifyAccounts(close.bind(this), this.state.selectedTableKeys) },
+                            onCancel: () => { },
+                        });
+                    }}>Un-Verify Users</Button>
                 </div>
                 <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                     emptyText: (
@@ -664,6 +804,13 @@ class AdminUsers extends React.Component {
                                     }}>
                                         <span>
                                             Change Password <KeyOutlined />
+                                        </span>
+                                    </Menu.Item>
+                                    <Menu.Item onClick={() => {
+                                        this.setState({ emailChangeModal: true, username: record.username })
+                                    }}>
+                                        <span>
+                                            Change Email <MailOutlined />
                                         </span>
                                     </Menu.Item>
                                 </Menu>

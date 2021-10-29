@@ -25,6 +25,40 @@ const disableStates = async (req, res) => {
     });
 }
 
+const adminVerifyEmail = async (req, res) => {
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (!Array.isArray(req.body.users)) throw new Error('Validation');
+    const collections = Connection.collections
+    await collections.users.updateMany({ username: { $in: req.body.users } }, { $unset: { code: 0, codeTimestamp: 0 } })
+    return res.send({ success: true })
+}
+
+
+const adminUnVerifyEmail = async (req, res) => {
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (!Array.isArray(req.body.users)) throw new Error('Validation');
+    const collections = Connection.collections
+    await collections.users.find({ username: { $in: req.body.users } }).forEach(async (doc) => {
+        const code = crypto.randomBytes(32).toString('hex')
+        const link = NodeCacheObj.get("websiteLink") + "/verify/" + doc.username + "/" + code
+        await collections.users.updateOne({ username: doc.username }, { $set: { code: await argon2.hash(code), codeTimestamp: new Date() } })
+        const NodemailerT = NodeCacheObj.get('NodemailerT')
+        await NodemailerT.sendMail({
+            from: '"' + NodeCacheObj.get("emailSender") + '"' + ' <' + NodeCacheObj.get("emailSenderAddr") + '>', // sender address
+            to: doc.email,
+            subject: "Email Verification for Sieberrsec CTF Platform", // Subject line
+            text: "Dear " + doc.username + ",\n\n  Please verify your email here: \n" + link + "\n\n  If you did not request this email, you can safely ignore this email. You will be able to login immediately after verifying your email.", // plain text body
+            html: `
+            Dear ${doc.username},<br><br>  Please verify your email by clicking <a href='${link}'>here</a>.
+            <br><br>
+            If you did not request this email, you can safely ignore this email. You will be able to login immediately after verifying your email.
+            `, // html body
+        })
+    })
+
+    return res.send({ success: true })
+}
+
 const verifyEmail = async (req, res) => {
     if (NodeCacheObj.get("emailVerify")) {
         const collections = Connection.collections
@@ -59,6 +93,8 @@ const verifyEmail = async (req, res) => {
         error: "disabled"
     })
 }
+
+
 
 const resendVerifyEmail = async (req, res) => {
     if (NodeCacheObj.get("emailVerify")) {
@@ -202,4 +238,4 @@ const resetForgottenPassword = async (req, res) => {
     })
 }
 
-module.exports = { disableStates, resendVerifyEmail, testConnection, forgotPassword, resetForgottenPassword, checkPassResetLink, verifyEmail }
+module.exports = { adminUnVerifyEmail, adminVerifyEmail, disableStates, resendVerifyEmail, testConnection, forgotPassword, resetForgottenPassword, checkPassResetLink, verifyEmail }

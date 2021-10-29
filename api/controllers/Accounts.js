@@ -407,6 +407,48 @@ const adminChangePassword = async (req, res) => {
     }
 }
 
+const adminChangeEmail = async (req, res) => {
+    try {
+        const collections = Connection.collections
+        if (req.locals.perms < 2) throw new Error('Permissions');
+        if (req.body.email == '') res.send({
+            success: false,
+            error: 'empty-email'
+        });
+        await collections.users.updateOne(
+            { username: req.body.username },
+            { '$set': { email: req.body.email } }
+        );
+        res.send({ success: true });
+    }
+    catch (err) {
+        if (err.name == 'MongoServerError') {
+            switch (err.code) {
+                case 11000:
+                    switch (Object.keys(err.keyPattern)[0]) {
+                        case 'email':
+                            res.code(403);
+                            res.send({
+                                success: false,
+                                error: 'email-taken'
+                            });
+                            return;
+                        default:
+                            res.send({
+                                success: false,
+                                error: 'validation'
+                            });
+                            throw new Error(err)
+                    }
+                default:
+                    throw new Error(err)
+            }
+        }
+        else throw new Error(err)
+    }
+
+}
+
 const list = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
@@ -431,4 +473,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { getSettings, changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { adminChangeEmail, getSettings, changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
