@@ -260,7 +260,7 @@ class Teams extends React.Component {
         })
 
         for (let x = 0; x < challengeArray.length; x++) {
-            if (challengeArray[x].points !== 0) {
+            if (challengeArrayReversed[x].points !== 0) {
                 //Plot graph
                 scoreTotal += challengeArrayReversed[x].points
                 if (challengeArrayReversed[x].originalAuthor in userScores) userScores[challengeArrayReversed[x].originalAuthor] += challengeArrayReversed[x].points
@@ -271,7 +271,9 @@ class Teams extends React.Component {
                     Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
                 }
                 graphData.push(graphPoint)
+            }
 
+            if (challengeArray[x].points !== 0) {
                 //Handle table
                 const currentStuff = challengeArray[x]
                 let currentDS = {
