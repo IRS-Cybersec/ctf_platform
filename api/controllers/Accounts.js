@@ -142,6 +142,8 @@ const create = async (req, res) => {
             lastChallengeID: latestSolveSubmissionID
         }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
+        await collections.transactions.insertOne(insertDoc)
+        await collections.transactions.updateOne({_id: insertDoc._id}, {$set: {_id: insertDoc._id}})
         transactionsCache[insertDoc.author] = {
             _id: insertDoc.author,
             changes: [{
@@ -156,7 +158,6 @@ const create = async (req, res) => {
             members: [insertDoc.author],
             isTeam: false
         }
-        await collections.transactions.insertOne(insertDoc)
         // Send out to scoreboards that there is a new user
         broadCastNewSolve([{
             _id: insertDoc._id,
