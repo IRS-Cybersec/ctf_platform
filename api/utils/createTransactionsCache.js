@@ -39,6 +39,7 @@ const createCache = async () => {
                 }
 
                 // Handle team transaction
+                console.log(insertDoc.author)
                 if (insertDoc.author in transactionsCache) {
                     // Iterate through list of team transactions to see if any of the team transactions are duplicates of this current transaction
                     // Duplicate means 2 transactions of the same challenge (and same type)
