@@ -228,7 +228,6 @@ class Scoreboard extends React.Component {
   }
 
   sortPlotRenderData(data) {
-    console.log(data)
     let formattedData = []
     let finalPoint = {}
     let scoreArray = []
