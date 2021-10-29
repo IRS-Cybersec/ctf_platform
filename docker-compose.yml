@@ -10,6 +10,7 @@ services:
   ctf-web-api:
     build:
       context: ./api
+    # image: "ghcr.io/matthew5025/ctf_platform_api:container-publish"
     container_name: "ctf-web-api"
     ports:
       - "127.0.0.1:20001:20001"
@@ -21,6 +22,7 @@ services:
   ctf-web-client:
     build:
       context: ./client
+    # image: "ghcr.io/matthew5025/ctf_platform_client:container-publish"
     container_name: "ctf-web-client"
     ports: 
       - 127.0.0.1:20002:20002
