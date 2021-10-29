@@ -74,7 +74,7 @@ async function createDefaultAdminAccount(userCollection, transactionColl) {
         let insertDoc = {
             author: adminUser.toLowerCase(),
             challenge: 'Registered',
-            challengeID: null,
+            challengeID: '',
             timestamp: new Date(),
             type: 'initial_register',
             points: 0,
@@ -82,6 +82,8 @@ async function createDefaultAdminAccount(userCollection, transactionColl) {
             submission: '',
             lastChallengeID: latestSolveSubmissionID
         }
+	await transactionColl.insertOne(insertDoc)
+	await transactionColl.updateOne({_id: insertDoc._id}, {$set: {challengeID: insertDoc._id}})
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         transactionsCache[insertDoc.author] = {
             _id: insertDoc.author,
@@ -97,8 +99,7 @@ async function createDefaultAdminAccount(userCollection, transactionColl) {
             members: [insertDoc.author],
             isTeam: false
         }
-        await transactionColl.insertOne(insertDoc)
-
+        
     }
 };
 
