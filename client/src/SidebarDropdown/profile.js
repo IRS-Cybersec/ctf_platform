@@ -68,73 +68,75 @@ class Profile extends React.Component {
                     })
 
                     for (let x = 0; x < challengeArray.length; x++) {
-                        //Plot graph
-                        scoreTotal += challengeArrayReversed[x].points
-                        graphPoint = {
-                            Score: scoreTotal,
-                            Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
-                        }
-                        graphData.push(graphPoint)
+                        if (challengeArrayReversed[x].points !== 0) {
+                            //Plot graph
+                            scoreTotal += challengeArrayReversed[x].points
+                            graphPoint = {
+                                Score: scoreTotal,
+                                Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
+                            }
+                            graphData.push(graphPoint)
 
-                        //Handle table
-                        let currentDS = {
-                            key: String(x),
-                            challenge: "",
-                            score: "",
-                            time: "",
-                            challengeID: ""
-                        }
-                        const currentStuff = challengeArray[x]
-                        //Current record is a hint
-                        if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
-                        else currentDS.challenge = currentStuff.challenge
-                        if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID
-                        currentDS.score = currentStuff.points
-                        //console.log(currentStuff.timestamp)
-                        const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
-                        let minutes = Math.ceil(dateTime / 60)
-                        let hours = 0
-                        let days = 0
-                        let months = 0
-                        let years = 0
-                        if (minutes >= 60) {
-                            hours = Math.floor(minutes / 60)
-                            minutes = minutes - hours * 60
+                            //Handle table
+                            let currentDS = {
+                                key: String(x),
+                                challenge: "",
+                                score: "",
+                                time: "",
+                                challengeID: ""
+                            }
+                            const currentStuff = challengeArray[x]
+                            //Current record is a hint
+                            if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
+                            else currentDS.challenge = currentStuff.challenge
+                            if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID
+                            currentDS.score = currentStuff.points
+                            //console.log(currentStuff.timestamp)
+                            const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+                            let minutes = Math.ceil(dateTime / 60)
+                            let hours = 0
+                            let days = 0
+                            let months = 0
+                            let years = 0
+                            if (minutes >= 60) {
+                                hours = Math.floor(minutes / 60)
+                                minutes = minutes - hours * 60
 
-                            if (hours >= 24) {
-                                days = Math.floor(hours / 24)
-                                hours = hours - days * 24
+                                if (hours >= 24) {
+                                    days = Math.floor(hours / 24)
+                                    hours = hours - days * 24
 
-                                if (days >= 30) {
-                                    months = Math.floor(days / 30)
-                                    days = days - months * 30
+                                    if (days >= 30) {
+                                        months = Math.floor(days / 30)
+                                        days = days - months * 30
 
-                                    if (months >= 12) {
-                                        years = Math.floor(months / 12)
-                                        months = months - years * 12
+                                        if (months >= 12) {
+                                            years = Math.floor(months / 12)
+                                            months = months - years * 12
+                                        }
                                     }
                                 }
                             }
-                        }
-                        let finalTime = " ago."
-                        if (minutes !== 0) {
-                            finalTime = minutes.toString() + " minutes " + finalTime
-                        }
-                        if (hours !== 0) {
-                            finalTime = hours.toString() + " hours " + finalTime
-                        }
-                        if (days !== 0) {
-                            finalTime = days.toString() + " days " + finalTime
-                        }
-                        if (months !== 0) {
-                            finalTime = months.toString() + " months " + finalTime
-                        }
-                        if (years !== 0) {
-                            finalTime = years.toString() + " years " + finalTime
-                        }
-                        currentDS.time = finalTime
+                            let finalTime = " ago."
+                            if (minutes !== 0) {
+                                finalTime = minutes.toString() + " minutes " + finalTime
+                            }
+                            if (hours !== 0) {
+                                finalTime = hours.toString() + " hours " + finalTime
+                            }
+                            if (days !== 0) {
+                                finalTime = days.toString() + " days " + finalTime
+                            }
+                            if (months !== 0) {
+                                finalTime = months.toString() + " months " + finalTime
+                            }
+                            if (years !== 0) {
+                                finalTime = years.toString() + " years " + finalTime
+                            }
+                            currentDS.time = finalTime
 
-                        challengeDS.push(currentDS)
+                            challengeDS.push(currentDS)
+                        }
                     }
 
                     //push finalPoint
@@ -183,9 +185,9 @@ class Profile extends React.Component {
                         <div style={{ height: "100%", width: "100%" }}>
                             <br /><br /><br />
                             <Empty
-                            image={<FrownOutlined />}
-                            imageStyle={{fontSize: "500%", color: "#177ddc"}}
-                            description={<h1>We were unable to find the user "{this.props.match.params.user}"</h1>}
+                                image={<FrownOutlined />}
+                                imageStyle={{ fontSize: "500%", color: "#177ddc" }}
+                                description={<h1>We were unable to find the user "{this.props.match.params.user}"</h1>}
                             />
                         </div>
                     )
@@ -235,22 +237,22 @@ class Profile extends React.Component {
                                 </ResponsiveContainer>
 
                             </div>
-                                <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
-                                    emptyText: (
-                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
-                                            <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                                            <h1 style={{ fontSize: "200%" }}>{this.state.targetUser} has not completed any challenges/bought any hints</h1>
-                                        </div>
-                                    )
-                                }}>
-                                    <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge"
-                                        render={(text, row, index) => {
-                                            if (row.challengeID !== "") return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
-                                            else return (<span>{text}</span>);
-                                        }} />
-                                    <Column width={30} title="Score Change" dataIndex="score" key="score" />
-                                    <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
-                                </Table>
+                            <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 10 }} locale={{
+                                emptyText: (
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                                        <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                                        <h1 style={{ fontSize: "200%" }}>{this.state.targetUser} has not completed any challenges/bought any hints</h1>
+                                    </div>
+                                )
+                            }}>
+                                <Column width={1} title="Challenge/Hint" dataIndex="challenge" key="challenge"
+                                    render={(text, row, index) => {
+                                        if (row.challengeID !== "") return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
+                                        else return (<span>{text}</span>);
+                                    }} />
+                                <Column width={30} title="Score Change" dataIndex="score" key="score" />
+                                <Column width={30} title="Solved Timestamp" dataIndex="time" key="time" />
+                            </Table>
                         </Layout>
 
                     )
