@@ -68,7 +68,7 @@ class Profile extends React.Component {
                     })
 
                     for (let x = 0; x < challengeArray.length; x++) {
-                        if (challengeArrayReversed[x].points !== 0) {
+                        if (challengeArray[x].points !== 0) {
                             //Plot graph
                             scoreTotal += challengeArrayReversed[x].points
                             graphPoint = {
