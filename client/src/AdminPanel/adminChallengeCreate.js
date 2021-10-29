@@ -1,4 +1,4 @@
-import React, {Suspense} from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Tooltip, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
@@ -24,35 +24,40 @@ const { TabPane } = Tabs;
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
     const [editorValue, setEditorValue] = React.useState("")
+    const [existingCats, setExistingCats] = React.useState([])
+    const [finalSortedChalls, setfinalSortedChalls] = React.useState([])
 
-    if (typeof form.getFieldValue("flags") === "undefined") {
+    useEffect(() => {
         var currentValues = form.getFieldsValue()
         currentValues.flags = [""]
 
         form.setFieldsValue(currentValues)
-    }
-    //Render existing categories select options
-    let existingCats = []
-    for (let i = 0; i < props.allCat.length; i++) {
-        existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
-    }
-    //Render existing challenges select options
-    let existingChalls = {}
-    for (let i = 0; i < props.challenges.length; i++) {
-        if (!(props.challenges[i].category in existingChalls)) existingChalls[props.challenges[i].category] = []
-        existingChalls[props.challenges[i].category].push({
-            value: props.challenges[i]._id,
-            label: props.challenges[i].name
-        })
-    }
-    let finalSortedChalls = []
-    for (const category in existingChalls) {
-        finalSortedChalls.push({
-            value: category,
-            label: category,
-            children: existingChalls[category]
-        })
-    }
+        //Render existing categories select options
+        let existCats = []
+        for (let i = 0; i < props.allCat.length; i++) {
+            existCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
+        }
+        setExistingCats(existCats)
+        //Render existing challenges select options
+        let existChalls = {}
+        for (let i = 0; i < props.challenges.length; i++) {
+            if (!(props.challenges[i].category in existChalls)) existChalls[props.challenges[i].category] = []
+            existChalls[props.challenges[i].category].push({
+                value: props.challenges[i]._id,
+                label: props.challenges[i].name
+            })
+        }
+
+        let finalChalls = []
+        for (const category in existChalls) {
+            finalChalls.push({
+                value: category,
+                label: category,
+                children: existChalls[category]
+            })
+        }
+        setfinalSortedChalls(finalChalls)
+    }, [])
 
     return (
         <Form

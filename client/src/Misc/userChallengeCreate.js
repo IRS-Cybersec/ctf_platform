@@ -1,4 +1,4 @@
-import React, {Suspense} from 'react';
+import React, { Suspense } from 'react';
 import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card } from 'antd';
 import {
     MinusCircleOutlined,
@@ -20,20 +20,20 @@ const { TabPane } = Tabs;
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
     const [editorValue, setEditorValue] = React.useState("")
+    const [existingCats, setExistingCats] = React.useState([])
 
-    if (typeof form.getFieldValue("flags") === "undefined") {
+    useEffect(() => {
         var currentValues = form.getFieldsValue()
         currentValues.flags = [""]
 
         form.setFieldsValue(currentValues)
-    }
-    let existingCats = []
-    //console.log(props.allCat)
-    for (let i = 0; i < props.allCat.length; i++) {
-        existingCats.push(<Option key={props.allCat[i]} value={props.allCat[i]}>{props.allCat[i]}</Option>)
-    }
+        let existCats = []
 
-    //Render existing categories select options
+        for (let i = 0; i < props.allCat.length; i++) {
+            existCats.push(<Option key={props.allCat[i]} value={props.allCat[i]}>{props.allCat[i]}</Option>)
+        }
+        setExistingCats(existCats)
+    }, [])
 
 
 

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Tooltip, Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card, Cascader } from 'antd';
 import {
     MinusCircleOutlined,
@@ -29,7 +29,7 @@ const CreateChallengeForm = (props) => {
 
     //Render existing categories select options
 
-    if (typeof form.getFieldValue("name") === "undefined") {
+    useEffect(() =>  {
         let existingCats = []
         for (let i = 0; i < props.allCat.length; i++) {
             existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
@@ -79,7 +79,7 @@ const CreateChallengeForm = (props) => {
         initialData.category1 = initialData.category
         form.setFieldsValue(initialData)
         setEditorValue(initialData.description)
-    }
+    }, [])
 
     return (
         <Form
