@@ -174,8 +174,6 @@ class Challenges extends React.Component {
         for (let i = 0; i < originalData.length; i++) {
           originalDataDictionary[originalData[i]._id] = originalData[i].challenges
         }
-        console.log(originalDataDictionary)
-        console.log(categoryMetaInfo)
         this.setState({ categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
         let categoryChall = this.props.match.params.categoryChall;
         const mongoID = /^[a-f\d]{24}$/i

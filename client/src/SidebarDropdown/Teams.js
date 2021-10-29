@@ -117,7 +117,6 @@ class Teams extends React.Component {
             this.getCodeDetails(code)
         }
         else {
-            console.log(this.props.team)
             const team = this.props.match.params.team
             if (typeof team !== "undefined") { // User is viewing another team
                 this.loadTeamDetails(team)

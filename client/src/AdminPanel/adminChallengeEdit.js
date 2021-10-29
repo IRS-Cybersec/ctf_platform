@@ -250,7 +250,7 @@ const CreateChallengeForm = (props) => {
 
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center" }}>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h1>Challenge Points:</h1>
                         <Form.Item
                             name="points"
@@ -265,7 +265,7 @@ const CreateChallengeForm = (props) => {
                         </Form.Item>
                     </Card>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h1>Maximum Number of Attempts (Set to 0 for unlimited)</h1>
                         <Form.Item
                             name="max_attempts"
@@ -289,7 +289,7 @@ const CreateChallengeForm = (props) => {
                         {(fields, { add, remove }) => {
 
                             return (
-                                <Card>
+                                <Card className="settings-card">
                                     <h1>Flags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -337,7 +337,7 @@ const CreateChallengeForm = (props) => {
                     <Form.List name="tags">
                         {(fields, { add, remove }) => {
                             return (
-                                <Card>
+                                <Card className="settings-card">
                                     <h1>Tags</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -388,7 +388,7 @@ const CreateChallengeForm = (props) => {
                     <Form.List name="hints" >
                         {(fields, { add, remove }) => {
                             return (
-                                <Card>
+                                <Card className="settings-card">
                                     <h1>Hints</h1>
                                     {fields.map(field => (
                                         <Space key={field.key} style={{ display: 'flex', marginBottom: 8 }} align="start">
@@ -439,7 +439,7 @@ const CreateChallengeForm = (props) => {
                         }}
                     </Form.List>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h1>Writeup Link (Optional)</h1>
                         <Form.Item
                             name="writeup"
@@ -462,7 +462,7 @@ const CreateChallengeForm = (props) => {
                         </div>
                     </Card>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h1>Visibility</h1>
                         <Form.Item
                             name="visibility"
@@ -502,7 +502,7 @@ const CreateChallengeForm = (props) => {
                         <p>Locks this challenge until the provided challenge above has been solved.</p>
                     </Card>
 
-                    <Card>
+                    <Card className="settings-card">
                         <h1>Dynamic Scoring</h1>
                         <Form.Item
                             name="dynamic"
