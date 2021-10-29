@@ -1,6 +1,5 @@
 import React from 'react';
 import { Layout, message, Card, Input, Divider, InputNumber, Switch, Button } from 'antd';
-import { Link } from 'react-router-dom';
 
 class AdminEmails extends React.Component {
     constructor(props) {

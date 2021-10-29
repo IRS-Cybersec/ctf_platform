@@ -183,11 +183,13 @@ const main = async () => {
 			instance.post('/v1/account/taken/email', accounts.takenEmail);
 			instance.post('/v1/account/delete', accounts.deleteAccount);
 			instance.get('/v1/account/type', accounts.type);
-			instance.post('/v1/account/password', accounts.password);
+			instance.post('/v1/account/change/password', accounts.password);
 			instance.post('/v1/account/adminChangePassword', accounts.adminChangePassword);
 			instance.get('/v1/account/list', accounts.list);
+			instance.get('/v1/account/settings', accounts.getSettings);
 			instance.post('/v1/account/permissions', accounts.permissions);
 			instance.post('/v1/account/change/email', accounts.changeEmail);
+			
 
 			// Challenge endpoints
 			instance.get('/v1/challenge/disableStates', challenges.disableStates);

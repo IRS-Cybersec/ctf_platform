@@ -285,6 +285,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     border: 5px solid transparent;
     border-radius: 20px;
+    width: 100%;
 }
 
 .settings-header {

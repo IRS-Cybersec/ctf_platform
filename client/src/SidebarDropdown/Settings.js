@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal, Tooltip } from 'antd';
 import {
     KeyOutlined,
     LockOutlined,
     UploadOutlined,
-    DeleteOutlined
+    DeleteOutlined,
+    MailOutlined
 } from '@ant-design/icons';
+import { Ellipsis } from 'react-spinners-css';
 
 
 
 const ChangePasswordForm = (props) => {
     const [form] = Form.useForm();
+    const [loading, setLoading] = React.useState(false);
 
     return (
         <Form
             form={form}
-            name="changePassword"
-            className="change-password-form"
-            onFinish={(values) => {
-
-                fetch(window.ipAddress + "/v1/account/password", {
+            onFinish={async (values) => {
+                setLoading(true)
+                await fetch(window.ipAddress + "/v1/account/change/password", {
                     method: 'post',
                     headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
                     body: JSON.stringify({
@@ -36,6 +37,7 @@ const ChangePasswordForm = (props) => {
                     else if (data.error === "wrong-password") {
                         message.error({ content: "Old password is incorrect. Please try again." })
                     }
+
                     else {
                         message.error({ content: "Oops. Unknown error." })
                     }
@@ -44,6 +46,7 @@ const ChangePasswordForm = (props) => {
                     console.log(error)
                     message.error({ content: "Oops. There was an issue connecting with the server" });
                 })
+                setLoading(false);
             }}
             style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
         >
@@ -93,7 +96,85 @@ const ChangePasswordForm = (props) => {
                 <Input.Password allowClear prefix={<LockOutlined />} placeholder="Confirm new password" />
             </Form.Item>
             <Form.Item>
-                <Button type="primary" htmlType="submit" icon={<KeyOutlined />}>Change Password</Button>
+                <Button type="primary" htmlType="submit" icon={<KeyOutlined />} loading={loading}>Change Password</Button>
+            </Form.Item>
+        </Form>
+    );
+}
+
+const ChangeEmailForm = (props) => {
+    const [form] = Form.useForm();
+    const [loading, setLoading] = React.useState(false);
+
+    useEffect(() => {
+        if (props.email != "") {
+            form.setFieldsValue({
+                email: props.email,
+                password: ""
+            })
+        }
+
+    }, [props.email])
+
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                setLoading(true)
+                await fetch(window.ipAddress + "/v1/account/change/email", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "password": values.password,
+                        "email": values.email,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Email changed successfully." })
+                        form.setFieldsValue({
+                            email: values.email,
+                            password: ""
+                        })
+                    }
+                    else if (data.error === "email-taken") {
+                        message.error({ content: "Email is already taken, please try another email." })
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Password is incorrect. Please try again." })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+                setLoading(false)
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
+        >
+
+            <h3>Email:</h3>
+            <Form.Item
+                name="email"
+                rules={[{ required: true, message: 'Please input your new email', }, { type: "email", message: "Please enter a valid email" }]}>
+
+                <Input allowClear prefix={<MailOutlined />} placeholder="Enter your new email." />
+            </Form.Item>
+
+            <h3>Password:</h3>
+            <Form.Item
+                name="password"
+                rules={[{ required: true, message: 'Please input your password', }]}>
+
+                <Input.Password allowClear prefix={<LockOutlined />} placeholder="Enter your password." />
+            </Form.Item>
+
+            <Form.Item>
+                <Button type="primary" htmlType="submit" icon={<MailOutlined />} loading={loading}>Change Email</Button>
             </Form.Item>
         </Form>
     );
@@ -163,11 +244,35 @@ class Settings extends React.Component {
         this.state = {
             fileList: [],
             disableUpload: false,
-            deleteAccountModal: false
+            deleteAccountModal: false,
+            email: "",
+            loading: true
         }
     }
 
     componentDidMount() {
+        this.getAccountSettings()
+    }
+
+    getAccountSettings() {
+        fetch(window.ipAddress + "/v1/account/settings", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken }
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                this.setState({ email: data.email })
+            }
+            else {
+                message.error({ content: "Oops. Unknown error." })
+            }
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+        this.setState({ loading: false })
     }
 
     deleteProfilePic() {
@@ -198,83 +303,103 @@ class Settings extends React.Component {
         return (
             <Layout className="layout-style">
 
-                <Modal
-                    title={"Delete Account"}
-                    visible={this.state.deleteAccountModal}
-                    footer={null}
-                    onCancel={() => { this.setState({ deleteAccountModal: false }) }}
-                    confirmLoading={this.state.modalLoading}
-                >
+                {this.state.loading ? (
+                    <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
+                        <Ellipsis color="#177ddc" size={120} />
+                    </div>
+                ) : (
+                    <div>
+                        <Modal
+                            title={"Delete Account"}
+                            visible={this.state.deleteAccountModal}
+                            footer={null}
+                            onCancel={() => { this.setState({ deleteAccountModal: false }) }}
+                            confirmLoading={this.state.modalLoading}
+                        >
 
-                    <DeleteAccountForm logout={this.props.logout.bind(this)} setState={this.setState.bind(this)} />
-                </Modal>
+                            <DeleteAccountForm logout={this.props.logout.bind(this)} setState={this.setState.bind(this)} />
+                        </Modal>
 
 
-                <Divider />
-                <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "20ch", overflow: "hidden" }}>
-                        <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"/static/profile/" + this.props.username + ".webp"} />
-                        <div style={{ marginTop: "2ch", display: "flex" }}>
-                            <Upload
-                                fileList={this.state.fileList}
-                                disabled={this.state.disableUpload}
-                                accept=".png, .jpg, .jpeg, .webp"
-                                action={window.ipAddress + "/v1/profile/upload"}
-                                maxCount={1}
-                                onChange={(file) => {
-                                    this.setState({ fileList: file.fileList })
-                                    if (file.file.status === "uploading") {
-                                        this.setState({ disableUpload: true })
-                                    }
-                                    else if ("response" in file.file) {
-                                        if (file.file.response.success) {
-                                            message.success("Uploaded profile picture")
-                                            message.success("Reload the page to see your shiny new picture :)!")
-                                        }
-                                        else {
-                                            message.error("Failed to upload profile picture")
-                                            if (file.file.response.error === "too-large") {
-                                                message.info("Please upload a file smaller than " + file.file.response.size.toString() + " Bytes.")
+                        <Divider />
+                        <div style={{ display: "flex", marginRight: "5ch", alignItems: "center", justifyItems: "center" }}>
+                            <div style={{ display: "flex", flexDirection: "column", justifyContent: "initial", width: "20ch", overflow: "hidden" }}>
+                                <Avatar style={{ backgroundColor: "transparent", width: "12ch", height: "12ch" }} size='large' src={"/static/profile/" + this.props.username + ".webp"} />
+                                <div style={{ marginTop: "2ch", display: "flex" }}>
+                                    <Upload
+                                        fileList={this.state.fileList}
+                                        disabled={this.state.disableUpload}
+                                        accept=".png, .jpg, .jpeg, .webp"
+                                        action={window.ipAddress + "/v1/profile/upload"}
+                                        maxCount={1}
+                                        onChange={(file) => {
+                                            this.setState({ fileList: file.fileList })
+                                            if (file.file.status === "uploading") {
+                                                this.setState({ disableUpload: true })
                                             }
-                                        }
-                                        this.setState({ fileList: [], disableUpload: false })
-                                    }
-                                }}
-                                headers={{ "Authorization": window.IRSCTFToken }}
-                                name="profile_pic"
-                                beforeUpload={file => {
-                                    const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
-                                    if (!exts.includes(file.type)) {
-                                        message.error(`${file.name} is not an image file.`);
-                                        return Upload.LIST_IGNORE
-                                    }
-                                    return true
-                                }}>
-                                <Tooltip title={<span>Upload a custom profile picture.</span>}>
-                                    <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
-                                </Tooltip>
-                            </Upload>
-                            <Tooltip title={<span>Reset your profile picture to the default profile picture.</span>}>
-                                <Button danger type="primary" icon={<DeleteOutlined />} style={{ marginLeft: "1ch" }} onClick={() => { this.deleteProfilePic() }} />
-                            </Tooltip>
+                                            else if ("response" in file.file) {
+                                                if (file.file.response.success) {
+                                                    message.success("Uploaded profile picture")
+                                                    message.success("Reload the page to see your shiny new picture :)!")
+                                                }
+                                                else {
+                                                    message.error("Failed to upload profile picture")
+                                                    if (file.file.response.error === "too-large") {
+                                                        message.info("Please upload a file smaller than " + file.file.response.size.toString() + " Bytes.")
+                                                    }
+                                                }
+                                                this.setState({ fileList: [], disableUpload: false })
+                                            }
+                                        }}
+                                        headers={{ "Authorization": window.IRSCTFToken }}
+                                        name="profile_pic"
+                                        beforeUpload={file => {
+                                            const exts = ["image/png", "image/jpg", "image/jpeg", "image/webp"]
+                                            if (!exts.includes(file.type)) {
+                                                message.error(`${file.name} is not an image file.`);
+                                                return Upload.LIST_IGNORE
+                                            }
+                                            return true
+                                        }}>
+                                        <Tooltip title={<span>Upload a custom profile picture.</span>}>
+                                            <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
+                                        </Tooltip>
+                                    </Upload>
+                                    <Tooltip title={<span>Reset your profile picture to the default profile picture.</span>}>
+                                        <Button danger type="primary" icon={<DeleteOutlined />} style={{ marginLeft: "1ch" }} onClick={() => { this.deleteProfilePic() }} />
+                                    </Tooltip>
+                                </div>
+                            </div>
+                            <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
+                        </div>
+
+                        <Divider />
+
+                        <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
+
+                            <div className="form-style">
+                                <h1 className="settings-header"><KeyOutlined /> Change Password</h1>
+                                <ChangePasswordForm />
+                            </div>
+
+                            <Divider type="vertical" style={{ height: "inherit" }} />
+
+
+                            <div className="form-style">
+                                <h1 className="settings-header"><MailOutlined /> Change Email</h1>
+                                <ChangeEmailForm email={this.state.email} />
+                            </div>
+                        </div>
+
+                        <Divider />
+
+                        <div>
+                            <h3>Very Very Dangerous Button</h3>
+                            <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => { this.setState({ deleteAccountModal: true }) }} >Delete Account</Button>
+                            <p>You will be asked to key in your password to confirm</p>
                         </div>
                     </div>
-                    <h1 style={{ fontSize: "5ch", marginLeft: "1ch" }}>{this.props.username}</h1>
-                </div>
-
-                <Divider />
-                <h1 className="settings-header"><KeyOutlined /> Change Password</h1>
-                <div className="form-style">
-                    <ChangePasswordForm />
-                </div>
-
-                <Divider />
-
-                <div>
-                    <h3>Very Very Dangerous Button</h3>
-                    <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => { this.setState({ deleteAccountModal: true }) }} >Delete Account</Button>
-                    <p>You will be asked to key in your password to confirm</p>
-                </div>
+                )}
             </Layout>
         )
     }

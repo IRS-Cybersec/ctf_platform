@@ -30,17 +30,59 @@ const type = async (req, res) => {
     });
 }
 
-const changeEmail = async (req, res) => {
+const getSettings = async (req, res) => {
     const collections = Connection.collections
-    if (req.body.email && req.body.email.length > 0) {
-        if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { email: req.body.email } })).matchedCount > 0) {
-            res.send({ success: true })
+    const user = await collections.users.findOne({ username: req.locals.username })
+    if (!user) throw new Error("NotFound")
+    res.send({
+        success: true,
+        email: user.email
+    })
+}
+
+const changeEmail = async (req, res) => {
+    try {
+        const collections = Connection.collections
+        if (req.body.email && req.body.email.length > 0) {
+            const user = await collections.users.findOne({ username: req.locals.username })
+            if (!user) throw new Error("NotFound")
+            if (await argon2.verify(user.password, req.body.password)) {
+                if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { email: req.body.email } })).matchedCount > 0) {
+                    res.send({ success: true })
+                }
+                else throw new Error("NotFound")
+            }
+            else return res.send({ success: false, error: "wrong-password" })
+
+
         }
-        else throw new Error("NotFound")
-
+        else res.send({ success: false, error: "empty-email" })
     }
-    else res.send({ success: false, error: "empty-email" })
-
+    catch (err) {
+        if (err.name == 'MongoServerError') {
+            switch (err.code) {
+                case 11000:
+                    switch (Object.keys(err.keyPattern)[0]) {
+                        case 'email':
+                            res.code(403);
+                            res.send({
+                                success: false,
+                                error: 'email-taken'
+                            });
+                            return;
+                        default:
+                            res.send({
+                                success: false,
+                                error: 'validation'
+                            });
+                            throw new Error(err)
+                    }
+                default:
+                    throw new Error(err)
+            }
+        }
+        else throw new Error(err)
+    }
 }
 
 const login = async (req, res) => {
@@ -143,7 +185,7 @@ const create = async (req, res) => {
         }
         let transactionsCache = NodeCacheObj.get("transactionsCache")
         await collections.transactions.insertOne(insertDoc)
-        await collections.transactions.updateOne({_id: insertDoc._id}, {$set: {_id: insertDoc._id}})
+        await collections.transactions.updateOne({ _id: insertDoc._id }, { $set: { _id: insertDoc._id } })
         transactionsCache[insertDoc.author] = {
             _id: insertDoc.author,
             changes: [{
@@ -389,4 +431,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { getSettings, changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
