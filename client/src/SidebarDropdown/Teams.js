@@ -260,77 +260,79 @@ class Teams extends React.Component {
         })
 
         for (let x = 0; x < challengeArray.length; x++) {
-            //Plot graph
-            scoreTotal += challengeArrayReversed[x].points
-            if (challengeArrayReversed[x].originalAuthor in userScores) userScores[challengeArrayReversed[x].originalAuthor] += challengeArrayReversed[x].points
-            else userScores[challengeArrayReversed[x].originalAuthor] = 0
+            if (challengeArrayReversed[x].points !== 0) {
+                //Plot graph
+                scoreTotal += challengeArrayReversed[x].points
+                if (challengeArrayReversed[x].originalAuthor in userScores) userScores[challengeArrayReversed[x].originalAuthor] += challengeArrayReversed[x].points
+                else userScores[challengeArrayReversed[x].originalAuthor] = 0
 
-            graphPoint = {
-                Score: scoreTotal,
-                Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
-            }
-            graphData.push(graphPoint)
+                graphPoint = {
+                    Score: scoreTotal,
+                    Time: new Date(challengeArrayReversed[x].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
+                }
+                graphData.push(graphPoint)
 
-            //Handle table
-            const currentStuff = challengeArray[x]
-            let currentDS = {
-                key: String(x),
-                challenge: "",
-                score: currentStuff.points,
-                time: "",
-                challengeID: "",
-                username: currentStuff.originalAuthor
-            }
+                //Handle table
+                const currentStuff = challengeArray[x]
+                let currentDS = {
+                    key: String(x),
+                    challenge: "",
+                    score: currentStuff.points,
+                    time: "",
+                    challengeID: "",
+                    username: currentStuff.originalAuthor
+                }
 
-            //Current record is a hint
-            if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
-            else currentDS.challenge = currentStuff.challenge
-            if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID
-            //console.log(currentStuff.timestamp)
-            const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
-            let minutes = Math.ceil(dateTime / 60)
-            let hours = 0
-            let days = 0
-            let months = 0
-            let years = 0
-            if (minutes >= 60) {
-                hours = Math.floor(minutes / 60)
-                minutes = minutes - hours * 60
+                //Current record is a hint
+                if (currentStuff.type === "hint") currentDS.challenge = "Purchased Hint For: " + currentStuff.challenge
+                else currentDS.challenge = currentStuff.challenge
+                if ("challengeID" in currentStuff) currentDS.challengeID = currentStuff.challengeID
+                //console.log(currentStuff.timestamp)
+                const dateTime = Math.abs(new Date() - new Date(currentStuff.timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+                let minutes = Math.ceil(dateTime / 60)
+                let hours = 0
+                let days = 0
+                let months = 0
+                let years = 0
+                if (minutes >= 60) {
+                    hours = Math.floor(minutes / 60)
+                    minutes = minutes - hours * 60
 
-                if (hours >= 24) {
-                    days = Math.floor(hours / 24)
-                    hours = hours - days * 24
+                    if (hours >= 24) {
+                        days = Math.floor(hours / 24)
+                        hours = hours - days * 24
 
-                    if (days >= 30) {
-                        months = Math.floor(days / 30)
-                        days = days - months * 30
+                        if (days >= 30) {
+                            months = Math.floor(days / 30)
+                            days = days - months * 30
 
-                        if (months >= 12) {
-                            years = Math.floor(months / 12)
-                            months = months - years * 12
+                            if (months >= 12) {
+                                years = Math.floor(months / 12)
+                                months = months - years * 12
+                            }
                         }
                     }
                 }
-            }
-            let finalTime = " ago."
-            if (minutes !== 0) {
-                finalTime = minutes.toString() + " minutes " + finalTime
-            }
-            if (hours !== 0) {
-                finalTime = hours.toString() + " hours " + finalTime
-            }
-            if (days !== 0) {
-                finalTime = days.toString() + " days " + finalTime
-            }
-            if (months !== 0) {
-                finalTime = months.toString() + " months " + finalTime
-            }
-            if (years !== 0) {
-                finalTime = years.toString() + " years " + finalTime
-            }
-            currentDS.time = finalTime
+                let finalTime = " ago."
+                if (minutes !== 0) {
+                    finalTime = minutes.toString() + " minutes " + finalTime
+                }
+                if (hours !== 0) {
+                    finalTime = hours.toString() + " hours " + finalTime
+                }
+                if (days !== 0) {
+                    finalTime = days.toString() + " days " + finalTime
+                }
+                if (months !== 0) {
+                    finalTime = months.toString() + " months " + finalTime
+                }
+                if (years !== 0) {
+                    finalTime = years.toString() + " years " + finalTime
+                }
+                currentDS.time = finalTime
 
-            challengeDS.push(currentDS)
+                challengeDS.push(currentDS)
+            }
         }
 
         //push finalPoint
