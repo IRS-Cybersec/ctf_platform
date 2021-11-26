@@ -136,6 +136,8 @@ const uploadBackup = async (req, res) => {
         passResetCode: req.body.passResetCode.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
     }
 
+    console.log(backupData)
+
     await collections.announcements.deleteMany({})
     await collections.cache.deleteMany({})
     await collections.challs.deleteMany({})
@@ -144,11 +146,13 @@ const uploadBackup = async (req, res) => {
     await collections.team.deleteMany({})
     await collections.passResetCode.deleteMany({})
 
-    await collections.announcements.insertMany(backupData.announcements)
-    await collections.cache.insertMany(backupData.cache)
-    await collections.challs.insertMany(backupData.challs)
-    await collections.transactions.insertMany(backupData.transactions)
-    await collections.users.insertMany(backupData.users)
+    if (backupData.announcements.length > 0) await collections.announcements.insertMany(backupData.announcements)
+    if (backupData.cache.length > 0) await collections.cache.insertMany(backupData.cache)
+    if (backupData.challs.length > 0) await collections.challs.insertMany(backupData.challs)
+    if (backupData.transactions.length > 0) await collections.transactions.insertMany(backupData.transactions)
+    if (backupData.users.length > 0) await collections.users.insertMany(backupData.users)
+    if (backupData.team.length > 0) await collections.team.insertMany(backupData.team)
+    if (backupData.passResetCode.length > 0) await collections.passResetCode.insertMany(backupData.passResetCode)
 
     NodeCacheObj.set("transactionsCache", backupData.transactions)
 
