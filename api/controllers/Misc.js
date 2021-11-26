@@ -154,7 +154,7 @@ const uploadBackup = async (req, res) => {
     if (backupData.team.length > 0) await collections.team.insertMany(backupData.team)
     if (backupData.passResetCode.length > 0) await collections.passResetCode.insertMany(backupData.passResetCode)
 
-    NodeCacheObj.set("transactionsCache", await createTransactionsCache())
+    
 
     // Update all caches 
     // Create teams cache
@@ -203,6 +203,8 @@ const uploadBackup = async (req, res) => {
 
 	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
 	NodeCacheObj.set("teamListCache", teamListCache)
+
+    NodeCacheObj.set("transactionsCache", await createTransactionsCache())
 
     // Create nodemailer object
 	NodeCacheObj.set("NodemailerT", nodemailer.createTransport({
