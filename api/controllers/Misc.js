@@ -154,7 +154,7 @@ const uploadBackup = async (req, res) => {
     if (backupData.team.length > 0) await collections.team.insertMany(backupData.team)
     if (backupData.passResetCode.length > 0) await collections.passResetCode.insertMany(backupData.passResetCode)
 
-    NodeCacheObj.set("transactionsCache", backupData.transactions)
+    NodeCacheObj.set("transactionsCache", await createTransactionsCache())
 
     return res.send({ success: true })
 }
