@@ -52,6 +52,7 @@ const startCache = async () => {
 		emailResetTime: 600,
 		emailVerify: false,
 		teamChangeDisable: false,
+		loginDisable: false
 	}
 	const collections = Connection.collections
 

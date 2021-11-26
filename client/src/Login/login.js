@@ -128,6 +128,9 @@ class Login extends React.Component {
                     message.info("Please verify your email in order to login to the platform.", 10)
                     this.setState({ login: false, needVerify: true, verifyEmail: data.emailVerify })
                 }
+                else if (data.error === "login-disabled") {
+                    message.error({ content: "Oops. Login is disabled for non-admin users." })
+                }
                 else {
                     message.error({ content: "Oops. Unknown error" })
                 }
@@ -256,6 +259,11 @@ class Login extends React.Component {
                 if (data.error === "disabled") {
                     message.error("Oops. It seems like the email verification function is disabled.", 5)
                     message.info("You may simply proceed to login without verifying your email.", 5)
+                    this.setState({ needVerify: false, login: true })
+                }
+                else if (data.error === "login-disabled") {
+                    message.success("Email successfully verified!")
+                    message.warn("Login is currently disabled for non-admin users so we couldn't log you in automatically.")
                     this.setState({ needVerify: false, login: true })
                 }
                 else if (data.error === "already-verified") {

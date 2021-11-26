@@ -67,12 +67,25 @@ const verifyEmail = async (req, res) => {
             if ("code" in user) { // successfully verified, let user login immediately
                 if (await argon2.verify(user.code, req.body.code)) {
                     await collections.users.updateOne({ username: user.username }, { $unset: { code: 0, codeTimestamp: 0 } })
-                    setPermissions(user.username, user.type)
-                    res.send({
-                        success: true,
-                        permissions: user.type,
-                        token: signToken(user.username)
-                    });
+                    if (NodeCacheObj.get("loginDisable")) {
+                        if (user.type === 2) {
+                            setPermissions(user.username, user.type)
+                            res.send({
+                                success: true,
+                                permissions: user.type,
+                                token: signToken(user.username)
+                            });
+                        }
+                        else res.send({ success: false, error: "login-disabled" })
+                    }
+                    else {
+                        setPermissions(user.username, user.type)
+                        res.send({
+                            success: true,
+                            permissions: user.type,
+                            token: signToken(user.username)
+                        });
+                    }
                 }
                 else return res.send({
                     success: false,

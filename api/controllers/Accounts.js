@@ -18,7 +18,8 @@ const disableStates = async (req, res) => {
             teamMode: NodeCacheObj.get("teamMode"),
             forgotPass: NodeCacheObj.get("forgotPass"),
             emailVerify: NodeCacheObj.get("emailVerify"),
-            teamChangeDisable: NodeCacheObj.get("teamChangeDisable")
+            teamChangeDisable: NodeCacheObj.get("teamChangeDisable"),
+            loginDisable: NodeCacheObj.get("loginDisable")
         }
     });
 }
@@ -97,12 +98,26 @@ const login = async (req, res) => {
                 res.send({ success: false, error: "need-verify", emailVerify: user.email })
             }
             else {
-                setPermissions(user.username, user.type)
-                res.send({
-                    success: true,
-                    permissions: user.type,
-                    token: signToken(user.username)
-                });
+                if (NodeCacheObj.get("loginDisable")) {
+                    if (user.type === 2) {
+                        setPermissions(user.username, user.type)
+                        res.send({
+                            success: true,
+                            permissions: user.type,
+                            token: signToken(user.username)
+                        });
+                    }
+                    else return res.send({ success: false, error: "login-disabled" })
+                }
+                else {
+                    setPermissions(user.username, user.type)
+                    res.send({
+                        success: true,
+                        permissions: user.type,
+                        token: signToken(user.username)
+                    });
+                }
+
             }
         }
         else throw new Error('WrongDetails');

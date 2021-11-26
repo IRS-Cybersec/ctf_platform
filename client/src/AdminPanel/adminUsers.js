@@ -269,7 +269,8 @@ class AdminUsers extends React.Component {
             forgotPass: false,
             emailVerify: false,
             teamChangeDisable: false,
-            emailChangeModal: false
+            emailChangeModal: false,
+            loginDisable: false
         }
     }
 
@@ -288,7 +289,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({ loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -447,6 +448,7 @@ class AdminUsers extends React.Component {
             "forgotPass": { name: "Forgot password reset", loading: "disableLoading2", disable: false },
             "emailVerify": { name: "Email verification", loading: "disableLoading2", disable: false },
             "disableTeamChange": { name: "Team changing", loading: "disableLoading2", disable: true },
+            "loginDisable": { name: "User login", loading: "disableLoading2", disable: true },
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
@@ -481,6 +483,7 @@ class AdminUsers extends React.Component {
 
 
         }).catch((error) => {
+            console.log(error)
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
         this.setState({ disableLoading: false, disableLoading2: false, disableLoading3: false })
@@ -827,6 +830,13 @@ class AdminUsers extends React.Component {
                     <Card className="settings-card">
                         <h3>Disable User Registration:  <Switch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("registerDisable", value)} checked={this.state.registerDisable} /></h3>
                         <p>Disables user registration for unregistered users. Admins can still create users from this page.</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>Disable User Logins:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("loginDisable", value)} checked={this.state.loginDisable} /></h3>
+                        <p>Disables user login except for admin users. <br/><b>Note:</b> Users already logged into the platform will remain authenticated as tokens cannot be revoked. If you want to restrict a user from accessing the platform anymore, simply delete their account.</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
