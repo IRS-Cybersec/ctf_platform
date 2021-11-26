@@ -156,6 +156,75 @@ const uploadBackup = async (req, res) => {
 
     NodeCacheObj.set("transactionsCache", await createTransactionsCache())
 
+    // Update all caches 
+    // Create teams cache
+	let usernameTeamCache = {}
+	let teamListCache = {}
+	const userCursor = collections.team.find({}, { projection: { name: 1, members: 1, code: 1 } })
+	await userCursor.forEach((doc) => {
+		teamListCache[doc.name] = { members: doc.members, code: doc.code }
+		// create username-team mapping
+		// this does not guarentee that every username will have a mapping
+		for (let i = 0; i < doc.members.length; i++) {
+			usernameTeamCache[doc.members[i]] = doc.name
+		}
+	})
+
+    const createCache = async () => {
+		try {
+			await collections.cache.insertOne(cache);
+			console.info("Cache created")
+		}
+		catch (err) {
+			console.error(err)
+		}
+	}
+
+	let checkCache = await collections.cache.findOne(null, { projection: { _id: 0 } })
+	if (checkCache === null) {
+		await createCache() //First time set-up: (1) Create Cache 
+		for (const key in cache) {
+			NodeCacheObj.set(key, cache[key])
+		}
+	}
+	else {
+		// Add any missing cache values
+		for (const key in cache) {
+			if (!(key in checkCache)) {
+				checkCache[key] = cache[key]
+				const updateObj = {}
+				updateObj[key] = cache[key]
+				await collections.cache.updateOne({}, { $set: updateObj })
+				console.log("Missing value " + key + " added")
+			}
+			NodeCacheObj.set(key, checkCache[key])
+		}
+	}
+
+	NodeCacheObj.set("usernameTeamCache", usernameTeamCache)
+	NodeCacheObj.set("teamListCache", teamListCache)
+
+    // Create nodemailer object
+	NodeCacheObj.set("NodemailerT", nodemailer.createTransport({
+		host: NodeCacheObj.get("SMTPHost"),
+		port: NodeCacheObj.get("SMTPPort"),
+		secure: NodeCacheObj.get("SMTPSecure"),
+		auth: {
+			user: NodeCacheObj.get("SMTPUser"),
+			pass: NodeCacheObj.get("SMTPPass")
+		}
+	}))
+
+    // Create challenge cache
+	const cursor = collections.challs.find({}, { projection: { solves: 1 } })
+	let challengeCache = {}
+	await cursor.forEach((doc) => {
+		challengeCache[doc._id] = { solves: doc.solves }
+	})
+	NodeCacheObj.set("challengeCache", challengeCache)
+
+
+
     return res.send({ success: true })
 }
 
