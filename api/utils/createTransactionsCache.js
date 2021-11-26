@@ -6,15 +6,18 @@ const createCache = async () => {
     let transactionsCache = {}
     const cursor = collections.transactions.find({})
     const teamList = NodeCacheObj.get("teamListCache")
-    await cursor.forEach((doc) => {
+    await cursor.forEach(async (doc) => {
         let isAdmin = false
 
         if (NodeCacheObj.get("adminShowDisable")) {
             if ("originalAuthor" in doc) {
-                if (checkUsernamePerms(doc.originalAuthor) === 2) isAdmin = true
+                if (await checkUsernamePerms(doc.originalAuthor) === 2) isAdmin = true
             }
-            else if (checkUsernamePerms(doc.author) === 2) isAdmin = true
+            else if (await checkUsernamePerms(doc.author) === 2) isAdmin = true
         }
+
+        console.log(doc)
+        console.log(isAdmin)
 
         if (!NodeCacheObj.get("adminShowDisable") || (NodeCacheObj.get("adminShowDisable") && !isAdmin)) {
 

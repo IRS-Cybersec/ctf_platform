@@ -5,7 +5,7 @@ let signer = null;
 let permissions = {};
 
 const checkPermissions = async (token) => {
-
+    // Check perms of a token
     const username = signer.unsign(token);
 
     if (username in permissions) return { type: permissions[username], username: username };
@@ -17,9 +17,17 @@ const checkPermissions = async (token) => {
     }
 }
 
-const checkUsernamePerms = (username) => {
+const checkUsernamePerms = async (username) => {
+    // Check perms of a username
     if (username in permissions) return permissions[username]
-    else return false
+    else {
+        const type = (await Connection.collections.users.findOne({ username: username }, { projection: { type: 1, _id: 0 } }));
+        if (type == null) return false;
+        else {
+            permissions[username] = type.type;
+            return type.type;
+        }
+    }
 }
 
 const setPermissions = (username, perms) => {

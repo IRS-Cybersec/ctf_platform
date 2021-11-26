@@ -165,9 +165,7 @@ const uploadBackup = async (req, res) => {
         team: req.body.team.map((document) => { document._id = MongoDB.ObjectId(document._id); return document }),
         passResetCode: req.body.passResetCode.map((document) => { document._id = MongoDB.ObjectId(document._id); document.timestamp = new Date(document.timestamp); return document }),
     }
-
-    console.log(backupData)
-
+    
     await collections.announcements.deleteMany({})
     await collections.cache.deleteMany({})
     await collections.challs.deleteMany({})

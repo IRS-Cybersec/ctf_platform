@@ -138,10 +138,10 @@ const startup = async (server) => {
     });
 }
 
-const broadCastNewSolve = (solveDetails) => {
+const broadCastNewSolve = async (solveDetails) => {
     if (NodeCacheObj.get("adminShowDisable")) {
         for (let i = 0; i < solveDetails.length; i++) {
-            if (checkUsernamePerms(solveDetails[i].author) === 2) solveDetails.splice(i, 1)
+            if ((await checkUsernamePerms(solveDetails[i].author)) === 2) solveDetails.splice(i, 1)
         }
     }
     wss.clients.forEach((client) => {

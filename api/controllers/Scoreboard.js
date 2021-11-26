@@ -28,7 +28,7 @@ const userScoreboard = async (req, res) => {
     let transactionsCache = NodeCacheObj.get("transactionsCache")
     let scores = []
 
-    if (NodeCacheObj.get("adminShowDisable") && checkUsernamePerms(req.params.username) === 2) return res.send({ success: true, scores: [], hidden: true })
+    if (NodeCacheObj.get("adminShowDisable") && (await checkUsernamePerms(req.params.username)) === 2) return res.send({ success: true, scores: [], hidden: true })
 
     if (req.params.username in transactionsCache) {
         scores = transactionsCache[req.params.username].changes
@@ -46,7 +46,7 @@ const userScoreboard = async (req, res) => {
 const userPoints = async (req, res) => {
     let transactionsCache = NodeCacheObj.get("transactionsCache")
     let score = 0
-    if (NodeCacheObj.get("adminShowDisable") && checkUsernamePerms(req.params.username) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
+    if (NodeCacheObj.get("adminShowDisable") && (await checkUsernamePerms(req.params.username)) === 2) return res.send({ success: true, score: "Hidden", hidden: true })
 
     const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     // Return team score instead of individual user score if user is in a team
