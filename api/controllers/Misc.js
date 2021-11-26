@@ -6,6 +6,36 @@ const MongoDB = require('mongodb');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const createTransactionsCache = require('./../utils/createTransactionsCache.js')
+let cache = {
+    announcements: 0,
+    challenges: 0,
+    registerDisable: false,
+    adminShowDisable: false,
+    submissionDisabled: false,
+    uploadSize: 512000,
+    latestSolveSubmissionID: 0,
+    maxSockets: 5,
+    uploadPath: "/usr/share/nginx/static/profile",
+    categoryUploadPath: "/usr/share/nginx/static/category",
+    categoryMeta: {},
+    teamMode: false,
+    teamMaxSize: 3,
+    teamUpdateID: 0,
+    forgotPass: false,
+    SMTPHost: "ctf.example.com",
+    SMTPUser: "user",
+    SMTPPass: "examplepass",
+    SMTPSecure: false,
+    SMTPPort: 587,
+    websiteLink: "https://ctf.example.com",
+    emailSenderAddr: "noreply@ctf.example.com",
+    emailSender: "John Smith",
+    emailCooldown: 180,
+    emailResetTime: 600,
+    emailVerify: false,
+    teamChangeDisable: false,
+}
+
 
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
@@ -156,7 +186,8 @@ const uploadBackup = async (req, res) => {
 
     
 
-    // Update all caches 
+    // Update all caches (copied from api.js)
+    
     // Create teams cache
 	let usernameTeamCache = {}
 	let teamListCache = {}
