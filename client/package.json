@@ -57,7 +57,7 @@
     ]
   },
   "devDependencies": {
-    "cssnano": "^5.0.11",
+    "cssnano": "^5.0.12",
     "source-map-explorer": "^2.5.2",
     "style-loader": "^2.0.0"
   }
