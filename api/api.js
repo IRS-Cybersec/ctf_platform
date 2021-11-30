@@ -1,7 +1,7 @@
 const fastify = require('fastify')()
 const mongoSanitize = require('express-mongo-sanitize');
 const fastifyFileUpload = require('fastify-file-upload');
-const cors = require("fastify-cors");
+
 
 const Connection = require('./utils/mongoDB.js')
 const createTransactionsCache = require('./utils/createTransactionsCache.js')
@@ -152,8 +152,12 @@ const main = async () => {
 	})
 
 	await fastify.register(fastifyFileUpload)
-	
-	await fastify.register(cors)
+
+	if (process.env.NODE_ENV === "development") {
+		console.log("Development mode: CORS enabled")
+		const cors = require("fastify-cors");
+		await fastify.register(cors)
+	}
 
 	if (await Connection.open()) {
 		await startCache()
