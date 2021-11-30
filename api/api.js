@@ -1,6 +1,7 @@
 const fastify = require('fastify')()
 const mongoSanitize = require('express-mongo-sanitize');
 const fastifyFileUpload = require('fastify-file-upload');
+const cors = require("fastify-cors");
 
 const Connection = require('./utils/mongoDB.js')
 const createTransactionsCache = require('./utils/createTransactionsCache.js')
@@ -151,12 +152,8 @@ const main = async () => {
 	})
 
 	await fastify.register(fastifyFileUpload)
-	console.log(process.env.NODE_ENV)
-	if (process.env.NODE_ENV === "development") {
-		console.log("Development mode: CORS enabled")
-		const cors = require("fastify-cors")
-		await fastify.register(cors)
-	}
+	
+	await fastify.register(cors)
 
 	if (await Connection.open()) {
 		await startCache()
@@ -193,7 +190,7 @@ const main = async () => {
 			instance.get('/v1/account/settings', accounts.getSettings);
 			instance.post('/v1/account/permissions', accounts.permissions);
 			instance.post('/v1/account/change/email', accounts.changeEmail);
-			
+
 
 			// Challenge endpoints
 			instance.get('/v1/challenge/disableStates', challenges.disableStates);
@@ -238,7 +235,7 @@ const main = async () => {
 			instance.get('/v1/email/test', emails.testConnection);
 			instance.post('/v1/email/adminVerify', emails.adminVerifyEmail)
 			instance.post('/v1/email/adminUnVerify', emails.adminUnVerifyEmail)
-			
+
 
 			// Misc endpoints
 			instance.get('/v1/backup', misc.downloadBackup)
