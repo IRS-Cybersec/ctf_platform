@@ -213,6 +213,8 @@ const main = async () => {
 			instance.post('/v1/challenge/edit/category', challenges.editCategory);
 			instance.post('/v1/challenge/edit/categoryVisibility', challenges.editCategoryVisibility);
 			instance.post('/v1/challenge/delete', challenges.deleteChall);
+			instance.post('/v1/challenge/download', challenges.downloadChall);
+			instance.post('/v1/challenge/upload', challenges.uploadChall);
 
 			// Announcement endpoints
 			instance.get('/v1/announcements/list/:version', announcemnets.listVersion);

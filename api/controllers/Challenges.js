@@ -865,4 +865,62 @@ const deleteChall = async (req, res) => {
     });
 }
 
-module.exports = { disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, editCategoryVisibility }
+const downloadChall = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (!Array.isArray(req.body.challenges)) throw new Error('Validation');
+    let challengeIDs = []
+    for (let i = 0; i < req.body.challenges.length; i++) {
+        challengeIDs.push(MongoDB.ObjectId(req.body.challenges[i]))
+    }
+    res.send({
+        success: true,
+        challenges: await collections.challs.find({ _id: { $in: challengeIDs } }).toArray()
+    })
+}
+
+const uploadChall = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    let challengeData = []
+    try { challengeData = JSON.parse(req.body.challenges).challenges }
+    catch (e) {
+        console.error(e)
+        return res.send({ success: false, error: "invalid-json" })
+    }
+    if (!Array.isArray(challengeData)) throw new Error('Validation');
+    let failedInsert = []
+    for (let i = 0; i < challengeData.length; i++) {
+        const check = await collections.challs.findOne({_id: MongoDB.ObjectId(challengeData[i]._id)})
+        if (!check) {
+            challengeData[i]._id = MongoDB.ObjectId(challengeData[i]._id)
+            challengeData[i].created = new Date(challengeData[i].created);
+            challengeData[i].solves = []
+            if ("hints" in challengeData[i]) {
+                for (let x = 0; x < challengeData[i].hints.length; x++) {
+                    challengeData[i].hints[x].purchased = []
+                }
+            }
+            await collections.challs.insertOne(challengeData[i])
+        }
+        else {
+            failedInsert.push(check.name)
+        }
+    }
+
+    // re-create challengeCache
+    let challengeCache = {}
+    const cursor = collections.challs.find({}, { projection: { solves: 1 } })
+	await cursor.forEach((doc) => {
+		challengeCache[doc._id] = { solves: doc.solves }
+	})
+	NodeCacheObj.set("challengeCache", challengeCache)
+
+    if (failedInsert.length === 0) res.send({
+        success: true
+    })
+    else res.send({ success:false, error: "failed-insert", failedInsert: failedInsert})
+    
+}
+
+module.exports = { uploadChall, downloadChall, disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, editCategoryVisibility }

@@ -13,6 +13,8 @@ import {
     EyeInvisibleOutlined,
     RedoOutlined,
     SearchOutlined,
+    DownloadOutlined,
+    UploadOutlined
 } from '@ant-design/icons';
 import AdminChallengeCreate from "./adminChallengeCreate.js";
 import AdminChallengeEdit from "./adminChallengeEdit.js";
@@ -157,6 +159,82 @@ const EditCategoryForm = (props) => {
     );
 };
 
+const UploadChallengesForm = (props) => {
+    const [form] = Form.useForm();
+    const [fileList, updateFileList] = useState([])
+    const [editLoading, updateEditLoading] = useState(false)
+
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                updateEditLoading(true)
+                let fileData = await fileList[0].originFileObj.text()
+                try {
+                    JSON.parse(fileData)
+                }
+                catch (e) {
+                    console.error(e)
+                    message.error("Invalid json.")
+                    updateEditLoading(false)
+                    return false
+                }
+
+                await fetch(window.ipAddress + "/v1/challenge/upload", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "challenges": fileData
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Uploaded challenges successfully" })
+                        props.closeUploadChallenges()
+                        props.handleRefresh()
+                    }
+                    else if (data.error === "failed-insert") {
+                        message.warn("Some challenges already exist and were not inserted. Please delete the challenges to insert from the backup.", 3)
+                        message.warn("The challenges are: [" + data.failedInsert.join(" ,") + "]", 5)
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error" })
+                    }
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+
+                updateEditLoading(false)
+            }}
+        >
+            <Form.Item
+                name="challenges"
+            >
+
+                <Dragger
+                    fileList={fileList}
+                    disabled={editLoading}
+                    accept=".json"
+                    maxCount={1}
+                    onChange={(file) => {
+                        updateFileList(file.fileList)
+                    }}
+                    beforeUpload={(file) => {
+                        return false
+                    }}>
+                    <h4>Drag and drop a challenge backup file (.json) to upload challenge(s).</h4>
+                </Dragger>
+            </Form.Item>
+            <span>Please note that hint purchases and solves are <b>not brought over</b> as this is equivalent to "creating a new challenge from a backup"</span>
+
+            <Button icon={<UploadOutlined/>} type="primary" htmlType="submit" style={{ marginBottom: "1.5vh", marginTop: "3vh" }} loading={editLoading}>Upload Challenge(s)</Button>
+
+        </Form>
+    );
+};
+
 class AdminChallenges extends React.Component {
     constructor(props) {
         super(props);
@@ -183,7 +261,8 @@ class AdminChallenges extends React.Component {
             categoryMeta: {},
             categoryOptions: [],
             currentEditCategory: false,
-            categorySelect: ""
+            categorySelect: "",
+            uploadModalVisible: false
         }
     }
 
@@ -515,6 +594,43 @@ class AdminChallenges extends React.Component {
         this.setState({ uploadLoading: false })
     }
 
+    downloadChallenges = async (challenges) => {
+        let challengeIDs = []
+        let challengeNames = []
+        for (let i = 0; i < challenges.length; i++) {
+            challengeIDs.push(challenges[i]._id)
+            challengeNames.push(challenges[i].name)
+        }
+        await fetch(window.ipAddress + "/v1/challenge/download", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+            body: JSON.stringify({
+                challenges: challengeIDs
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                const downloadData = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ challenges: data.challenges }))
+                const downloadAnchorNode = document.createElement('a');
+                const date = new Date()
+                downloadAnchorNode.setAttribute("href", downloadData);
+                downloadAnchorNode.setAttribute("download", date.toISOString() + "-ChallengesBackup.json");
+                document.body.appendChild(downloadAnchorNode); // required for firefox
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                message.success("Successfully downloaded the challenges [" + challengeNames.join(", ") + "]")
+            }
+            else {
+                message.error({ content: "Oops. Unknown error" })
+            }
+
+
+        }).catch((error) => {
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
+    }
+
     openCategoryEditor = async (category) => {
         const catMeta = this.state.categoryMeta[category]
         this.setState({
@@ -535,12 +651,14 @@ class AdminChallenges extends React.Component {
 
             <Layout style={{ height: "100%", width: "100%", backgroundColor: "rgba(0, 0, 0, 0)" }}>
 
-
-
+                <Modal title={<span><UploadOutlined/> Upload Challenges</span>} visible={this.state.uploadModalVisible} footer={null} onCancel={() => {this.setState({uploadModalVisible: false})}}>
+                    <UploadChallengesForm handleRefresh={this.handleRefresh.bind(this)} closeUploadChallenges={() => {this.setState({uploadModalVisible: false})}}/>
+                </Modal>
                 <div style={{ display: (!this.state.challengeCreate && !this.state.editChallenge) ? "initial" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", height: "2ch" }}>
                             <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<FlagOutlined />} onClick={() => { this.setState({ challengeCreate: true }, this.props.history.push("/Admin/Challenges/Create")) }}>Create New Challenge</Button>
+                            <Button type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<UploadOutlined />} onClick={() => { this.setState({uploadModalVisible: true}) }}>Upload Challenges</Button>
                             {this.state.loading && (
                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                                     <Ellipsis color="#177ddc" size={60} />
@@ -549,19 +667,25 @@ class AdminChallenges extends React.Component {
                             )}
                         </div>
                         <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.handleRefresh(); message.success("Challenge list refreshed.") }} />
+
                     </div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true, this.state.selectedTableKeys, this.state.selectedRows) }}>Show</Button>
-                        <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys, this.state.selectedRows) }}>Hide</Button>
-                        <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
-                            confirm({
-                                confirmLoading: this.state.disableEditButtons,
-                                title: 'Are you sure you want to delete the challenge(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
-                                icon: <ExclamationCircleOutlined />,
-                                onOk: (close) => { this.deleteChallenge(close.bind(this), this.state.selectedTableKeys, this.state.selectedRows) },
-                                onCancel: () => { },
-                            });
-                        }}>Delete Challenges</Button>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                            <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeOutlined style={{ color: "#49aa19" }} />} onClick={() => { this.editChallengeVisibility(true, this.state.selectedTableKeys, this.state.selectedRows) }}>Show</Button>
+                            <Button disabled={this.state.disableEditButtons} type="default" style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#6e6e6e" }} icon={<EyeInvisibleOutlined style={{ color: "#d32029" }} />} onClick={() => { this.editChallengeVisibility(false, this.state.selectedTableKeys, this.state.selectedRows) }}>Hide</Button>
+                            <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
+                                confirm({
+                                    confirmLoading: this.state.disableEditButtons,
+                                    title: 'Are you sure you want to delete the challenge(s) (' + this.state.selectedTableKeys.join(", ") + ')? This action is irreversible.',
+                                    icon: <ExclamationCircleOutlined />,
+                                    onOk: (close) => { this.deleteChallenge(close.bind(this), this.state.selectedTableKeys, this.state.selectedRows) },
+                                    onCancel: () => { },
+                                });
+                            }}>Delete Challenges</Button>
+                        </div>
+                        <div>
+                            <Button disabled={this.state.disableEditButtons} type="primary" style={{ marginBottom: "2vh", marginRight: "1ch" }} icon={<DownloadOutlined />} onClick={() => { this.downloadChallenges(this.state.selectedRows) }}>Download</Button>
+                        </div>
                     </div>
                     <Table rowSelection={{ selectedRowKeys: this.state.selectedTableKeys, onChange: this.handleTableSelect.bind(this) }} style={{ overflow: "auto" }} dataSource={this.state.dataSource} locale={{
                         emptyText: (
