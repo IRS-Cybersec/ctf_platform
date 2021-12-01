@@ -15,10 +15,7 @@ const createCache = async () => {
             }
             else if (await checkUsernamePerms(doc.author) === 2) isAdmin = true
         }
-
-        console.log(doc)
-        console.log(isAdmin)
-
+        
         if (!NodeCacheObj.get("adminShowDisable") || (NodeCacheObj.get("adminShowDisable") && !isAdmin)) {
 
             const insertDoc = {
