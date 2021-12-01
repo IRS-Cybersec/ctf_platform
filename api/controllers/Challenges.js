@@ -519,7 +519,6 @@ const submit = async (req, res) => {
                 data: 'correct'
             });
         }
-        console.log(NodeCacheObj.get("transactionsCache").tkai)
         // for "double-blind" CTFs - ask me if you want to
         // else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
         // 	if (argon2.verify(flag, req.body.flag)) {
