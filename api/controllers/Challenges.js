@@ -484,9 +484,10 @@ const submit = async (req, res) => {
                 lastChallengeID: insertDocument.lastChallengeID,
             }
             if ("originalAuthor" in insertDocument) transactionDoc.originalAuthor = insertDocument.originalAuthor
+            // Push new solve to user's transactions
             transactionsCache[req.locals.username].changes.push(transactionDoc)
             // Push new solve to team's transactions. Duplicate solves would already have been filtered out
-            transactionsCache[insertDocument.author].changes.push(transactionDoc)
+            if (req.locals.username in usernameTeamCache) transactionsCache[insertDocument.author].changes.push(transactionDoc)
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
@@ -518,6 +519,7 @@ const submit = async (req, res) => {
                 data: 'correct'
             });
         }
+        console.log(NodeCacheObj.get("transactionsCache").tkai)
         // for "double-blind" CTFs - ask me if you want to
         // else if (chall.flags[0].substring(0, 1) == '$') chall.flags.some(flag => {
         // 	if (argon2.verify(flag, req.body.flag)) {

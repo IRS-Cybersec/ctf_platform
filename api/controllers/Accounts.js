@@ -1,4 +1,5 @@
 const { checkPermissions, deletePermissions, setPermissions, signToken } = require('./../utils/permissionUtils.js')
+const createCache = require('../utils/createTransactionsCache.js')
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
 const crypto = require('crypto');
@@ -286,6 +287,8 @@ const takenEmail = async (req, res) => {
 const deleteAccount = async (req, res) => {
     const collections = Connection.collections
     let userToDelete = req.locals.username;
+
+    // admin deletion
     if (req.body.users) {
         if (!Array.isArray(req.body.users)) throw new Error('Validation');
         const usersToDelete = req.body.users;
@@ -324,9 +327,10 @@ const deleteAccount = async (req, res) => {
         await collections.challs.deleteMany({ author: { $in: usersToDelete } });
         await collections.transactions.deleteMany({ author: { $in: usersToDelete } });
         usersToDelete.forEach(username => { deletePermissions(username) })
-
+        await createCache()
         res.send({ success: true });
     }
+    // non-admin deletion (delete self)
     else {
         const user = await collections.users.findOne({ username: userToDelete }, { projection: { password: 1, _id: 0 } });
         if (!(await argon2.verify(user.password, req.body.password))) return res.send({ success: false, error: "wrong-pass" })
@@ -355,6 +359,7 @@ const deleteAccount = async (req, res) => {
         await collections.challs.deleteMany({ author: userToDelete });
         await collections.transactions.deleteMany({ author: userToDelete });
         deletePermissions(username);
+        await createCache()
         res.send({ success: true });
     }
 }

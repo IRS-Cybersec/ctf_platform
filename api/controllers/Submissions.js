@@ -162,6 +162,7 @@ const deleteSubmission = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
     let notFoundList = []
+    let challengeCache = NodeCacheObj.get("challengeCache")
     for (let i = 0; i < req.body.ids.length; i++) {
         const current = req.body.ids[i]
         let delReq = await collections.transactions.findOneAndDelete({ _id: MongoDB.ObjectId(current) })
@@ -186,6 +187,11 @@ const deleteSubmission = async (req, res) => {
                     solves.splice(index, 1)
                     await collections.challs.updateOne({ _id: delReq.challengeID }, { $set: { solves: solves } })
                 }
+                const index2 = challengeCache[delReq.challengeID].solves.indexOf(delReq.author)
+                if (index2 !== -1) { // in case the challenge purchase record is not found for any reason
+                    solves.splice(index, 1)
+                    challengeCache[delReq.challengeID].solves.splice(index2, 1)
+                }
 
             }
         }
@@ -200,6 +206,7 @@ const deleteSubmission = async (req, res) => {
             }
         }
     }
+    
     NodeCacheObj.set("transactionsCache", await createTransactionsCache())
 
 
