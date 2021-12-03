@@ -6,7 +6,7 @@
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
-    "@uiw/react-md-editor": "^3.8.2",
+    "@uiw/react-md-editor": "^3.8.4",
     "antd": "^4.17.2",
     "antd-dayjs-webpack-plugin": "^1.0.6",
     "babel-plugin-import": "^1.13.3",
