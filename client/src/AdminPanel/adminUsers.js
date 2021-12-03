@@ -447,7 +447,7 @@ class AdminUsers extends React.Component {
             "teamMode": { name: "Team mode", loading: "disableLoading3", disable: false },
             "forgotPass": { name: "Forgot password reset", loading: "disableLoading2", disable: false },
             "emailVerify": { name: "Email verification", loading: "disableLoading2", disable: false },
-            "teamChangeDisbale": { name: "Team changing", loading: "disableLoading2", disable: true },
+            "teamChangeDisable": { name: "Team changing", loading: "disableLoading2", disable: true },
             "loginDisable": { name: "User login", loading: "disableLoading2", disable: true },
         }
         await fetch(window.ipAddress + "/v1/adminSettings", {
