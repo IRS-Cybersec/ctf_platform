@@ -377,14 +377,14 @@ class Login extends React.Component {
                                                 <Checkbox>Remember me</Checkbox>
                                             </Form.Item>
 
-                                            <a href="#" onClick={() => { this.setState({ login: false, forgotPass: true }) }}><b>I forgot my password <QuestionCircleOutlined /></b></a>
+                                            <a href="#" id="forgot-password" onClick={() => { this.setState({ login: false, forgotPass: true }) }}><b>I forgot my password <QuestionCircleOutlined /></b></a>
                                         </div>
                                     </Form.Item>
 
                                     <Form.Item>
                                         <div style={{ display: "flex", alignItems: "center" }}>
                                             <Button type="primary" htmlType="submit" className="login-form-button" style={{ marginRight: "2ch" }} loading={this.state.loading}>Log in</Button>
-                                            <span>Or <a href="#" onClick={() => { this.setState({ login: false, register: true }) }} ><b>Register now <RightCircleOutlined /></b></a></span>
+                                            <span>Or <a href="#" id="register-toggle" onClick={() => { this.setState({ login: false, register: true }) }} ><b>Register now <RightCircleOutlined /></b></a></span>
                                         </div>
                                     </Form.Item>
                                 </Form>
@@ -395,6 +395,7 @@ class Login extends React.Component {
                                 <h1 style={{ color: "white", fontSize: "3ch" }}>Register an Account</h1>
                                 <Form
                                     name="register_form"
+                                    id="register-form"
                                     className="register-form"
                                     onFinish={this.handleRegister}
                                     style={{ width: "95%" }}
@@ -402,20 +403,22 @@ class Login extends React.Component {
                                 >
                                     <Form.Item
                                         name="username"
+                                        
                                         rules={[{ required: true, message: 'Please enter a username' }, { message: "Please enter an alphanumeric username (without spaces)", pattern: /^[a-zA-Z0-9_]+$/ }]}
                                     >
-                                        <Input allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
+                                        <Input id="register-username" allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
                                     </Form.Item>
 
                                     <Form.Item
                                         name="email"
+                                        
                                         rules={[{ required: true, message: 'Please enter an email' },
                                         {
                                             type: 'email',
                                             message: "Please enter a valid email",
                                         }]}
                                     >
-                                        <Input allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
+                                        <Input id="register-email" allowClear prefix={<MailOutlined />} placeholder="Enter a new email" />
                                     </Form.Item>
 
                                     <Form.Item
