@@ -248,7 +248,10 @@ const create = async (req, res) => {
             await collections.cache.updateOne({}, { $set: { teamUpdateID: teamUpdateID } })
             // Edit transactions and change author to the team name
             let transactionCache = NodeCacheObj.get("transactionsCache")
-            const userTransactions = transactionCache[req.locals.username].changes
+
+            // If an admin is hidden, their transactions are not in the cache. Hence we need to check if the name is inside
+            let userTransactions = []
+            if (req.locals.username in transactionCache) userTransactions = transactionCache[req.locals.username].changes
             for (let i = 0; i < userTransactions.length; i++) {
                 userTransactions[i].author = req.body.name
                 userTransactions[i].originalAuthor = req.locals.username
