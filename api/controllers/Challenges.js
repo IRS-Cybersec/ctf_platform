@@ -565,7 +565,7 @@ const newChall = async (req, res) => {
         if (req.locals.perms < 1) throw new Error('Permissions');
         let doc = {
             name: req.body.name,
-            category: req.body.category,
+            category: req.body.category.trim(),
             description: req.locals.perms <= 1 ? DomPurify.sanitize(req.body.description) : req.body.description,
             points: parseInt(req.body.points),
             flags: req.body.flags,
@@ -660,7 +660,10 @@ const edit = async (req, res) => {
         for (field of editables) {
             if (req.body[field] != undefined) {
                 if (req.body[field] === '') unsetObj[field] = "" // If the field is set to "", it means the user wants to delete this optional argument
-                else updateObj[field] = req.body[field];
+                else {
+                    if (field === "category") updateObj[field] = req.body[field].trim();
+                    else updateObj[field] = req.body[field]
+                } 
             }
         }
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
@@ -771,7 +774,7 @@ const editCategory = async (req, res) => {
     let categoryMeta = NodeCacheObj.get("categoryMeta")
     // name changed
     if (req.body.new_name !== req.body.name) {
-        await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name } })
+        await collections.challs.updateMany({ category: req.body.name }, { $set: { category: req.body.new_name.trim() } })
         categoryMeta[req.body.new_name] = categoryMeta[req.body.name]
         delete categoryMeta[req.body.name]
         fs.rename(path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.name) + ".webp"), path.join(NodeCacheObj.get("categoryUploadPath"), sanitizeFile(req.body.new_name) + ".webp"), (err) => {
