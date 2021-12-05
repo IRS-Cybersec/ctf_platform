@@ -3,10 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.15.1",
-    "@testing-library/react": "^12.1.2",
-    "@testing-library/user-event": "^13.5.0",
-    "@uiw/react-md-editor": "^3.8.2",
+    "@uiw/react-md-editor": "^3.8.4",
     "antd": "^4.17.2",
     "antd-dayjs-webpack-plugin": "^1.0.6",
     "babel-plugin-import": "^1.13.3",
@@ -57,6 +54,9 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.0",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.5.0",
     "cssnano": "^5.0.12",
     "source-map-explorer": "^2.5.2",
     "style-loader": "^2.0.0"
