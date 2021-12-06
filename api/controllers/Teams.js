@@ -176,7 +176,7 @@ const join = async (req, res) => {
                 let replacedDuplicateWithOlderSolve = false
                 let duplicate = false
                 for (let x = 0; x < teamTransacList.length; x++) {
-                    if (teamTransacList[x].challengeID.toString() === userTransactions[i].challengeID.toString() && teamTransacList[x].type === userTransactions[i].type && teamTransacList[x].points === userTransactions[i].points) {
+                    if (teamTransacList[x].challengeID && teamTransacList[x].challengeID.toString() === userTransactions[i].challengeID.toString() && teamTransacList[x].type === userTransactions[i].type && teamTransacList[x].points === userTransactions[i].points) {
                         if ("hint_id" in userTransactions[i] && "hint_id" in teamTransacList[x]) {
                             if (userTransactions[i].hint_id === teamTransacList[x].hint_id) {
                                 duplicate = true
@@ -327,7 +327,7 @@ const leave = async (req, res) => {
                         let replacedDuplicateWithOlderSolve = false
                         let duplicate = false
                         for (let y = 0; y < teamTransacList.length; y++) {
-                            if (teamTransacList[y].challengeID.toString() === current.challengeID.toString() && teamTransacList[y].type === current.type && teamTransacList[y].points === current.points) {
+                            if (teamTransacList[y].challengeID && teamTransacList[y].challengeID.toString() === current.challengeID.toString() && teamTransacList[y].type === current.type && teamTransacList[y].points === current.points) {
                                 if ("hint_id" in current && "hint_id" in teamTransacList[y]) {
                                     if (current.hint_id === teamTransacList[y].hint_id) {
                                         duplicate = true

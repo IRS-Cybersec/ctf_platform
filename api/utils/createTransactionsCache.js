@@ -46,7 +46,7 @@ const createCache = async () => {
                     let replacedDuplicateWithOlderSolve = false
                     let duplicate = false
                     for (let i = 0; i < teamTransacList.length; i++) {
-                        if (teamTransacList[i].challengeID.toString() === insertDoc.challengeID.toString() && teamTransacList[i].type === insertDoc.type && teamTransacList[i].points === insertDoc.points) {
+                        if (teamTransacList[i].challengeID && teamTransacList[i].challengeID.toString() === insertDoc.challengeID.toString() && teamTransacList[i].type === insertDoc.type && teamTransacList[i].points === insertDoc.points) {
                             // both are hints
                             if ("hint_id" in insertDoc && "hint_id" in teamTransacList[i]) {
                                 if (insertDoc.hint_id === teamTransacList[i].hint_id) {
