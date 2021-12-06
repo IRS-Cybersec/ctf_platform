@@ -53,7 +53,8 @@ const startCache = async () => {
 		emailResetTime: 600,
 		emailVerify: false,
 		teamChangeDisable: false,
-		loginDisable: false
+		loginDisable: false,
+		categoryList: ["Secondary School", "JC/Poly/ITE"]
 	}
 	const collections = Connection.collections
 
@@ -194,6 +195,9 @@ const main = async () => {
 			instance.get('/v1/account/settings', accounts.getSettings);
 			instance.post('/v1/account/permissions', accounts.permissions);
 			instance.post('/v1/account/change/email', accounts.changeEmail);
+			instance.post('/v1/account/change/category', accounts.changeCategory);
+			instance.post('/v1/account/category/add', accounts.addCategory)
+			instance.post('/v1/account/category/remove', accounts.removeCategory)
 
 
 			// Challenge endpoints

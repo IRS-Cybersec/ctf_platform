@@ -20,7 +20,8 @@ const disableStates = async (req, res) => {
             forgotPass: NodeCacheObj.get("forgotPass"),
             emailVerify: NodeCacheObj.get("emailVerify"),
             teamChangeDisable: NodeCacheObj.get("teamChangeDisable"),
-            loginDisable: NodeCacheObj.get("loginDisable")
+            loginDisable: NodeCacheObj.get("loginDisable"),
+            categoryList: NodeCacheObj.get("categoryList")
         }
     });
 }
@@ -38,8 +39,56 @@ const getSettings = async (req, res) => {
     if (!user) throw new Error("NotFound")
     res.send({
         success: true,
-        email: user.email
+        email: user.email,
+        category: user.category,
+        categoryList: NodeCacheObj.get("categoryList")
     })
+}
+
+const changeCategory = async (req, res) => {
+    const collections = Connection.collections
+    if (req.body.category && req.body.category.length > 0) {
+        if (req.body.category === "none") {
+            if ((await collections.users.updateOne({ username: req.locals.username }, { $unset: { category: false } })).matchedCount > 0) {
+                res.send({ success: true })
+            }
+        }
+        else {
+            if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { category: req.body.category } })).matchedCount > 0) {
+                res.send({ success: true })
+            }
+        }
+    }
+    else res.send({ success: false, error: "empty-category" })
+
+}
+
+const addCategory = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (req.body.category && req.body.category.length > 0) {
+        const currentCategory = NodeCacheObj.get("categoryList")
+        if (currentCategory.includes(req.body.category)) return res.send({ success: false, error: "category-exists" })
+        currentCategory.push(req.body.category)
+
+        await collections.cache.updateOne({}, { $set: { categoryList: currentCategory } })
+        res.send({ success: true })
+    }
+    else res.send({ success: false, error: "empty-category" })
+}
+
+const removeCategory = async (req, res) => {
+    const collections = Connection.collections
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (req.body.category && req.body.category.length > 0) {
+        const currentCategory = NodeCacheObj.get("categoryList")
+        if (!(currentCategory.includes(req.body.category))) return res.send({ success: false, error: "not-found" })
+        currentCategory.splice(currentCategory.indexOf(req.body.category), 1)
+
+        await collections.cache.updateOne({}, { $set: { categoryList: currentCategory } })
+        res.send({ success: true })
+    }
+    else res.send({ success: false, error: "empty-category" })
 }
 
 const changeEmail = async (req, res) => {
@@ -493,4 +542,4 @@ const permissions = async (req, res) => {
     else throw new Error('NotFound');
 }
 
-module.exports = { adminChangeEmail, getSettings, changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }
+module.exports = { removeCategory, addCategory, changeCategory, adminChangeEmail, getSettings, changeEmail, disableStates, type, create, takenUsername, takenEmail, deleteAccount, login, password, adminChangePassword, list, permissions }

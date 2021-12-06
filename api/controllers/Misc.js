@@ -34,14 +34,15 @@ let cache = {
     emailResetTime: 600,
     emailVerify: false,
     teamChangeDisable: false,
-    loginDisable: false
+    loginDisable: false,
+    categoryList: ["Secondary School", "JC/Poly/ITE"]
 }
 
 
 const adminSettings = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
-    const allowedSettings = ["loginDisable", "teamChangeDisable", "emailVerify", "emailCooldown", "emailResetTime", "websiteLink", "emailSender", "emailSenderAddr", "forgotPass", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
+    const allowedSettings = ["categoryList", "loginDisable", "teamChangeDisable", "emailVerify", "emailCooldown", "emailResetTime", "websiteLink", "emailSender", "emailSenderAddr", "forgotPass", "SMTPHost", "SMTPUser", "SMTPPass", "SMTPPort", "SMTPSecure", "registerDisable", "adminShowDisable", "submissionDisabled", "uploadSize", "uploadPath", "maxSockets", "teamMode", "teamMaxSize"]
     if (!allowedSettings.includes(req.body.setting)) return res.send({ success: false, error: "invalid-setting" })
     NodeCacheObj.set(req.body.setting, req.body.disable)
 

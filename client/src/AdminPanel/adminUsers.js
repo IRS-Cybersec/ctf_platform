@@ -13,6 +13,8 @@ import {
     KeyOutlined,
     CheckOutlined,
     CloseOutlined,
+    MinusCircleOutlined,
+    PlusOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -270,7 +272,10 @@ class AdminUsers extends React.Component {
             emailVerify: false,
             teamChangeDisable: false,
             emailChangeModal: false,
-            loginDisable: false
+            loginDisable: false,
+            categoryList: [],
+            newCategoryValue: "",
+            addCategoryLoading: false
         }
     }
 
@@ -289,7 +294,8 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                data.states.categoryList.push("none")
+                this.setState({ categoryList: data.states.categoryList, loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -315,6 +321,7 @@ class AdminUsers extends React.Component {
                     data.list[i].key = data.list[i].username
                     data.list[i].verified = "code" in data.list[i] ? "❌" : "✅"
                     data.list[i].team = data.list[i].username in data.usernameTeamCache ? data.usernameTeamCache[data.list[i].username] : "N/A"
+                    data.list[i].category = "category" in data.list[i] ? data.list[i].category : "none"
                 }
                 this.setState({ dataSource: data.list })
             }
@@ -450,6 +457,9 @@ class AdminUsers extends React.Component {
             "teamChangeDisable": { name: "Team changing", loading: "disableLoading2", disable: true },
             "loginDisable": { name: "User login", loading: "disableLoading2", disable: true },
         }
+        const tempLoading = {}
+        tempLoading[settingList[setting].loading] = true
+        this.setState(tempLoading)
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -496,7 +506,9 @@ class AdminUsers extends React.Component {
             "uploadPath": { name: "Profile pictures upload path", loading: "uploadPathLoading", suffix: "" },
             "teamMaxSize": { name: "Team mode", loading: "Maximum size of teams", suffix: "" }
         }
-
+        const tempLoading = {}
+        tempLoading[settingList[setting].loading] = true
+        this.setState(tempLoading)
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -522,7 +534,7 @@ class AdminUsers extends React.Component {
         }).catch((error) => {
             message.error({ content: "Oops. There was an issue connecting with the server" });
         })
-        this.setState({ uploadLoading: false })
+        this.setState({ uploadLoading: false, uploadPathLoading: false })
     }
 
     verifyAccounts = async (close, users) => {
@@ -585,6 +597,67 @@ class AdminUsers extends React.Component {
         if (this.state.disableEditButtons && selectedRowKeys.length > 0) this.setState({ disableEditButtons: false })
         else if (!this.state.disableEditButtons && selectedRowKeys.length === 0) this.setState({ disableEditButtons: true })
     }
+
+    addCategory = async () => {
+        this.setState({ addCategoryLoading: true })
+        await fetch(window.ipAddress + "/v1/account/category/add", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+            body: JSON.stringify({
+                "category": this.state.newCategoryValue,
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "User category '" + this.state.newCategoryValue + "' created successfully." })
+                const newList = this.state.categoryList
+                newList.push(this.state.newCategoryValue)
+                this.setState({ newCategoryValue: "", categoryList: newList })
+            }
+            else if (data.error === "category-exists") {
+                message.error("A category with the same name already exists.")
+            }
+            else message.error("Oops. Unknown error")
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+
+        })
+        this.setState({ addCategoryLoading: false })
+    }
+
+    removeCategory = async (category) => {
+        await fetch(window.ipAddress + "/v1/account/category/remove", {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+            body: JSON.stringify({
+                "category": category,
+            })
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            //console.log(data)
+            if (data.success === true) {
+                message.success({ content: "User category '" + category + "' removed successfully." })
+                const newList = this.state.categoryList
+                newList.splice(newList.indexOf(category), 1)
+                this.setState({ categoryList: newList })
+            }
+            else if (data.error === "not-found") {
+                message.error("Category '" + category + "' does not exists. Perhaps it has already been deleted.")
+            }
+            else message.error("Oops. Unknown error")
+
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+
+        })
+    }
+
     render() {
         return (
 
@@ -629,7 +702,7 @@ class AdminUsers extends React.Component {
                     onCancel={() => { this.setState({ passwordResetModal: false }) }}
                 >
 
-                    <ChangePasswordForm  username={this.state.username} setState={this.setState.bind(this)} />
+                    <ChangePasswordForm username={this.state.username} setState={this.setState.bind(this)} />
                 </Modal>
                 <Modal
                     title={"Changing Email For: " + this.state.username}
@@ -652,7 +725,7 @@ class AdminUsers extends React.Component {
                             </div>
                         )}
                     </div>
-                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await this.fillTableData(); message.success("Users list refreshed.") }} />
+                    <Button loading={this.state.loading} type="primary" shape="circle" size="large" style={{ marginBottom: "2vh", maxWidth: "25ch" }} icon={<RedoOutlined />} onClick={async () => { await Promise.all([this.fillTableData(), this.getDisableStates()]); message.success("Users list refreshed.") }} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center" }}>
                     <Button disabled={this.state.disableEditButtons} style={{ marginBottom: "2vh", marginRight: "1ch", backgroundColor: "#a61d24" }} icon={<DeleteOutlined />} onClick={() => {
@@ -788,6 +861,10 @@ class AdminUsers extends React.Component {
                         onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
+                    <Column title="Category" dataIndex="category" key="category" filters={
+                        this.state.categoryList.map((category) => {
+                            return { text: category, value: category }
+                        })} onFilter={(value, record) => { return value === record.category }} />
                     <Column title="Verified" dataIndex="verified" key="verified" filters={[{ text: "Verified", value: "True" }, { text: "Unverified", value: "False" }]} onFilter={(value, record) => { return value === record.verified }} />
                     <Column
                         title=""
@@ -823,6 +900,7 @@ class AdminUsers extends React.Component {
                         )}
                     />
                 </Table>
+
                 <Divider />
 
                 <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
@@ -836,7 +914,7 @@ class AdminUsers extends React.Component {
 
                     <Card className="settings-card">
                         <h3>Disable User Logins:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("loginDisable", value)} checked={this.state.loginDisable} /></h3>
-                        <p>Disables user login except for admin users. <br/><b>Note:</b> Users already logged into the platform will remain authenticated as tokens cannot be revoked. If you want to restrict a user from accessing the platform anymore, simply delete their account.</p>
+                        <p>Disables user login except for admin users. <br /><b>Note:</b> Users already logged into the platform will remain authenticated as tokens cannot be revoked. If you want to restrict a user from accessing the platform anymore, simply delete their account.</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
@@ -872,6 +950,38 @@ class AdminUsers extends React.Component {
                                 onChange={(e) => this.setState({ uploadPath: e.target.value })}
                                 onPressEnter={(e) => { this.changeSetting("uploadPath", this.state.uploadPath) }} /></h3>
                         <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br />set for the Node process to save the file there. Press <b>Enter</b> to save</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>User Category Management <UserOutlined /></h3>
+                        <Space direction="vertical">
+                            {this.state.categoryList.map((category) => {
+                                if (category !== "none") {
+                                    return (
+                                        <div style={{ display: 'flex', alignItems: "center" }}>
+                                            <Input disabled value={category} />
+                                            <MinusCircleOutlined onClick={() => { this.removeCategory(category) }} style={{ cursor: "pointer", marginLeft: "1ch", color: "#f5222d" }} />
+                                        </div>
+                                    )
+
+                                }
+                            })}
+                            <div style={{ display: "flex" }}>
+                                <Input value={this.state.newCategoryValue} onChange={(e) => { this.setState({ newCategoryValue: e.target.value }) }} />
+                                <Button
+                                loading={this.state.addCategoryLoading}
+                                    style={{ marginLeft: "1ch" }}
+                                    type="dashed"
+                                    onClick={() => {
+                                        this.addCategory()
+                                    }}
+                                >
+                                    <PlusOutlined /> Add Category
+                                </Button>
+                            </div>
+                        </Space>
                     </Card>
                 </div>
 

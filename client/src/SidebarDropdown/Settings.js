@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
-import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal, Tooltip } from 'antd';
+import { Layout, message, Avatar, Button, Form, Input, Divider, Upload, Modal, Tooltip, Radio, Space } from 'antd';
 import {
     KeyOutlined,
     LockOutlined,
     UploadOutlined,
     DeleteOutlined,
-    MailOutlined
+    MailOutlined,
+    ApartmentOutlined
 } from '@ant-design/icons';
 import { Ellipsis } from 'react-spinners-css';
 
@@ -180,6 +181,86 @@ const ChangeEmailForm = (props) => {
     );
 }
 
+const SelectParticipantCategoryForm = (props) => {
+    const [form] = Form.useForm();
+    const [loading, setLoading] = React.useState(false);
+    const [options, setOptions] = React.useState("")
+
+    useEffect(() => {
+        if (props.email != "") {
+            form.setFieldsValue({
+                email: props.email,
+                password: ""
+            })
+        }
+        const optionList = props.categoryList.map((currentCat) => {
+            if (currentCat === "none") return <Radio value="none"><b>No Category</b></Radio>
+            else return <Radio value={currentCat}>{currentCat}</Radio>
+        })
+        setOptions(optionList)
+        form.setFieldsValue({category: props.participantCategory})
+
+    }, [props.email])
+
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                setLoading(true)
+                await fetch(window.ipAddress + "/v1/account/change/category", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "category": values.category,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Category changed successfully to '" + values.category + "'." })
+                        form.setFieldsValue({
+                            category: values.category
+                        })
+                    }
+                    else if (data.error === "email-taken") {
+                        message.error({ content: "Email is already taken, please try another email." })
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Password is incorrect. Please try again." })
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+                setLoading(false)
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
+        >
+
+            <h3>Category:</h3>
+            <Form.Item
+                name="category"
+                rules={[{ required: true, message: 'Please select a category', }]}>
+
+                <Radio.Group>
+                    <Space direction="vertical">
+                        {options}
+                    </Space>
+                </Radio.Group>
+            </Form.Item>
+            <span>Select a category to compete and be eligible for prizes of that category. Verification will be required after the CTF before claiming your prizes.</span>
+
+            <Form.Item>
+                <Button type="primary" htmlType="submit" icon={<ApartmentOutlined />} loading={loading} style={{marginTop: "2ch"}}>Change Category</Button>
+            </Form.Item>
+        </Form>
+    );
+}
+
 const DeleteAccountForm = (props) => {
     const [form] = Form.useForm();
 
@@ -246,7 +327,9 @@ class Settings extends React.Component {
             disableUpload: false,
             deleteAccountModal: false,
             email: "",
-            loading: true
+            loading: true,
+            participantCategory: "",
+            categoryList: [""]
         }
     }
 
@@ -254,15 +337,18 @@ class Settings extends React.Component {
         this.getAccountSettings()
     }
 
-    getAccountSettings() {
-        fetch(window.ipAddress + "/v1/account/settings", {
+    getAccountSettings = async () => {
+        await fetch(window.ipAddress + "/v1/account/settings", {
             method: 'get',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken }
         }).then((results) => {
             return results.json(); //return data in JSON (since its JSON data)
         }).then((data) => {
             if (data.success === true) {
-                this.setState({ email: data.email })
+                let category = "none"
+                if (data.category) category = data.category
+                data.categoryList.push("none")
+                this.setState({ email: data.email, participantCategory: category, categoryList: data.categoryList })
             }
             else {
                 message.error({ content: "Oops. Unknown error." })
@@ -392,6 +478,17 @@ class Settings extends React.Component {
                         </div>
 
                         <Divider />
+
+                        <div className="settings-responsive2" style={{ display: "flex", justifyContent: "space-around" }}>
+
+                            <div className="form-style">
+                                <h1 className="settings-header"><ApartmentOutlined /> Select Participant Category</h1>
+                                <SelectParticipantCategoryForm participantCategory={this.state.participantCategory} categoryList={this.state.categoryList} />
+                            </div>
+                        </div>
+
+                        <Divider />
+
 
                         <div>
                             <h3>Very Very Dangerous Button</h3>
