@@ -21,7 +21,7 @@
     "argon2": "^0.28.3",
     "bson": "^4.6.0",
     "dayjs": "^1.10.7",
-    "dompurify": "^2.3.3",
+    "dompurify": "^2.3.4",
     "express-mongo-sanitize": "^2.1.0",
     "fastify": "^3.24.1",
     "fastify-cors": "^6.0.2",
