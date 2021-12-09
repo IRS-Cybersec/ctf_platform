@@ -20,7 +20,10 @@ const scoreboard = async (req, res) => {
         success: true,
         users: finalData,
         lastChallengeID: NodeCacheObj.get("latestSolveSubmissionID"),
-        teamUpdateID: NodeCacheObj.get("teamUpdateID")
+        teamUpdateID: NodeCacheObj.get("teamUpdateID"),
+        latestUserCategoryUpdateID: NodeCacheObj.get("latestUserCategoryUpdateID"),
+        userCategories: NodeCacheObj.get("userCategories"),
+        categoryList: NodeCacheObj.get("categoryList")
     });
 }
 

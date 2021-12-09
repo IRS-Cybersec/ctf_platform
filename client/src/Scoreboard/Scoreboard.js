@@ -1,8 +1,9 @@
 import React from 'react';
-import { Layout, message, Table, Avatar } from 'antd';
+import { Layout, message, Table, Avatar, Select } from 'antd';
 import {
   FileUnknownTwoTone,
-  TeamOutlined
+  TeamOutlined,
+  ApartmentOutlined
 } from '@ant-design/icons';
 import orderBy from 'lodash.orderby'
 import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
@@ -10,9 +11,12 @@ import { Ellipsis, Ripple } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
 
 const { Column } = Table;
+const { Option } = Select;
 
 var changes = {}
 var updating = false
+var userCategories = {}
+var userCategory = ""
 
 class Scoreboard extends React.Component {
   constructor(props) {
@@ -25,6 +29,7 @@ class Scoreboard extends React.Component {
       loadingGraph: false,
       loadingTable: false,
       liveUpdates: false,
+      categoryListOptions: []
     };
   }
 
@@ -35,10 +40,21 @@ class Scoreboard extends React.Component {
       window.scoreboardData = changes
     }
     else {
+      userCategories = window.userCategories
       changes = scoreboardData
     }
+    userCategory = "none"
+
     // Render whatever data we have either: stored in global window/retrieved from Fetch for fast loading of scoreboard
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
+    let categoryListOptions = []
+    for (let i = 0; i < window.categoryList.length; i++) {
+      categoryListOptions.push(
+        <Option value={window.categoryList[i]}>{window.categoryList[i]}</Option>
+      )
+    }
+    categoryListOptions.unshift(<Option value="none">All Players</Option>)
+    this.setState({ categoryListOptions: categoryListOptions })
 
     this.connectWebSocket() //Connect to socket server for live scoreboard and this will update the scoreboard with the latest data
 
@@ -150,6 +166,12 @@ class Scoreboard extends React.Component {
         window.lastChallengeID = payloadArray[0].lastChallengeID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
       }
+      else if (data.type === "user-category-update") {
+        window.latestUserCategoryUpdateID = data.latestUserCategoryUpdateID
+        window.userCategories = data.userCategories
+        userCategories = data.userCategories
+        this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
+      }
       else if (data.type === "team-update") {
         window.teamUpdateID = data.teamUpdateID
         window.scoreboardData = data.data
@@ -159,6 +181,7 @@ class Scoreboard extends React.Component {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
         else if (data.data === "missing-auth") message.error("Error connecting to live updates")
         else if (data.data === "up-to-date") this.setState({ liveUpdates: true })
+
         else if (data.data === "max-connections") {
           message.warn("Your account has more than the concurrent number of socket connections allowed. Disconnecting...")
         }
@@ -168,6 +191,12 @@ class Scoreboard extends React.Component {
             window.teamUpdateID = data.teamUpdateID
             window.scoreboardData = data.data
             this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)))
+          }
+          else if (data.msg === "user-category-update") {
+            window.latestUserCategoryUpdateID = data.latestUserCategoryUpdateID
+            window.userCategories = data.userCategories
+            userCategories = data.userCategories
+            this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
           }
           else {
             lastChallengeID = parseInt(data.data.lastChallengeID)
@@ -211,7 +240,7 @@ class Scoreboard extends React.Component {
       }
     }
     webSocket.onopen = (e) => {
-      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: window.lastChallengeID, teamUpdateID: window.teamUpdateID } }))
+      webSocket.send(JSON.stringify({ type: "init", data: { auth: window.IRSCTFToken, lastChallengeID: window.lastChallengeID, teamUpdateID: window.teamUpdateID, latestUserCategoryUpdateID: window.latestUserCategoryUpdateID } }))
       this.props.handleWebSocket(webSocket)
     }
     webSocket.onerror = (e) => {
@@ -232,6 +261,16 @@ class Scoreboard extends React.Component {
     let finalPoint = {}
     let scoreArray = []
     let tempScoreTimeStampDict = {}
+
+    if (userCategory !== "none") {
+      const newUserData = []
+
+      for (let i = 0; i < data.users.length; i++) {
+        if (userCategories[data.users[i]._id] === userCategory) newUserData.push(data.users[i])
+      }
+      data.users = newUserData
+    }
+
     //Process timestamps - find the last solve timing and create scoreArray
     for (let i = 0; i < data.users.length; i++) {
       let scores2 = data.users[i].changes
@@ -406,7 +445,13 @@ class Scoreboard extends React.Component {
       if (data.success === true) {
         window.lastChallengeID = data.lastChallengeID
         window.teamUpdateID = data.teamUpdateID
-        return data
+        window.latestUserCategoryUpdateID = data.latestUserCategoryUpdateID
+        window.userCategories = data.userCategories
+        window.categoryList = data.categoryList
+
+        userCategories = data.userCategories
+
+        return { users: data.users }
       }
       else {
         message.error({ content: "Oops. Unknown error" })
@@ -418,6 +463,12 @@ class Scoreboard extends React.Component {
       message.error({ content: "Oops. There was an issue connecting with the server" });
     })
     return finalData
+  }
+
+  handleCategoryChange = (value) => {
+    userCategory = value
+    this.setState({ loadingGraph: true, loadingTable: true })
+    this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
   }
 
 
@@ -508,17 +559,27 @@ class Scoreboard extends React.Component {
             </div>
           )}
         </div>
-        {this.state.liveUpdates ?
-          <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Live Scoreboard </h4> <Ripple color="#a61d24" size={40} /></div> :
-          <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Connecting Live Scoreboard </h4> <Ellipsis color="#177ddc" size={40} /></div>
-        }
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {this.state.liveUpdates ?
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Live Scoreboard </h4> <Ripple color="#a61d24" size={40} /></div> :
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Connecting Live Scoreboard </h4> <Ellipsis color="#177ddc" size={40} /></div>
+          }
+          <div style={{ display: "flex", alignContent: "center" }}>
+            <h1><ApartmentOutlined /> Category: </h1>
+            <Select loading={this.state.loadingGraph || this.state.loadingTable} defaultValue="none" style={{ width: "20ch", backgroundColor: "#1f1f1f", marginLeft: "1ch" }} onChange={(value) => { this.handleCategoryChange(value) }}>
+              {this.state.categoryListOptions}
+            </Select>
+          </div>
+        </div>
+
         {!this.state.loadingTable && (
           <div style={{ height: "70%", width: "100%", minWidth: "70vw" }}>
             <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 20 }} locale={{
               emptyText: (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
                   <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
-                  <h1 style={{ fontSize: "200%" }}>That's odd. There are no users created yet.</h1>
+                  <h1 style={{ fontSize: "200%" }}>There are no users created/There are no users in this category</h1>
                 </div>
               )
             }}>

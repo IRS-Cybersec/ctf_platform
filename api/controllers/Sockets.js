@@ -97,6 +97,10 @@ const startup = async (server) => {
                     }
                     else socket.send(JSON.stringify({ type: "init", data: "up-to-date" }))
                 }
+
+                if (payload.latestUserCategoryUpdateID < NodeCacheObj.get("latestUserCategoryUpdateID")) {
+                    socket.send(JSON.stringify({ type: "init", msg: "user-category-update", userCategories: NodeCacheObj.get("userCategories"), latestUserCategoryUpdateID: NodeCacheObj.get("latestUserCategoryUpdateID") }))
+                }
             }
         })
         socket.on('close', (e) => {
@@ -167,6 +171,13 @@ const broadCastNewTeamChange = () => {
     })
 }
 
+const broadCastNewCategoryChange = () => {
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws.OPEN && client.isAuthed === true) {
+            client.send(JSON.stringify({ type: "user-category-update", userCategories: NodeCacheObj.get("userCategories"), latestUserCategoryUpdateID: NodeCacheObj.get("latestUserCategoryUpdateID") }));
+        }
+    })
+}
 
 
-module.exports = { startup, broadCastNewSolve, broadCastNewTeamChange }
+module.exports = { broadCastNewCategoryChange, startup, broadCastNewSolve, broadCastNewTeamChange }

@@ -54,7 +54,9 @@ const startCache = async () => {
 		emailVerify: false,
 		teamChangeDisable: false,
 		loginDisable: false,
-		categoryList: ["Secondary School", "JC/Poly/ITE"]
+		categoryList: ["Secondary School", "JC/Poly/ITE"],
+		latestUserCategoryUpdateID: 0,
+		categorySwitchDisable: false
 	}
 	const collections = Connection.collections
 
@@ -140,6 +142,15 @@ const startCache = async () => {
 		}
 	}))
 
+	// Create user category dictionary
+	let userCategories = {}
+	const userCategoryCursor = collections.users.find({}, {})
+	await userCategoryCursor.forEach((doc) => {
+		if ("category" in doc) userCategories[doc.username] = doc.category
+		else userCategories[doc.username] = "none"
+	})
+	NodeCacheObj.set("userCategories", userCategories)
+
 
 	return true
 }
@@ -196,8 +207,8 @@ const main = async () => {
 			instance.post('/v1/account/permissions', accounts.permissions);
 			instance.post('/v1/account/change/email', accounts.changeEmail);
 			instance.post('/v1/account/change/category', accounts.changeCategory);
-			instance.post('/v1/account/category/add', accounts.addCategory)
-			instance.post('/v1/account/category/remove', accounts.removeCategory)
+			instance.post('/v1/account/category/add', accounts.addCategory);
+			instance.post('/v1/account/category/remove', accounts.removeCategory);
 
 
 			// Challenge endpoints

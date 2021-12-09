@@ -1,6 +1,6 @@
 const { checkPermissions, deletePermissions, setPermissions, signToken } = require('./../utils/permissionUtils.js')
 const createCache = require('../utils/createTransactionsCache.js')
-const { broadCastNewSolve } = require('./../controllers/Sockets.js')
+const { broadCastNewSolve, broadCastNewCategoryChange } = require('./../controllers/Sockets.js')
 const Connection = require('./../utils/mongoDB.js')
 const crypto = require('crypto');
 const argon2 = require('argon2');
@@ -21,7 +21,8 @@ const disableStates = async (req, res) => {
             emailVerify: NodeCacheObj.get("emailVerify"),
             teamChangeDisable: NodeCacheObj.get("teamChangeDisable"),
             loginDisable: NodeCacheObj.get("loginDisable"),
-            categoryList: NodeCacheObj.get("categoryList")
+            categoryList: NodeCacheObj.get("categoryList"),
+            categorySwitchDisable: NodeCacheObj.get("categorySwitchDisable")
         }
     });
 }
@@ -47,19 +48,33 @@ const getSettings = async (req, res) => {
 
 const changeCategory = async (req, res) => {
     const collections = Connection.collections
-    if (req.body.category && req.body.category.length > 0) {
-        if (req.body.category === "none") {
-            if ((await collections.users.updateOne({ username: req.locals.username }, { $unset: { category: false } })).matchedCount > 0) {
-                res.send({ success: true })
-            }
-        }
-        else {
-            if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { category: req.body.category } })).matchedCount > 0) {
-                res.send({ success: true })
-            }
-        }
+
+    if (NodeCacheObj.get("categorySwitchDisable")) {
+        res.send({success: false, error: "switching-disabled"})
     }
-    else res.send({ success: false, error: "empty-category" })
+    else {
+        if (req.body.category && req.body.category.length > 0) {
+            const userCategories = NodeCacheObj.get("userCategories")
+            if (req.body.category === "none") {
+                if ((await collections.users.updateOne({ username: req.locals.username }, { $unset: { category: false } })).matchedCount > 0) {
+                    res.send({ success: true })
+                }
+                userCategories[req.locals.username] = "none"
+            }
+            else {
+                if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { category: req.body.category } })).matchedCount > 0) {
+                    res.send({ success: true })
+                }
+                userCategories[req.locals.username] = req.body.category
+            }
+            let latestUserCategoryUpdateID = NodeCacheObj.get("latestUserCategoryUpdateID")
+            latestUserCategoryUpdateID += 1
+            NodeCacheObj.set("latestUserCategoryUpdateID", latestUserCategoryUpdateID)
+            broadCastNewCategoryChange()
+        }
+        else res.send({ success: false, error: "empty-category" })
+    }
+    
 
 }
 

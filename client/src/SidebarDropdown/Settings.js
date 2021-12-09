@@ -193,12 +193,12 @@ const SelectParticipantCategoryForm = (props) => {
                 password: ""
             })
         }
-        const optionList = props.categoryList.map((currentCat) => {
-            if (currentCat === "none") return <Radio value="none"><b>No Category</b></Radio>
-            else return <Radio value={currentCat}>{currentCat}</Radio>
+        let optionList = props.categoryList.map((currentCat) => {
+            return <Radio value={currentCat}>{currentCat}</Radio>
         })
+        optionList.push(<Radio value="none"><b>No Category</b></Radio>)
         setOptions(optionList)
-        form.setFieldsValue({category: props.participantCategory})
+        form.setFieldsValue({ category: props.participantCategory })
 
     }, [props.email])
 
@@ -228,6 +228,9 @@ const SelectParticipantCategoryForm = (props) => {
                     else if (data.error === "wrong-password") {
                         message.error({ content: "Password is incorrect. Please try again." })
                     }
+                    else if (data.error === "switching-disabled") {
+                        message.error("Category switching is currently disabled by the admins.")
+                    }
                     else {
                         message.error({ content: "Oops. Unknown error." })
                     }
@@ -255,7 +258,7 @@ const SelectParticipantCategoryForm = (props) => {
             <span>Select a category to compete and be eligible for prizes of that category. Verification will be required after the CTF before claiming your prizes.</span>
 
             <Form.Item>
-                <Button type="primary" htmlType="submit" icon={<ApartmentOutlined />} loading={loading} style={{marginTop: "2ch"}}>Change Category</Button>
+                <Button type="primary" htmlType="submit" icon={<ApartmentOutlined />} loading={loading} style={{ marginTop: "2ch" }}>Change Category</Button>
             </Form.Item>
         </Form>
     );
@@ -347,7 +350,6 @@ class Settings extends React.Component {
             if (data.success === true) {
                 let category = "none"
                 if (data.category) category = data.category
-                data.categoryList.push("none")
                 this.setState({ email: data.email, participantCategory: category, categoryList: data.categoryList })
             }
             else {

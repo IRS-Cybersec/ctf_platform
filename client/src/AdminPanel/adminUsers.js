@@ -295,7 +295,7 @@ class AdminUsers extends React.Component {
             if (data.success === true) {
                 //console.log(data)
                 data.states.categoryList.push("none")
-                this.setState({ categoryList: data.states.categoryList, loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({categorySwitchDisable: data.states.categorySwitchDisable, categoryList: data.states.categoryList, loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -456,6 +456,7 @@ class AdminUsers extends React.Component {
             "emailVerify": { name: "Email verification", loading: "disableLoading2", disable: false },
             "teamChangeDisable": { name: "Team changing", loading: "disableLoading2", disable: true },
             "loginDisable": { name: "User login", loading: "disableLoading2", disable: true },
+            "categorySwitchDisable": { name: "Category switching ", loading: "disableLoading2", disable: true },
         }
         const tempLoading = {}
         tempLoading[settingList[setting].loading] = true
@@ -944,12 +945,8 @@ class AdminUsers extends React.Component {
                     <Divider type="vertical" style={{ height: "inherit" }} />
 
                     <Card className="settings-card">
-                        <h3>Profile Picture Upload Path
-                            <Input
-                                value={this.state.uploadPath}
-                                onChange={(e) => this.setState({ uploadPath: e.target.value })}
-                                onPressEnter={(e) => { this.changeSetting("uploadPath", this.state.uploadPath) }} /></h3>
-                        <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br />set for the Node process to save the file there. Press <b>Enter</b> to save</p>
+                        <h3>Disable Category Switches:  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("categorySwitchDisable", value)} checked={this.state.categorySwitchDisable} /></h3>
+                        <p>Prevents users from switching their scoreboard category. Useful during competitions where you want to lock the user into a category</p>
                     </Card>
 
                     <Divider type="vertical" style={{ height: "inherit" }} />
@@ -971,7 +968,7 @@ class AdminUsers extends React.Component {
                             <div style={{ display: "flex" }}>
                                 <Input value={this.state.newCategoryValue} onChange={(e) => { this.setState({ newCategoryValue: e.target.value }) }} />
                                 <Button
-                                loading={this.state.addCategoryLoading}
+                                    loading={this.state.addCategoryLoading}
                                     style={{ marginLeft: "1ch" }}
                                     type="dashed"
                                     onClick={() => {
@@ -1027,6 +1024,17 @@ class AdminUsers extends React.Component {
                     <Card className="settings-card">
                         <h3>Enable Email Verification  <Switch disabled={this.state.disableLoading2} onClick={(value) => this.disableSetting("emailVerify", value)} checked={this.state.emailVerify} /></h3>
                         <p>Forces newly registered users to <b>verify their email</b> before being able to access the site.</p>
+                    </Card>
+
+                    <Divider type="vertical" style={{ height: "inherit" }} />
+
+                    <Card className="settings-card">
+                        <h3>Profile Picture Upload Path
+                            <Input
+                                value={this.state.uploadPath}
+                                onChange={(e) => this.setState({ uploadPath: e.target.value })}
+                                onPressEnter={(e) => { this.changeSetting("uploadPath", this.state.uploadPath) }} /></h3>
+                        <p>Sets the file upload path for profile pictures. Please ensure that the folder has the appropriate permissions <br />set for the Node process to save the file there. Press <b>Enter</b> to save</p>
                     </Card>
                 </div>
 
