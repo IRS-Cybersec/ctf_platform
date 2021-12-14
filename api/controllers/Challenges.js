@@ -331,12 +331,13 @@ const hint = async (req, res) => {
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
         }
+        
         if ("originalAuthor" in insertDoc) {
             transactionDoc.originalAuthor = insertDoc.originalAuthor
             // Add hint to user's team transactions - this hint is new as above checks whether the team already owns this hint
-            transactionsCache[insertDoc.author].changes.push(transactionDoc)
+            if (insertDoc.author in transactionsCache) transactionsCache[insertDoc.author].changes.push(transactionDoc)
         }
-        transactionsCache[req.locals.username].changes.push(transactionDoc)
+        if (req.locals.username in transactionsCache) transactionsCache[req.locals.username].changes.push(transactionDoc)
         broadCastNewSolve([{
             _id: insertDoc._id,
             author: "originalAuthor" in insertDoc ? insertDoc.author : req.locals.username,
