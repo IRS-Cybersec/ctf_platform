@@ -146,7 +146,7 @@ const listAll = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, requires: 1 } }).toArray())
+        challenges: (await collections.challs.find({}, { projection: { name: 1, category: 1, points: 1, visibility: 1, solves: 1, requires: 1, dynamic: 1, initial: 1, minSolves: 1, minimum: 1 } }).toArray())
     });
 }
 

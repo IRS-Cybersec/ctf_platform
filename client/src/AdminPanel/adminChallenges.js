@@ -414,6 +414,12 @@ class AdminChallenges extends React.Component {
                     else {
                         data.challenges[i].visibility = <span visibility={data.challenges[i].visibility.toString()} style={{ color: "#49aa19" }}>Visible <EyeOutlined /></span>
                     }
+                    if (!data.challenges[i].dynamic) {
+                        data.challenges[i].minimum = "N/A"
+                        data.challenges[i].initial = "N/A"
+                        data.challenges[i].minSolves = "N/A"
+                    }
+                    
                     IDNameMapping[data.challenges[i]._id] = data.challenges[i].name
                 }
                 this.setState({ dataSource: data.challenges, IDNameMapping: IDNameMapping, loading: false })
@@ -734,6 +740,9 @@ class AdminChallenges extends React.Component {
                             return <Link to={"/Challenges/" + row.category}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                         }} />
                         <Column sorter={(a, b) => a.points - b.points} title="Points" dataIndex="points" key="points" />
+                        <Column sorter={(a, b) => a.points - b.points} title="Initial Points" dataIndex="initial" key="initial" />
+                        <Column sorter={(a, b) => a.points - b.points} title="Solves to Min." dataIndex="minSolves" key="minSolves" />
+                        <Column sorter={(a, b) => a.points - b.points} title="Min. Points" dataIndex="minimum" key="minimum" />
                         <Column filters={[{ text: "Visible", value: "true" }, { text: "Hidden", value: "false" }]} onFilter={(value, record) => { return value === record.visibility.props.visibility }} title="Visbility" dataIndex="visibility" key="visibility" />
                         <Column title="Required Challenge" dataIndex="requires" key="requires"
                             render={(text, row, index) => {
