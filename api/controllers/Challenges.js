@@ -568,7 +568,7 @@ const newChall = async (req, res) => {
             name: req.body.name,
             category: req.body.category.trim(),
             description: req.locals.perms <= 1 ? DomPurify.sanitize(req.body.description) : req.body.description,
-            points: parseInt(req.body.points),
+            points: req.body.dynamic ? req.body.initial : parseInt(req.body.points),
             flags: req.body.flags,
 
             author: req.locals.username,
