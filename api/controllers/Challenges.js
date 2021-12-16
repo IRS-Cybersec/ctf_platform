@@ -12,7 +12,7 @@ const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
     res.send({
         success: true,
-        states: { submissionDisabled: NodeCacheObj.get("submissionDisabled"), maxSockets: NodeCacheObj.get("maxSockets") }
+        states: { disableNonCatFB: NodeCacheObj.get("disableNonCatFB"), submissionDisabled: NodeCacheObj.get("submissionDisabled"), maxSockets: NodeCacheObj.get("maxSockets") }
     });
 }
 
@@ -31,7 +31,6 @@ const list = async (req, res) => {
                         name: '$name',
                         points: '$points',
                         solves: '$solves',
-                        firstBlood: { $arrayElemAt: ['$solves', 0] },
                         tags: '$tags',
                         requires: '$requires'
                     }
@@ -63,7 +62,6 @@ const list = async (req, res) => {
                         name: '$name',
                         points: '$points',
                         solves: '$solves',
-                        firstBlood: { $arrayElemAt: ['$solves', 0] },
                         tags: '$tags',
                         visibility: '$visibility',
                         requires: '$requires'
@@ -83,6 +81,8 @@ const list = async (req, res) => {
     res.send({
         success: true,
         challenges: challenges,
+        disableNonCatFB: NodeCacheObj.get("disableNonCatFB"),
+        userCategories: NodeCacheObj.get("userCategories"),
         usernameTeamCache: NodeCacheObj.get("usernameTeamCache")
     });
 }
@@ -331,7 +331,7 @@ const hint = async (req, res) => {
             points: -hints.hints[0].cost,
             lastChallengeID: latestSolveSubmissionID
         }
-        
+
         if ("originalAuthor" in insertDoc) {
             transactionDoc.originalAuthor = insertDoc.originalAuthor
             // Add hint to user's team transactions - this hint is new as above checks whether the team already owns this hint
@@ -664,7 +664,7 @@ const edit = async (req, res) => {
                 else {
                     if (field === "category") updateObj[field] = req.body[field].trim();
                     else updateObj[field] = req.body[field]
-                } 
+                }
             }
         }
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
@@ -895,7 +895,7 @@ const uploadChall = async (req, res) => {
     if (!Array.isArray(challengeData)) throw new Error('Validation');
     let failedInsert = []
     for (let i = 0; i < challengeData.length; i++) {
-        const check = await collections.challs.findOne({_id: MongoDB.ObjectId(challengeData[i]._id)})
+        const check = await collections.challs.findOne({ _id: MongoDB.ObjectId(challengeData[i]._id) })
         if (!check) {
             challengeData[i]._id = MongoDB.ObjectId(challengeData[i]._id)
             challengeData[i].created = new Date(challengeData[i].created);
@@ -915,16 +915,16 @@ const uploadChall = async (req, res) => {
     // re-create challengeCache
     let challengeCache = {}
     const cursor = collections.challs.find({}, { projection: { solves: 1 } })
-	await cursor.forEach((doc) => {
-		challengeCache[doc._id] = { solves: doc.solves }
-	})
-	NodeCacheObj.set("challengeCache", challengeCache)
+    await cursor.forEach((doc) => {
+        challengeCache[doc._id] = { solves: doc.solves }
+    })
+    NodeCacheObj.set("challengeCache", challengeCache)
 
     if (failedInsert.length === 0) res.send({
         success: true
     })
-    else res.send({ success:false, error: "failed-insert", failedInsert: failedInsert})
-    
+    else res.send({ success: false, error: "failed-insert", failedInsert: failedInsert })
+
 }
 
 module.exports = { uploadChall, downloadChall, disableStates, list, listCategory, listCategories, listAll, listCategoryInfo, show, showDetailed, hint, submit, newChall, edit, editVisibility, editCategory, deleteChall, editCategoryVisibility }

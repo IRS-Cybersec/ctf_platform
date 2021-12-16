@@ -517,6 +517,10 @@ class AdminChallenges extends React.Component {
             settingName = "Challenge submission"
             this.setState({ disableLoading: true })
         }
+        else if (setting === "disableNonCatFB") {
+            settingName = "No Category First Bloods"
+            this.setState({ disableLoading: true })
+        }
         await fetch(window.ipAddress + "/v1/adminSettings", {
             method: 'post',
             headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -535,6 +539,7 @@ class AdminChallenges extends React.Component {
                     message.success(settingName + " enabled")
                 }
                 if (setting === "submissionDisabled") this.setState({ submissionDisabled: value })
+                else if (setting === "disableNonCatFB") this.setState({ disableNonCatFB: value })
 
 
             }
@@ -557,7 +562,7 @@ class AdminChallenges extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                this.setState({ submissionDisabled: data.states.submissionDisabled, maxSockets: data.states.maxSockets })
+                this.setState({disableNonCatFB: data.states.disableNonCatFB, submissionDisabled: data.states.submissionDisabled, maxSockets: data.states.maxSockets })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -842,6 +847,13 @@ class AdminChallenges extends React.Component {
                                 onChange={(value) => this.setState({ maxSockets: value })}
                                 onPressEnter={(e) => { this.changeSetting("maxSockets", this.state.maxSockets) }} /></h3>
                             <p>Sets the maximum number of socket connections allowed <b>per account</b> to connect to the live scoreboard. <br /> <b>Press "Enter" to save</b></p>
+                        </Card>
+
+                        <Divider type="vertical" style={{ height: "inherit" }} />
+
+                        <Card className="settings-card">
+                        <h3>Disable First Blood for No Category:  <AntdSwitch disabled={this.state.disableLoading} onClick={(value) => this.disableSetting("disableNonCatFB", value)} checked={this.state.disableNonCatFB} /></h3>
+                            <p>Prevents people with no categories from attaining first blood. Useful if you want to limit First Blood prizes to only eligible participants.</p>
                         </Card>
 
 

@@ -85,6 +85,7 @@
 .card-design-firstblood {
     color: #d32029;
     display: flex;
+    white-space: nowrap;
 }
 
 .disabled-style {

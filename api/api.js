@@ -56,7 +56,8 @@ const startCache = async () => {
 		loginDisable: false,
 		categoryList: ["Secondary School", "JC/Poly/ITE"],
 		latestUserCategoryUpdateID: 0,
-		categorySwitchDisable: false
+		categorySwitchDisable: false,
+		disableNonCatFB: false
 	}
 	const collections = Connection.collections
 

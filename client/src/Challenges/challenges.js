@@ -29,7 +29,9 @@ class Challenges extends React.Component {
       loadingChall: false,
       currentCategoryChallenges: [],
       foundChallenge: false,
-      countDownTimerStrings: {}
+      countDownTimerStrings: {},
+      userCategories: {},
+      disableNonCatFB: false
     };
   }
 
@@ -174,7 +176,7 @@ class Challenges extends React.Component {
         for (let i = 0; i < originalData.length; i++) {
           originalDataDictionary[originalData[i]._id] = originalData[i].challenges
         }
-        this.setState({ categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
+        this.setState({disableNonCatFB: data.disableNonCatFB, userCategories: data.userCategories, categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
         let categoryChall = this.props.match.params.categoryChall;
         const mongoID = /^[a-f\d]{24}$/i
         if (typeof categoryChall !== "undefined") {
@@ -194,7 +196,7 @@ class Challenges extends React.Component {
                 }
               }
               if (foundChallenge) {
-                this.setState({ currentCategory: foundChallenge.category, currentCategoryChallenges: [originalDataDictionary[foundChallenge.category]], foundChallenge: foundChallenge })
+                this.setState({  currentCategory: foundChallenge.category, currentCategoryChallenges: [originalDataDictionary[foundChallenge.category]], foundChallenge: foundChallenge })
               }
               else message.error("Challenge with ID '" + challenge + "' not found.")
             }
@@ -369,7 +371,7 @@ class Challenges extends React.Component {
                   )}
 
                   {this.state.currentCategory && (
-                    <ChallengesTagSort obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                    <ChallengesTagSort disableNonCatFB={this.state.disableNonCatFB} userCategories={this.state.userCategories} obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                   )}
                 </animated.div>)
               }

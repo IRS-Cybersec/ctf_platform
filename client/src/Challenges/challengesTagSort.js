@@ -655,8 +655,18 @@ class ChallengesTagSort extends React.Component {
               )
             }}
             renderItem={item => {
-              if (!("firstBlood" in item)) {
-                item.firstBlood = "No Solves Yet!"
+              if (item.solves.length === 0) item.firstBlood = "No First Blood Yet!"
+              else {
+                if (this.props.disableNonCatFB) {
+                  item.firstBlood = "No First blood Yet"
+                  for (let i = 0; i < item.solves.length; i++) {
+                    if (this.props.userCategories[item.solves[i]] !== "none") {
+                      item.firstBlood = item.solves[i]
+                      break
+                    }
+                  }
+                }
+                else item.firstBlood = item.solves[0]
               }
 
               if (item.requires && !item.requiresSolved) {
