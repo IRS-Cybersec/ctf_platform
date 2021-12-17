@@ -38,6 +38,7 @@ const list = async (req, res) => {
             }
         }]).toArray();
 
+        console.log(challenges)
         const categoryMeta = NodeCacheObj.get("categoryMeta")
         for (let i = 0; i < challenges.length; i++) {
             if (challenges[i]._id in categoryMeta) {
@@ -50,6 +51,7 @@ const list = async (req, res) => {
                     challenges[i].meta = currentMeta
                 }
             }
+            else challenges[i].meta = { visibility: true }
         }
     }
     else {
@@ -78,6 +80,8 @@ const list = async (req, res) => {
             else challenges[i].meta = { visibility: true }
         }
     }
+
+    console.log(challenges)
     res.send({
         success: true,
         challenges: challenges,
