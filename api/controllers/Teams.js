@@ -28,10 +28,15 @@ const get = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
         const transactionsCache = NodeCacheObj.get("transactionsCache")
-        console.log(req.params)
-        if (req.params.team in teamList) {
-            const team = teamList[req.params.team]
-            let changes = transactionsCache[req.params.team].changes
+        const teamRequest = req.raw.originalUrl.split("/v1/team/info/")
+        let teamName = ""
+
+        if (teamRequest.length > 0) teamName = decodeURIComponent(teamRequest[1])
+        else return res.send({success: false, error: "empty-name"})
+
+        if (teamName in teamList) {
+            const team = teamList[teamName]
+            let changes = transactionsCache[teamName].changes
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
                 return res.send({
