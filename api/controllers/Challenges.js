@@ -38,12 +38,14 @@ const list = async (req, res) => {
             }
         }]).toArray();
 
-        console.log(challenges)
         const categoryMeta = NodeCacheObj.get("categoryMeta")
         for (let i = 0; i < challenges.length; i++) {
             if (challenges[i]._id in categoryMeta) {
                 const currentMeta = categoryMeta[challenges[i]._id]
-                if (currentMeta.visibility === false) challenges.splice(i, 1) // remove categories that are hidden
+                if (currentMeta.visibility === false) {
+                    challenges.splice(i, 1) // remove categories that are hidden
+                    i -= 1
+                } 
                 else {
                     if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
                         challenges[i].challenges = []
@@ -81,7 +83,6 @@ const list = async (req, res) => {
         }
     }
 
-    console.log(challenges)
     res.send({
         success: true,
         challenges: challenges,
