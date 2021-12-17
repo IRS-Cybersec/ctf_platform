@@ -28,6 +28,7 @@ const get = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         const teamList = NodeCacheObj.get("teamListCache")
         const transactionsCache = NodeCacheObj.get("transactionsCache")
+        console.log(req.params)
         if (req.params.team in teamList) {
             const team = teamList[req.params.team]
             let changes = transactionsCache[req.params.team].changes
