@@ -263,7 +263,7 @@ class Teams extends React.Component {
                 //Plot graph
                 scoreTotal += challengeArrayReversed[x].points
                 if (challengeArrayReversed[x].originalAuthor in userScores) userScores[challengeArrayReversed[x].originalAuthor] += challengeArrayReversed[x].points
-                else userScores[challengeArrayReversed[x].originalAuthor] = 0
+                else userScores[challengeArrayReversed[x].originalAuthor] = challengeArrayReversed[x].points
 
                 graphPoint = {
                     Score: scoreTotal,
