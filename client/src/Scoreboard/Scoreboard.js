@@ -266,7 +266,18 @@ class Scoreboard extends React.Component {
       const newUserData = []
 
       for (let i = 0; i < data.users.length; i++) {
-        if (userCategories[data.users[i]._id] === userCategory) newUserData.push(data.users[i])
+        if (data.users[i]._id in userCategories) {
+          if (userCategories[data.users[i]._id] === userCategory) newUserData.push(data.users[i])
+        }
+        else if (data.users[i].isTeam) {
+          for (let x = 0; x < data.users[i].members.length; x++) {
+            if (userCategories[data.users[i].members[x]] === userCategory) {
+              newUserData.push(data.users[i])
+              break
+            }
+          }
+        }
+        
       }
       data.users = newUserData
     }
