@@ -15,7 +15,7 @@ const createCache = async () => {
             }
             else if (await checkUsernamePerms(doc.author) === 2) isAdmin = true
         }
-        
+
         if (!NodeCacheObj.get("adminShowDisable") || (NodeCacheObj.get("adminShowDisable") && !isAdmin)) {
 
             const insertDoc = {
@@ -37,6 +37,7 @@ const createCache = async () => {
                 else {
                     transactionsCache[insertDoc.originalAuthor] = { _id: insertDoc.originalAuthor, changes: [insertDoc], members: [insertDoc.originalAuthor], isTeam: false }
                 }
+
 
                 // Handle team transaction
                 if (insertDoc.author in transactionsCache) {
@@ -75,7 +76,13 @@ const createCache = async () => {
                     }
                     if (!duplicate && !replacedDuplicateWithOlderSolve) teamTransacList.push(insertDoc)
                 }
-                else transactionsCache[insertDoc.author] = { _id: insertDoc.author, changes: [insertDoc], members: JSON.parse(JSON.stringify(teamList[insertDoc.author].members)), isTeam: true }
+                else {
+                    if (insertDoc.author in teamList) transactionsCache[insertDoc.author] = { _id: insertDoc.author, changes: [insertDoc], members: JSON.parse(JSON.stringify(teamList[insertDoc.author].members)), isTeam: true }
+                    else {
+                        console.info("Found a user whose team no longer exists but transactions were not updated. Updating now")
+                        await collections.transactions.updateOne({ author: insertDoc.author }, { $unset: { originalAuthor: 0 }, $set: { author: insertDoc.originalAuthor } })
+                    }
+                }
             }
             else { // Person is not in a team
                 if (insertDoc.author in transactionsCache) transactionsCache[insertDoc.author].changes.push(insertDoc)
