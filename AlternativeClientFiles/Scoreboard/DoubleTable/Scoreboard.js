@@ -1,12 +1,11 @@
 import React from 'react';
-import { Layout, message, Table, Avatar, Select } from 'antd';
+import { Layout, message, Table, Avatar, Select, notification } from 'antd';
 import {
   FileUnknownTwoTone,
   TeamOutlined,
   ApartmentOutlined
 } from '@ant-design/icons';
 import orderBy from 'lodash.orderby'
-import { AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid, Label, ResponsiveContainer } from "recharts";
 import { Ellipsis, Ripple } from 'react-spinners-css';
 import { Link } from 'react-router-dom';
 
@@ -25,12 +24,10 @@ class Scoreboard extends React.Component {
 
     this.state = {
       scores: [],
-      graphData: [{ "": 0 }],
-      top10: [""] * 10,
-      loadingGraph: false,
       loadingTable: false,
       liveUpdates: false,
-      categoryListOptions: []
+      categoryListOptions: [],
+      scoreTransactions: []
     };
   }
 
@@ -69,6 +66,7 @@ class Scoreboard extends React.Component {
   lastSolveTiming() {
     if (!updating) {
       let scoreArray = this.state.scores
+      let scoreTransactions = this.state.scoreTransactions
       for (let x = 0; x < scoreArray.length; x++) {
 
         if ("timestamp" in scoreArray[x] && scoreArray[x].timestamp !== "0") {
@@ -122,7 +120,52 @@ class Scoreboard extends React.Component {
           scoreArray[x].time = "No solves yet"
         }
       }
-      this.setState({ scores: scoreArray })
+
+      for (let x = 0; x < scoreTransactions.length; x++) {
+        const dateTime = Math.abs(new Date() - new Date(scoreTransactions[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+        let minutes = Math.ceil(dateTime / 60)
+        let hours = 0
+        let days = 0
+        let months = 0
+        let years = 0
+        if (minutes >= 60) {
+          hours = Math.floor(minutes / 60)
+          minutes = minutes - hours * 60
+
+          if (hours >= 24) {
+            days = Math.floor(hours / 24)
+            hours = hours - days * 24
+
+            if (days >= 30) {
+              months = Math.floor(days / 30)
+              days = days - months * 30
+
+              if (months >= 12) {
+                years = Math.floor(months / 12)
+                months = months - years * 12
+              }
+            }
+          }
+        }
+        let finalTime = " ago."
+        if (minutes !== 0) {
+          finalTime = minutes.toString() + (minutes > 1 ? " minutes " : " minute ") + finalTime
+        }
+        if (hours !== 0) {
+          finalTime = hours.toString() + (hours > 1 ? " hours " : " hour ") + finalTime
+        }
+        if (days !== 0) {
+          finalTime = days.toString() + (days > 1 ? " days " : " day ") + finalTime
+        }
+        if (months !== 0) {
+          finalTime = months.toString() + (months > 1 ? " months " : " month ") + finalTime
+        }
+        if (years !== 0) {
+          finalTime = years.toString() + (years > 1 ? " years " : " year ") + finalTime
+        }
+        scoreTransactions[x].time = finalTime
+      }
+      this.setState({ scores: scoreArray, scoreTransactions: scoreTransactions })
     }
   }
 
@@ -153,14 +196,14 @@ class Scoreboard extends React.Component {
                   break userLoop;
                 }
               }
-              if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
+              if (!transactionFound) changes.users[x].changes.push({ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id })
               break
             }
           }
 
           if (!userFound) {
             // User is a new user not on the scoreboard for whatever reason
-            changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
+            changes.users.push({ _id: payload.author, changes: [{ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
           }
         }
 
@@ -226,14 +269,14 @@ class Scoreboard extends React.Component {
                       break userLoop;
                     }
                   }
-                  if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
+                  if (!transactionFound) changes.users[x].changes.push({ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id })
                   break
                 }
               }
 
               if (!userFound) {
                 // User is a new user not on the scoreboard for whatever reason
-                changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
+                changes.users.push({ _id: payload.author, changes: [{ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
               }
             }
 
@@ -266,10 +309,9 @@ class Scoreboard extends React.Component {
   }
 
   sortPlotRenderData(data, table2update = false) {
-    let formattedData = []
-    let finalPoint = {}
     let scoreArray = []
     let tempScoreTimeStampDict = {}
+    let scoreTransactions = []
     const newUserCat = table2update ? userCategory2 : userCategory
 
     if (newUserCat !== "none") {
@@ -283,7 +325,7 @@ class Scoreboard extends React.Component {
           let allUsersRightCat = true
           for (let x = 0; x < data.users[i].members.length; x++) {
             if (userCategories[data.users[i].members[x]] !== newUserCat) {
-              allUsersRightCat = false 
+              allUsersRightCat = false
               break
             }
           }
@@ -314,7 +356,60 @@ class Scoreboard extends React.Component {
           if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
           else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
         }
+
+        if (scores2[x].points > 0) {
+          const index = scoreTransactions.push(scores2[x])
+          scoreTransactions[index - 1].isTeam = data.users[i].isTeam
+          scoreTransactions[index - 1].members = data.users[i].members
+        }
       }
+    }
+
+    scoreTransactions = orderBy(scoreTransactions, ["timestamp"], ["desc"])
+
+    for (let x = 0; x < scoreTransactions.length; x++) {
+      const dateTime = Math.abs(new Date() - new Date(scoreTransactions[x].timestamp)) / 1000 //no. of seconds since the challenge was completed/hint bought
+      let minutes = Math.ceil(dateTime / 60)
+      let hours = 0
+      let days = 0
+      let months = 0
+      let years = 0
+      if (minutes >= 60) {
+        hours = Math.floor(minutes / 60)
+        minutes = minutes - hours * 60
+
+        if (hours >= 24) {
+          days = Math.floor(hours / 24)
+          hours = hours - days * 24
+
+          if (days >= 30) {
+            months = Math.floor(days / 30)
+            days = days - months * 30
+
+            if (months >= 12) {
+              years = Math.floor(months / 12)
+              months = months - years * 12
+            }
+          }
+        }
+      }
+      let finalTime = " ago."
+      if (minutes !== 0) {
+        finalTime = minutes.toString() + (minutes > 1 ? " minutes " : " minute ") + finalTime
+      }
+      if (hours !== 0) {
+        finalTime = hours.toString() + (hours > 1 ? " hours " : " hour ") + finalTime
+      }
+      if (days !== 0) {
+        finalTime = days.toString() + (days > 1 ? " days " : " day ") + finalTime
+      }
+      if (months !== 0) {
+        finalTime = months.toString() + (months > 1 ? " months " : " month ") + finalTime
+      }
+      if (years !== 0) {
+        finalTime = years.toString() + (years > 1 ? " years " : " year ") + finalTime
+      }
+      scoreTransactions[x].time = finalTime
     }
 
     //console.log(timestamp)
@@ -324,38 +419,6 @@ class Scoreboard extends React.Component {
     }
     scoreArray = orderBy(scoreArray, ["score", "timestamp"], ["desc", "asc"])
 
-    // Plot graph data and get top 10 scores
-    let top10scores = {}
-    let top10initialScores = {}
-    let pointDict = {}
-    let top10 = []
-    const iterateTill = scoreArray.length > 10 ? 10 : scoreArray.length
-    for (let i = 0; i < iterateTill; i++) {
-      top10initialScores[scoreArray[i].username] = 0
-      pointDict[scoreArray[i].username] = 0
-      top10scores[scoreArray[i].username] = scoreArray[i].score
-      top10.push(scoreArray[i].username)
-    }
-
-    finalPoint = top10scores
-    finalPoint["Time"] = new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
-    for (let i = 0; i < data.users.length; i++) {
-      let currentPoint = {}
-
-      if (data.users[i]._id in top10scores) {
-        let scores = data.users[i].changes
-        let pointsSoFar = 0
-
-        for (let x = 0; x < scores.length; x++) {
-          pointsSoFar += scores[x].points
-          currentPoint["name"] = data.users[i]._id
-          currentPoint["points"] = pointsSoFar
-          currentPoint["Time"] = scores[x].timestamp
-          formattedData.push(Object.assign({}, currentPoint))
-        }
-
-      }
-    }
 
     // Fill position + solve time ago
     for (let x = 0; x < scoreArray.length; x++) {
@@ -413,30 +476,14 @@ class Scoreboard extends React.Component {
       }
     }
 
-
-    formattedData = orderBy(formattedData, ["Time"], ["asc"])
-    //console.log(formattedData)
-    let finalData = []
-
-    finalData.push(top10initialScores)
-    for (let i = 0; i < formattedData.length; i++) {
-
-      pointDict[formattedData[i].name] = formattedData[i].points
-      pointDict["Time"] = new Date(formattedData[i].Time).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
-
-      let copy = Object.assign({}, pointDict)
-
-      finalData.push(copy)
-    }
-
-    finalData.push(finalPoint)
+    console.log(scoreTransactions)
     if (table2update) this.setState({ scores2: scoreArray, loadingTable2: false })
-    else this.setState({ graphData: finalData, scores2: scoreArray, loadingGraph: false, scores: scoreArray, loadingTable: false, top10: top10 })
+    else this.setState({ scores2: scoreArray, scores: scoreArray, loadingTable: false, scoreTransactions: scoreTransactions })
     updating = false
   }
 
   getFinalScores = async () => {
-    this.setState({ loadingGraph: true, loadingTable: true })
+    this.setState({ loadingTable: true })
     const finalData = await fetch(window.ipAddress + "/v1/scores", {
       method: 'get',
       headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
@@ -491,7 +538,7 @@ class Scoreboard extends React.Component {
 
   handleCategoryChange = (value) => {
     userCategory = value
-    this.setState({ loadingGraph: true, loadingTable: true })
+    this.setState({ loadingTable: true })
     this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
   }
 
@@ -509,104 +556,68 @@ class Scoreboard extends React.Component {
   render() {
     return (
       <Layout className="layout-style">
-        <div style={{ height: 375, width: "100%", backgroundColor: "rgba(0, 0, 0, 0.3)", border: "5px solid transparent", borderRadius: "20px", padding: "10px", margin: "10px" }}>
-          <ResponsiveContainer width="90%" height={350} debounce={200}>
-            <AreaChart height={350} data={this.state.graphData}
 
-              margin={{ top: 10, right: 15, left: 15, bottom: 15 }}>
-
-              <defs>
-                <linearGradient id="color1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#791a1f" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f89f9a" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c4a15" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f8cf8d" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color3" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c5914" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f8df8b" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color4" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#536d13" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#e4f88b" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color5" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#306317" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#b2e58b" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color6" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#146262" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#84e2d8" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color7" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#164c7e" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#8dcff8" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color8" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#203175" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#a8c1f8" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color9" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3e2069" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#cda8f0" stopOpacity={0.1} />
-                </linearGradient>
-                <linearGradient id="color10" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#75204f" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f8a8cc" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="Time">
-                <Label offset={-5} position="insideBottom" style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                  Time
-                </Label>
-              </XAxis>
-              <YAxis >
-                <Label offset={-10} position='insideLeft' style={{ fill: 'rgba(207, 207, 207, 1)' }}>
-                  Score
-                </Label>
-              </YAxis>
-              <CartesianGrid strokeDasharray="3 3" />
-
-              <Tooltip labelStyle={{ backgroundColor: "#1c2b3e" }} contentStyle={{ backgroundColor: "#1c2b3e" }} wrapperStyle={{ backgroundColor: "#1c2b3e" }} />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[0]} stroke="#d32029" fillOpacity={1} fill="url(#color1)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[1]} stroke="#d87a16" fillOpacity={1} fill="url(#color2)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[2]} stroke="#d89614" fillOpacity={1} fill="url(#color3)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[3]} stroke="#8bbb11" fillOpacity={1} fill="url(#color4)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[4]} stroke="#49aa19" fillOpacity={1} fill="url(#color5)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[5]} stroke="#13a8a8" fillOpacity={1} fill="url(#color6)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[6]} stroke="#177ddc" fillOpacity={1} fill="url(#color7)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[7]} stroke="#2b4acb" fillOpacity={1} fill="url(#color8)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[8]} stroke="#642ab5" fillOpacity={1} fill="url(#color9)" />
-              <Area isAnimationActive={false} type="monotone" dataKey={this.state.top10[9]} stroke="#cb2b83" fillOpacity={1} fill="url(#color10)" />
-              <Area isAnimationActive={false} type="monotone" dataKey="Hi" stroke="#8884d8" fillOpacity={1} fill="url(#colorPv)" />
-            </AreaChart>
-          </ResponsiveContainer>
-          {this.state.loadingGraph && (
-            <div style={{ position: "absolute", left: "55%", transform: "translate(-55%, 0%)", zIndex: 10 }}>
-              <Ellipsis color="#177ddc" size={120} ></Ellipsis>
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "left" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h1 style={{ fontSize: "150%" }}>Scoring History</h1>
+          </div>
           {this.state.liveUpdates ?
             <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Live Scoreboard </h4> <Ripple color="#a61d24" size={40} /></div> :
             <div style={{ display: "flex", alignItems: "center", flexDirection: "row", justifyContent: "flex-end" }}><h4>Connecting Live Scoreboard </h4> <Ellipsis color="#177ddc" size={40} /></div>
           }
         </div>
 
+        <div>
+          {!this.state.loadingTable && (
+            <Table style={{ marginTop: "2vh" }} dataSource={this.state.scoreTransactions} pagination={{ pageSize: 7 }} locale={{
+              emptyText: (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginTop: "10vh" }}>
+                  <FileUnknownTwoTone style={{ color: "#177ddc", fontSize: "400%", zIndex: 1 }} />
+                  <h1 style={{ fontSize: "200%" }}>There are no solves yet. You could be the first!</h1>
+                </div>
+              )
+
+            }}>
+              <Column title="Username" dataIndex="author" key="author"
+                render={(text, row, index) => {
+                  if (row.isTeam) {
+                    return (
+                      <Link to={"/Team/" + text}><a style={{ fontSize: "110%", fontWeight: 700, display: "flex", alignItems: "center" }}>
+                        <Avatar.Group
+                          maxCount={3}
+                          maxStyle={{ marginRight: "1ch" }}
+                        >
+                          {row.members.map((member) => {
+                            return (<Avatar src={"/static/profile/" + member + ".webp"} style={{ marginRight: "1ch" }} />)
+                          })}
+                        </Avatar.Group>
+                        <span>{text} <TeamOutlined /></span>
+                      </a>
+                      </Link>);
+                  }
+                  else {
+                    return <Link to={"/Profile/" + text}><a style={{ fontSize: "110%", fontWeight: 700 }}><Avatar src={"/static/profile/" + text + ".webp"} style={{ marginRight: "1ch" }} /><span>{text}</span></a></Link>;
+                  }
+                }}
+              />
+              <Column title="Score" dataIndex="points" key="points" />
+              <Column title="Timestamp" dataIndex="time" key="time" />
+            </Table>
+          )}
+        </div>
+
+
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignContent: "center" }}>
-            <h1><ApartmentOutlined /> Category (also controls Scoreboard): </h1>
-            <Select loading={this.state.loadingGraph || this.state.loadingTable} defaultValue="none" style={{ width: "20ch", backgroundColor: "#1f1f1f", marginLeft: "1ch" }} onChange={(value) => { this.handleCategoryChange(value) }}>
+            <h1><ApartmentOutlined /> Category: </h1>
+            <Select loading={this.state.loadingTable} defaultValue="none" style={{ width: "20ch", backgroundColor: "#1f1f1f", marginLeft: "1ch" }} onChange={(value) => { this.handleCategoryChange(value) }}>
               {this.state.categoryListOptions}
             </Select>
           </div>
           <div style={{ display: "flex", alignContent: "center" }}>
             <h1><ApartmentOutlined /> Category: </h1>
-            <Select loading={this.state.loadingGraph || this.state.loadingTable} defaultValue="none" style={{ width: "20ch", backgroundColor: "#1f1f1f", marginLeft: "1ch" }} onChange={(value) => { this.handleCategoryChange2(value) }}>
+            <Select loading={this.state.loadingTable} defaultValue="none" style={{ width: "20ch", backgroundColor: "#1f1f1f", marginLeft: "1ch" }} onChange={(value) => { this.handleCategoryChange2(value) }}>
               {this.state.categoryListOptions}
             </Select>
           </div>
@@ -614,7 +625,7 @@ class Scoreboard extends React.Component {
 
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div style={{ height: "70%", width: "47%", minWidth: "35vw" }}>
+          <div style={{ height: "70%", width: "48%", minWidth: "35vw" }}>
             {!this.state.loadingTable && (
               <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores} pagination={{ pageSize: 20 }} locale={{
                 emptyText: (
@@ -623,6 +634,7 @@ class Scoreboard extends React.Component {
                     <h1 style={{ fontSize: "200%" }}>There are no users created/There are no users in this category</h1>
                   </div>
                 )
+
               }}>
                 <Column title="Position" dataIndex="position" key="position" />
                 <Column title="Username" dataIndex="username" key="username"
@@ -653,7 +665,7 @@ class Scoreboard extends React.Component {
             )}
           </div>
 
-          <div style={{ height: "70%", width: "47%", minWidth: "35vw" }}>
+          <div style={{ height: "70%", width: "48%", minWidth: "35vw" }}>
             {!this.state.loadingTable2 && (
               <Table style={{ marginTop: "2vh" }} dataSource={this.state.scores2} pagination={{ pageSize: 20 }} locale={{
                 emptyText: (

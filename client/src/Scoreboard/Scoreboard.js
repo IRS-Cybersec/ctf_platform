@@ -150,14 +150,14 @@ class Scoreboard extends React.Component {
                   break userLoop;
                 }
               }
-              if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
+              if (!transactionFound) changes.users[x].changes.push({ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id })
               break
             }
           }
 
           if (!userFound) {
             // User is a new user not on the scoreboard for whatever reason
-            changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
+            changes.users.push({ _id: payload.author, changes: [{ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
           }
         }
 
@@ -218,14 +218,14 @@ class Scoreboard extends React.Component {
                       break userLoop;
                     }
                   }
-                  if (!transactionFound) changes.users[x].changes.push({ points: payload.points, timestamp: payload.timestamp, _id: payload._id })
+                  if (!transactionFound) changes.users[x].changes.push({ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id })
                   break
                 }
               }
 
               if (!userFound) {
                 // User is a new user not on the scoreboard for whatever reason
-                changes.users.push({ _id: payload.author, changes: [{ points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
+                changes.users.push({ _id: payload.author, changes: [{ author: payload.author, points: payload.points, timestamp: payload.timestamp, _id: payload._id }] })
               }
             }
 
