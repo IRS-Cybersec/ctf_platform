@@ -47,6 +47,7 @@ class Scoreboard extends React.Component {
     // Render whatever data we have either: stored in global window/retrieved from Fetch for fast loading of scoreboard
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
     this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), true)
+    this.scoreHistoryRenderData(JSON.parse(JSON.stringify(changes)))
     let categoryListOptions = []
     for (let i = 0; i < window.categoryList.length; i++) {
       categoryListOptions.push(
@@ -212,6 +213,7 @@ class Scoreboard extends React.Component {
         window.lastChallengeID = payloadArray[0].lastChallengeID
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
         this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), true)
+        this.scoreHistoryRenderData(JSON.parse(JSON.stringify(changes)))
       }
       else if (data.type === "user-category-update") {
         window.latestUserCategoryUpdateID = data.latestUserCategoryUpdateID
@@ -219,12 +221,14 @@ class Scoreboard extends React.Component {
         userCategories = data.userCategories
         this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
         this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)), true)
+        this.scoreHistoryRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
       }
       else if (data.type === "team-update") {
         window.teamUpdateID = data.teamUpdateID
         window.scoreboardData = data.data
         this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)))
         this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)), true)
+        this.scoreHistoryRenderData(JSON.parse(JSON.stringify(data.data)))
       }
       else if (data.type === "init") {
         if (data.data === "bad-auth") message.error("Error connecting to live updates")
@@ -241,6 +245,7 @@ class Scoreboard extends React.Component {
             window.scoreboardData = data.data
             this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)))
             this.sortPlotRenderData(JSON.parse(JSON.stringify(data.data)), true)
+            this.scoreHistoryRenderData(JSON.parse(JSON.stringify(data.data)))
           }
           else if (data.msg === "user-category-update") {
             window.latestUserCategoryUpdateID = data.latestUserCategoryUpdateID
@@ -248,6 +253,7 @@ class Scoreboard extends React.Component {
             userCategories = data.userCategories
             this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
             this.sortPlotRenderData(JSON.parse(JSON.stringify(window.scoreboardData)), true)
+            this.scoreHistoryRenderData(JSON.parse(JSON.stringify(window.scoreboardData)))
           }
           else {
             lastChallengeID = parseInt(data.data.lastChallengeID)
@@ -285,6 +291,7 @@ class Scoreboard extends React.Component {
             window.lastChallengeID = data.lastChallengeID
             this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)))
             this.sortPlotRenderData(JSON.parse(JSON.stringify(changes)), true)
+            this.scoreHistoryRenderData(JSON.parse(JSON.stringify(changes)))
             this.setState({ liveUpdates: true })
           }
 
@@ -308,55 +315,13 @@ class Scoreboard extends React.Component {
     };
   }
 
-  sortPlotRenderData(data, table2update = false) {
-    let scoreArray = []
-    let tempScoreTimeStampDict = {}
+  scoreHistoryRenderData(data) {
     let scoreTransactions = []
-    const newUserCat = table2update ? userCategory2 : userCategory
-
-    if (newUserCat !== "none") {
-      const newUserData = []
-
-      for (let i = 0; i < data.users.length; i++) {
-        if (data.users[i]._id in userCategories) {
-          if (userCategories[data.users[i]._id] === newUserCat) newUserData.push(data.users[i])
-        }
-        else if (data.users[i].isTeam) {
-          let allUsersRightCat = true
-          for (let x = 0; x < data.users[i].members.length; x++) {
-            if (userCategories[data.users[i].members[x]] !== newUserCat) {
-              allUsersRightCat = false
-              break
-            }
-          }
-          if (allUsersRightCat) newUserData.push(data.users[i])
-        }
-
-      }
-      data.users = newUserData
-    }
-
     //Process timestamps - find the last solve timing and create scoreArray
     for (let i = 0; i < data.users.length; i++) {
       let scores2 = data.users[i].changes
 
-      // some users might have empty "changes" as they have yet to solve anything
-      // so we have to include their username first into the dictionary
-      tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: 0 }
       for (let x = 0; x < scores2.length; x++) {
-        if (tempScoreTimeStampDict[data.users[i]._id].timestamp !== "0") {
-          let d1 = new Date(tempScoreTimeStampDict[data.users[i]._id].timestamp)
-          let d2 = new Date(scores2[x].timestamp)
-
-          if (d1 < d2 && scores2[x].points > 0) tempScoreTimeStampDict[data.users[i]._id].timestamp = scores2[x].timestamp
-          tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
-
-        }
-        else {
-          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
-          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
-        }
-
         if (scores2[x].points > 0) {
           const index = scoreTransactions.push(scores2[x])
           scoreTransactions[index - 1].isTeam = data.users[i].isTeam
@@ -364,6 +329,7 @@ class Scoreboard extends React.Component {
         }
       }
     }
+
 
     scoreTransactions = orderBy(scoreTransactions, ["timestamp"], ["desc"])
 
@@ -411,6 +377,60 @@ class Scoreboard extends React.Component {
       }
       scoreTransactions[x].time = finalTime
     }
+
+    this.setState({ scoreTransactions: scoreTransactions })
+  }
+
+  sortPlotRenderData(data, table2update = false) {
+    let scoreArray = []
+    let tempScoreTimeStampDict = {}
+    const newUserCat = table2update ? userCategory2 : userCategory
+
+    if (newUserCat !== "none") {
+      const newUserData = []
+
+      for (let i = 0; i < data.users.length; i++) {
+        if (data.users[i]._id in userCategories) {
+          if (userCategories[data.users[i]._id] === newUserCat) newUserData.push(data.users[i])
+        }
+        else if (data.users[i].isTeam) {
+          let allUsersRightCat = true
+          for (let x = 0; x < data.users[i].members.length; x++) {
+            if (userCategories[data.users[i].members[x]] !== newUserCat) {
+              allUsersRightCat = false
+              break
+            }
+          }
+          if (allUsersRightCat) newUserData.push(data.users[i])
+        }
+
+      }
+      data.users = newUserData
+    }
+
+    //Process timestamps - find the last solve timing and create scoreArray
+    for (let i = 0; i < data.users.length; i++) {
+      let scores2 = data.users[i].changes
+
+      // some users might have empty "changes" as they have yet to solve anything
+      // so we have to include their username first into the dictionary
+      tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: 0 }
+      for (let x = 0; x < scores2.length; x++) {
+        if (tempScoreTimeStampDict[data.users[i]._id].timestamp !== "0") {
+          let d1 = new Date(tempScoreTimeStampDict[data.users[i]._id].timestamp)
+          let d2 = new Date(scores2[x].timestamp)
+
+          if (d1 < d2 && scores2[x].points > 0) tempScoreTimeStampDict[data.users[i]._id].timestamp = scores2[x].timestamp
+          tempScoreTimeStampDict[data.users[i]._id].points += scores2[x].points
+
+        }
+        else {
+          if (scores2[x].points === 0) tempScoreTimeStampDict[data.users[i]._id] = { timestamp: "0", points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
+          else tempScoreTimeStampDict[data.users[i]._id] = { timestamp: scores2[x].timestamp, points: scores2[x].points, isTeam: data.users[i].isTeam, members: data.users[i].members }
+        }
+      }
+    }
+
 
     //console.log(timestamp)
     // More processing & sort by timestamp
@@ -475,10 +495,8 @@ class Scoreboard extends React.Component {
         scoreArray[x].time = "No solves yet"
       }
     }
-
-    console.log(scoreTransactions)
     if (table2update) this.setState({ scores2: scoreArray, loadingTable2: false })
-    else this.setState({ scores2: scoreArray, scores: scoreArray, loadingTable: false, scoreTransactions: scoreTransactions })
+    else this.setState({ scores: scoreArray, loadingTable: false })
     updating = false
   }
 
