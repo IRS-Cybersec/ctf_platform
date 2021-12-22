@@ -161,6 +161,7 @@ const main = async () => {
 	// mongoSanitize hook
 	fastify.addHook('preHandler', (request, reply, done) => {
 		mongoSanitize.sanitize(request.body, {});
+		mongoSanitize.sanitize(request.params, {});
 		done()
 	})
 
