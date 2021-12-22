@@ -239,6 +239,10 @@ const create = async (req, res) => {
                     error: "name-taken"
                 })
             }
+            if (!/^[a-zA-Z0-9_ ]+$/.test(req.body.name)) return res.send({
+                success: false,
+                error: "bad-team-name"
+            })
             const newTeam = {
                 name: req.body.name,
                 members: [req.locals.username],

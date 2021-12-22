@@ -68,11 +68,12 @@ const CreateTeamForm = (props) => {
                     {
                         required: true,
                         message: 'Please input a team name',
+                        pattern: /^[a-zA-Z0-9_ ]+$/
                     },
                 ]}
             >
 
-                <Input icon={<IdcardOutlined />} allowClear placeholder="Enter a team name" />
+                <Input icon={<IdcardOutlined />}  allowClear placeholder="Enter a team name" />
             </Form.Item>
 
             <Form.Item>
