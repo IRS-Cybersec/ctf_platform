@@ -256,12 +256,12 @@ const CreateChallengeForm = (props) => {
                             name="points"
                             rules={[{ required: true, message: 'Please enter challenge points' }, {
                                 type: 'integer',
-                                message: "Please enter a valid integer between 1-100000",
+                                message: "Please enter a valid integer between 0-100000",
                             },]}
                             initialValue={0}
                         >
 
-                            <InputNumber disabled={props.state.dynamic} min={1} max={100000} style={{ width: "30ch" }} ></InputNumber>
+                            <InputNumber disabled={props.state.dynamic} min={0} max={100000} style={{ width: "30ch" }} ></InputNumber>
                         </Form.Item>
                     </Card>
 
