@@ -371,7 +371,7 @@ class Challenges extends React.Component {
                   )}
 
                   {this.state.currentCategory && (
-                    <ChallengesTagSort disableNonCatFB={this.state.disableNonCatFB} userCategories={this.state.userCategories} obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                    <ChallengesTagSort permissions={this.props.permissions} disableNonCatFB={this.state.disableNonCatFB} userCategories={this.state.userCategories} obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
                   )}
                 </animated.div>)
               }

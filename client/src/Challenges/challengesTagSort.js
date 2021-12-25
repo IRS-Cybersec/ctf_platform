@@ -669,7 +669,7 @@ class ChallengesTagSort extends React.Component {
                 else item.firstBlood = item.solves[0]
               }
 
-              if (item.requires && !item.requiresSolved) {
+              if (item.requires && !item.requiresSolved && !this.props.permissions) {
 
                 return (
                   <List.Item key={item._id}>
