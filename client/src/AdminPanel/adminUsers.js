@@ -794,7 +794,7 @@ class AdminUsers extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.username.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.username.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                         sorter={(a, b) => {
                             if (a.username < b.username) return -1
@@ -826,7 +826,7 @@ class AdminUsers extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.email.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.email.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
                     <Column title="Permissions" dataIndex="type" key="type" filters={[{ text: "Normal User (0)", value: 0 }, { text: "Challenge Creator (1)", value: 1 }, { text: "Admin (2)", value: 2 }]} onFilter={(value, record) => { return value === record.type }} />
@@ -859,7 +859,7 @@ class AdminUsers extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.team.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
                     />
                     <Column title="Category" dataIndex="category" key="category" filters={

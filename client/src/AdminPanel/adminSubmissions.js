@@ -567,7 +567,7 @@ class AdminSubmissions extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.author.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.author.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
 
                     />
@@ -597,7 +597,7 @@ class AdminSubmissions extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.team.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.team.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
 
                     />
@@ -627,7 +627,7 @@ class AdminSubmissions extends React.Component {
                                 </Space>
                             </div>
                         )}
-                        onFilter={(value, record) => record.challenge.toLowerCase().includes(value.toLowerCase())}
+                        onFilter={(value, record) => record.challenge.toLowerCase().trim().includes(value.toLowerCase())}
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Hint ID" dataIndex="hint_id" key="hint_id" filterDropdown={({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
                         <div style={{ padding: 8 }}>
