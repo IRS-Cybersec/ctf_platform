@@ -55,7 +55,7 @@ class ChallengesTagSortList extends React.Component {
                       item.firstBlood = "No Solves Yet!"
                     }
 
-                    if (item.requires && !item.requiresSolved) {
+                    if (item.requires && !item.requiresSolved && this.props.permissions < 2) {
 
                       return (
                         <List.Item key={item._id}>
