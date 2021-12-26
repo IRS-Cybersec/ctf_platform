@@ -342,7 +342,8 @@ class AdminSubmissions extends React.Component {
             selectedTableKeys: [],
             disableEditButtons: true,
             editTModal: false,
-            initialData: {}
+            initialData: {},
+            categoryList: []
         }
     }
 
@@ -384,9 +385,12 @@ class AdminSubmissions extends React.Component {
                     else data.submissions[i].team = "N/A"
                     data.submissions[i].key = data.submissions[i]._id
                     data.submissions[i].timestamp = new Date(data.submissions[i].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
+
+                    if (data.submissions[i].author in data.userCatMapping) data.submissions[i].category = data.userCatMapping[data.submissions[i].author]
+                    else data.submissions[i].category = "N/A"
                 }
 
-                this.setState({ dataSource: data.submissions })
+                this.setState({ categoryList: data.categoryList, dataSource: data.submissions })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -601,6 +605,10 @@ class AdminSubmissions extends React.Component {
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />}
 
                     />
+                    <Column title="Category" dataIndex="category" key="category" filters={
+                        this.state.categoryList.map((category) => {
+                            return { text: category, value: category }
+                        })} onFilter={(value, record) => { return value === record.category }} />
                     <Column render={(text, row, index) => {
                         return <Link to={"/Challenges/" + row.challengeID}><a style={{ fontWeight: 700 }}>{text}</a></Link>;
                     }} title="Challenge" dataIndex="challenge" key="challenge"
@@ -656,6 +664,7 @@ class AdminSubmissions extends React.Component {
                         filterIcon={filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />} />
                     <Column title="Type" dataIndex="type" key="type" filters={[{ text: "Submission", value: "submission" }, { text: "Hint", value: "hint" }, { text: "Blocked Submission", value: "blocked_submission" }, { text: "Initial Register", value: "initial_register" }]} onFilter={(value, record) => { return value === record.type }} />
                     <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
+
                     <Column title="Flag Submitted" dataIndex="submission" key="submission" />
                     <Column title="Correct" dataIndex="correct" key="correct" filters={[{ text: "True", value: "True" }, { text: "False", value: "False" }]} onFilter={(value, record) => { return value === record.correct }} />
                     <Column
