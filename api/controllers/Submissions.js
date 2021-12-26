@@ -48,7 +48,7 @@ const newSubmission = async (req, res) => {
         let replacedDuplicateWithOlderSolve = false
         let duplicate = false
         for (let i = 0; i < teamTransacList.length; i++) {
-            if (teamTransacList[i].challengeID && teamTransacList[i].challengeID.toString() === insertDoc.challengeID.toString() && teamTransacList[i].type === insertDoc.type && teamTransacList[i].points === insertDoc.points) {
+            if (teamTransacList[i].challengeID && insertDoc.challengeID && teamTransacList[i].challengeID.toString() === insertDoc.challengeID.toString() && teamTransacList[i].type === insertDoc.type && teamTransacList[i].points === insertDoc.points) {
                 duplicate = true
                 // Current insertDoc is a duplicate transaction for this team
                 // Check whether insertDoc has a timestamp before the current 1 in the team list, then set it to it

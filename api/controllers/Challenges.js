@@ -45,7 +45,7 @@ const list = async (req, res) => {
                 if (currentMeta.visibility === false) {
                     challenges.splice(i, 1) // remove categories that are hidden
                     i -= 1
-                } 
+                }
                 else {
                     if ("time" in currentMeta && new Date() < new Date(currentMeta.time[0])) {
                         challenges[i].challenges = []
@@ -176,13 +176,29 @@ const show = async (req, res) => {
             }
         }
     }
+    let challengeCache = NodeCacheObj.get("challengeCache")
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+    const team = usernameTeamCache[req.locals.username]
     if ("requires" in chall && req.locals.perms < 2) {
         const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(chall.requires) }, { projection: { _id: 0, solves: 1 } })
         if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-        if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+            let solved = false
+
+            for (let i = 0; i < challengeCache[chall.requires].solves.length; i++) {
+                const current = challengeCache[chall.requires].solves[i]
+                if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                    solved = true
+                    break
+                }
+            }
+            if (!solved) return res.send({ success: false, error: "required-challenge-not-completed" })
+        }
+        else {
+            if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+        }
+
     }
-    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
-    const team = usernameTeamCache[req.locals.username]
     if (chall.hints != undefined)
         chall.hints.forEach(hint => {
             let bought = false
@@ -275,16 +291,31 @@ const hint = async (req, res) => {
             }
         }
     }
+    let challengeCache = NodeCacheObj.get("challengeCache")
+    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     if ("requires" in hints && req.locals.perms < 2) {
         const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(hints.requires) }, { projection: { _id: 0, solves: 1 } })
         if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-        if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+            let solved = false
+            const team = usernameTeamCache[req.locals.username]
+            for (let i = 0; i < challengeCache[hints.requires].solves.length; i++) {
+                const current = challengeCache[hints.requires].solves[i]
+                if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                    solved = true
+                    break
+                }
+            }
+            if (!solved) return res.send({ success: false, error: "required-challenge-not-completed" })
+        }
+        else {
+            if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+        }
     }
 
     if (!hints.hints[0]) throw new Error('OutOfRange');
     let Gtimestamp = new Date()
 
-    const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
     let purchased = false
     if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
         const team = usernameTeamCache[req.locals.username]
@@ -387,11 +418,28 @@ const submit = async (req, res) => {
         if (NodeCacheObj.get("submissionDisabled")) return res.send({ success: false, error: "submission-disabled" })
 
         //Check if the required challenge has been solved (if any)
-
+        let challengeCache = NodeCacheObj.get("challengeCache")
+        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         if ("requires" in chall) {
             const solved = await collections.challs.findOne({ _id: MongoDB.ObjectId(chall.requires) }, { projection: { _id: 0, solves: 1 } })
             if (!solved) return res.send({ success: false, error: "required-challenge-not-found" })
-            if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+            const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
+            if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+                let solved = false
+                const team = usernameTeamCache[req.locals.username]
+                for (let i = 0; i < challengeCache[chall.requires].solves.length; i++) {
+                    const current = challengeCache[chall.requires].solves[i]
+                    if (current in usernameTeamCache && usernameTeamCache[current] === team) {
+                        solved = true
+                        break
+                    }
+                }
+                if (!solved) return res.send({ success: false, error: "required-challenge-not-completed" })
+            }
+            else {
+                if (!(solved.solves.includes(req.locals.username))) return res.send({ success: false, error: "required-challenge-not-completed" })
+            }
+
         }
         if (chall.max_attempts != 0) {
             if (await collections.transactions.countDocuments({
@@ -401,8 +449,6 @@ const submit = async (req, res) => {
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }
         let submitted = false
-        let challengeCache = NodeCacheObj.get("challengeCache")
-        const usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
         if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
             const team = usernameTeamCache[req.locals.username]
             for (let i = 0; i < challengeCache[req.body.chall].solves.length; i++) {
