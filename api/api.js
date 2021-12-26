@@ -1,4 +1,4 @@
-const fastify = require('fastify')()
+const fastify = require('fastify')({bodyLimit: 12485760})
 const mongoSanitize = require('express-mongo-sanitize');
 const fastifyFileUpload = require('fastify-file-upload');
 

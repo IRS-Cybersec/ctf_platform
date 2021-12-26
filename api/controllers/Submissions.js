@@ -5,16 +5,11 @@ const createTransactionsCache = require('./../utils/createTransactionsCache.js')
 
 const submissions = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
-    const collections = Connection.collections
-    const users = await collections.users.find({}).toArray()
-    const userCatMapping = {}
-    for (let i = 0; i < users.length; i++) {
-        if ("category" in users[i]) userCatMapping[users[i].username] = users[i].category
-    }
+    const collections = Connection.collections;
     res.send({
         success: true,
         submissions: await collections.transactions.find({}).toArray(),
-        userCatMapping: userCatMapping,
+        userCatMapping: NodeCacheObj.get("userCategories"),
         categoryList: NodeCacheObj.get("categoryList")
     });
 }

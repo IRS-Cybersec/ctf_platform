@@ -7,6 +7,8 @@ const scoreboard = async (req, res) => {
 
     if (NodeCacheObj.get("teamMode")) {
         for (username in transactionsCache) {
+            // Pushes transaction records of people who are NOT IN A TEAM [OR] THE TEAM TRANSACTIONS
+            // But it fails for teams whose usernames matches a user
             if (!(username in usernameTeamCache)) finalData.push(transactionsCache[username])
         }
     }
@@ -15,6 +17,7 @@ const scoreboard = async (req, res) => {
             finalData.push(transactionsCache[username])
         }
     }
+
 
     res.send({
         success: true,

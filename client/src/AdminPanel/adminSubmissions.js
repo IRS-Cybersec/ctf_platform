@@ -386,7 +386,7 @@ class AdminSubmissions extends React.Component {
                     data.submissions[i].key = data.submissions[i]._id
                     data.submissions[i].timestamp = new Date(data.submissions[i].timestamp).toLocaleString("en-US", { timeZone: "Asia/Singapore" })
 
-                    if (data.submissions[i].author in data.userCatMapping) data.submissions[i].category = data.userCatMapping[data.submissions[i].author]
+                    if (data.submissions[i].author in data.userCatMapping && data.userCatMapping[data.submissions[i].author] !== "none") data.submissions[i].category = data.userCatMapping[data.submissions[i].author]
                     else data.submissions[i].category = "N/A"
                 }
 
@@ -666,7 +666,7 @@ class AdminSubmissions extends React.Component {
                     <Column title="Points Awarded" dataIndex="points" key="points" sorter={(a, b) => a.points - b.points} />
 
                     <Column title="Flag Submitted" dataIndex="submission" key="submission" />
-                    <Column title="Correct" dataIndex="correct" key="correct" filters={[{ text: "True", value: "True" }, { text: "False", value: "False" }]} onFilter={(value, record) => { return value === record.correct }} />
+                    <Column title="Correct" dataIndex="correct" key="correct" filters={[{ text: "✅", value: "✅" }, { text: "❌", value: "❌" }]} onFilter={(value, record) => { return value === record.correct }} />
                     <Column
                         title=""
                         key="edit"

@@ -224,6 +224,7 @@ const create = async (req, res) => {
     if (NodeCacheObj.get("teamMode")) {
         if (!NodeCacheObj.get("teamChangeDisable")) {
             const collections = Connection.collections
+            const usernames = await collections.users.find({}, {projection: {username: 1, _id: 0}}).toArray()
             let teamList = NodeCacheObj.get("teamListCache")
             let usernameTeamCache = NodeCacheObj.get("usernameTeamCache")
             // Is user already in a team?
@@ -243,6 +244,15 @@ const create = async (req, res) => {
                 success: false,
                 error: "bad-team-name"
             })
+            // Team names must not be the same name as a username if not the transactionCache will fail to create unique entries
+            for (let i = 0; i < usernames.length; i++) {
+                if (usernames[i].username === req.body.name) {
+                    return res.send({
+                        success: false,
+                        error: "same-name-as-user"
+                    })
+                }
+            } 
             const newTeam = {
                 name: req.body.name,
                 members: [req.locals.username],
