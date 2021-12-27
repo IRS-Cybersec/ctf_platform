@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@uiw/react-md-editor": "^3.9.1",
-    "antd": "^4.17.4",
+    "antd": "^4.18.0",
     "antd-dayjs-webpack-plugin": "^1.0.6",
     "babel-plugin-import": "^1.13.3",
     "css-loader": "^5.2.6",
