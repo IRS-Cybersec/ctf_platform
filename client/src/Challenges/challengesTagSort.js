@@ -420,7 +420,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Challenge Solved! Congratulations!',
             description:
               'Congratulations on solving "' + this.state.viewingChallengeDetails.name + '".',
-            duration: 0
+            duration: 5
           });
           this.setState({ challengeModal: false })
           this.props.history.push("/Challenges/" + this.props.category)
@@ -433,7 +433,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Oops. Incorrect Flag',
             description:
               'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.viewingChallengeDetails.name + '".',
-            duration: 0
+            duration: 3
           });
         }
       }
@@ -443,7 +443,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Oops. Attempts Exhausted',
             description:
               'It seems like you have execeeded the maximum number of attempts for "' + this.state.viewingChallengeDetails.name + '". Contact an admin if you need more tries.',
-            duration: 0
+            duration: 3
           });
         }
         else if (data.error === "submitted") {
@@ -451,7 +451,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Challenge already solved.',
             description:
               'Your teammate might have already solved the challenge. Please refresh the page to see the latest solve status.',
-            duration: 0
+            duration: 3
           });
         }
         else if (data.error === "admin-hidden") {
@@ -459,7 +459,7 @@ class ChallengesTagSort extends React.Component {
             message: 'The challenge is hidden.',
             description:
               'Submission has been disabled as this challenge is hidden even for admins. This is to prevent challenge leakages.',
-            duration: 0
+            duration: 3
           });
         }
         else if (data.error === "required-challenge-not-completed") {
@@ -467,7 +467,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Oops. Required challenge not completed',
             description:
               'It seems like you have not completed the required challenge before doing this challenge.',
-            duration: 0
+            duration: 3
           });
         }
         else if (data.error === "required-challenge-not-found") {
@@ -475,7 +475,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Oops. Required challenge was not found',
             description:
               'This is likely an error in the challenge settings. Please contact an admin.',
-            duration: 0
+            duration: 3
           });
         }
         else if (data.error === "submission-disabled") {
@@ -483,7 +483,7 @@ class ChallengesTagSort extends React.Component {
             message: 'Oops. Submission is disabled',
             description:
               'New flag submissions have been disabled. The competition might have ended/is not running.',
-            duration: 0
+            duration: 3
           });
         }
         else {
