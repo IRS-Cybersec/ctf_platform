@@ -253,6 +253,7 @@ class ChallengesTagSort extends React.Component {
       if (data.success === true) {
         message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
         let challengeHints = this.state.challengeHints
+        console.log(challengeHints)
         challengeHints[id] = (
           <Button type="primary" key={"hint" + String(id)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, challID, true) }}>Hint {id + 1} - Purchased</Button>
         )
@@ -352,9 +353,9 @@ class ChallengesTagSort extends React.Component {
 
 
         //Handle hints
+        let renderHints = []
         if (typeof data.chall.hints !== "undefined") {
           const hints = data.chall.hints
-          var renderHints = []
 
           for (let y = 0; y < hints.length; y++) {
             if (hints[y].bought === false) {
@@ -365,12 +366,12 @@ class ChallengesTagSort extends React.Component {
                 hints[y].cost = String(hints[y].cost) + " Points"
               }
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, ID, false) }}>Hint {y + 1} - {hints[y].cost}</Button>
+                <Button type="primary" key={"hint " + String(y)} style={{ marginBottom: "1.5vh" }} onClick={() => { this.handleHint(y, ID, false) }}>Hint {y + 1} - {hints[y].cost}</Button>
               )
             }
             else {
               renderHints.push(
-                <Button type="primary" key={hints[y].cost} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(y, ID, true) }}>Hint {y + 1} - Purchased</Button>
+                <Button type="primary" key={"hint " + String(y)} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(y, ID, true) }}>Hint {y + 1} - Purchased</Button>
               )
             }
 
