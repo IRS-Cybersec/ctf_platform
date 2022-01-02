@@ -13,8 +13,6 @@ import { Transition, animated } from 'react-spring';
 const { Meta } = Card;
 const { Option } = Select;
 
-var countDownTimes = {}
-
 class Challenges extends React.Component {
   constructor(props) {
     super(props);
@@ -80,27 +78,36 @@ class Challenges extends React.Component {
         // Competition hasn't started
         if (currentTime < startTime) {
           const timeLeft = Math.ceil((startTime - currentTime) / 1000)
-          countDownTimes[data[x]._id] = { time: timeLeft, tillStart: true } // time left in seconds till start
           countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, true)
         }
         else {
           const timeLeft = Math.ceil((endTime - currentTime) / 1000)
-          countDownTimes[data[x]._id] = { time: timeLeft, tillStart: false } // time left in seconds till end
           countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, false)
         }
       }
     }
     this.setState({ countDownTimerStrings: countDownTimerStrings })
-    setInterval(this.countDownTicker.bind(this), 1000 * 10)
+    setInterval(this.countDownTicker.bind(this), 1000 * 15, data)
     return [challengeMetaInfo, data];
   }
 
-  countDownTicker() {
-    let countDownTimerStrings = this.state.countDownTimerStrings
-    for (const key in countDownTimes) {
-      const current = countDownTimes[key]
-      current.time -= 10
-      countDownTimerStrings[key] = this.getTimerString(current.time, current.tillStart)
+  countDownTicker(data) {
+    let countDownTimerStrings = {}
+    for (let x = 0; x < data.length; x++) {
+      if ("time" in data[x].meta) {
+        const startTime = new Date(data[x].meta.time[0])
+        const endTime = new Date(data[x].meta.time[1])
+        const currentTime = new Date()
+        // Competition hasn't started
+        if (currentTime < startTime) {
+          const timeLeft = Math.ceil((startTime - currentTime) / 1000)
+          countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, true)
+        }
+        else {
+          const timeLeft = Math.ceil((endTime - currentTime) / 1000)
+          countDownTimerStrings[data[x]._id] = this.getTimerString(timeLeft, false)
+        }
+      }
     }
     this.setState({ countDownTimerStrings: countDownTimerStrings })
   }
@@ -176,7 +183,7 @@ class Challenges extends React.Component {
         for (let i = 0; i < originalData.length; i++) {
           originalDataDictionary[originalData[i]._id] = originalData[i].challenges
         }
-        this.setState({disableNonCatFB: data.disableNonCatFB, userCategories: data.userCategories, categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
+        this.setState({ disableNonCatFB: data.disableNonCatFB, userCategories: data.userCategories, categories: categoryMetaInfo, originalData: originalDataDictionary, loadingChall: false })
         let categoryChall = this.props.match.params.categoryChall;
         const mongoID = /^[a-f\d]{24}$/i
         if (typeof categoryChall !== "undefined") {
@@ -196,7 +203,7 @@ class Challenges extends React.Component {
                 }
               }
               if (foundChallenge) {
-                this.setState({  currentCategory: foundChallenge.category, currentCategoryChallenges: [originalDataDictionary[foundChallenge.category]], foundChallenge: foundChallenge })
+                this.setState({ currentCategory: foundChallenge.category, currentCategoryChallenges: [originalDataDictionary[foundChallenge.category]], foundChallenge: foundChallenge })
               }
               else message.error("Challenge with ID '" + challenge + "' not found.")
             }

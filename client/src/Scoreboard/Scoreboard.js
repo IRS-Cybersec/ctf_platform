@@ -65,6 +65,7 @@ class Scoreboard extends React.Component {
 
   lastSolveTiming() {
     if (!updating) {
+      // this uses absolute timing, so the drift from setInterval does not matter
       let scoreArray = this.state.scores
       for (let x = 0; x < scoreArray.length; x++) {
 
