@@ -187,12 +187,6 @@ const SelectParticipantCategoryForm = (props) => {
     const [options, setOptions] = React.useState("")
 
     useEffect(() => {
-        if (props.email != "") {
-            form.setFieldsValue({
-                email: props.email,
-                password: ""
-            })
-        }
         let optionList = props.categoryList.map((currentCat) => {
             return <Radio value={currentCat}>{currentCat}</Radio>
         })
@@ -200,7 +194,7 @@ const SelectParticipantCategoryForm = (props) => {
         setOptions(optionList)
         form.setFieldsValue({ category: props.participantCategory })
 
-    }, [props.email])
+    }, [props.participantCategory])
 
     return (
         <Form

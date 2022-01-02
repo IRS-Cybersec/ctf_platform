@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space, InputNumber, Card } from 'antd';
+import React, { useEffect } from 'react';
+import { Layout, Menu, Table, message, Dropdown, Button, Select, Modal, Form, Input, Switch, Divider, Space, InputNumber, Card, Radio } from 'antd';
 import {
     FileUnknownTwoTone,
     ExclamationCircleOutlined,
@@ -14,7 +14,8 @@ import {
     CheckOutlined,
     CloseOutlined,
     MinusCircleOutlined,
-    PlusOutlined
+    PlusOutlined,
+    ApartmentOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { Ellipsis } from 'react-spinners-css';
@@ -23,6 +24,84 @@ const { Column } = Table;
 const { Option } = Select;
 const { confirm } = Modal;
 
+const SelectParticipantCategoryForm = (props) => {
+    const [form] = Form.useForm();
+    const [loading, setLoading] = React.useState(false);
+    const [options, setOptions] = React.useState("")
+
+    useEffect(() => {
+        let optionList = props.categoryList.map((currentCat) => {
+            return <Radio value={currentCat}>{currentCat}</Radio>
+        })
+        optionList.push(<Radio value="none"><b>No Category</b></Radio>)
+        setOptions(optionList)
+        form.setFieldsValue({ category: props.participantCategory })
+
+    }, [props.username])
+
+    return (
+        <Form
+            form={form}
+            onFinish={async (values) => {
+                setLoading(true)
+                await fetch(window.ipAddress + "/v1/account/change/category", {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+                    body: JSON.stringify({
+                        "username": props.username,
+                        "category": values.category,
+                    })
+                }).then((results) => {
+                    return results.json(); //return data in JSON (since its JSON data)
+                }).then((data) => {
+                    if (data.success === true) {
+                        message.success({ content: "Category for '" + props.username + "' successfully changed to '" + values.category + "'." })
+                        form.setFieldsValue({
+                            category: values.category
+                        })
+                        props.fillTableData()
+                    }
+                    else if (data.error === "email-taken") {
+                        message.error({ content: "Email is already taken, please try another email." })
+                    }
+                    else if (data.error === "wrong-password") {
+                        message.error({ content: "Password is incorrect. Please try again." })
+                    }
+                    else if (data.error === "switching-disabled") {
+                        message.error("Category switching is currently disabled by the admins.")
+                    }
+                    else {
+                        message.error({ content: "Oops. Unknown error." })
+                    }
+
+                }).catch((error) => {
+                    console.log(error)
+                    message.error({ content: "Oops. There was an issue connecting with the server" });
+                })
+                setLoading(false)
+            }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "center", width: "100%", marginBottom: "2vh" }}
+        >
+
+            <h3>Category:</h3>
+            <Form.Item
+                name="category"
+                rules={[{ required: true, message: 'Please select a category', }]}>
+
+                <Radio.Group>
+                    <Space direction="vertical">
+                        {options}
+                    </Space>
+                </Radio.Group>
+            </Form.Item>
+            <span>Select a category to compete and be eligible for prizes of that category. Verification will be required after the CTF before claiming your prizes.</span>
+
+            <Form.Item>
+                <Button type="primary" htmlType="submit" icon={<ApartmentOutlined />} loading={loading} style={{ marginTop: "2ch" }}>Change Category</Button>
+            </Form.Item>
+        </Form>
+    );
+}
 
 const RegisterForm = (props) => {
     const [form] = Form.useForm();
@@ -275,7 +354,9 @@ class AdminUsers extends React.Component {
             loginDisable: false,
             categoryList: [],
             newCategoryValue: "",
-            addCategoryLoading: false
+            addCategoryLoading: false,
+            categoryChangeModal: false,
+            participantCategory: ""
         }
     }
 
@@ -294,8 +375,7 @@ class AdminUsers extends React.Component {
         }).then((data) => {
             if (data.success === true) {
                 //console.log(data)
-                data.states.categoryList.push("none")
-                this.setState({categorySwitchDisable: data.states.categorySwitchDisable, categoryList: data.states.categoryList, loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
+                this.setState({ categorySwitchDisable: data.states.categorySwitchDisable, categoryList: data.states.categoryList, loginDisable: data.states.loginDisable, teamChangeDisable: data.states.teamChangeDisable, emailVerify: data.states.emailVerify, forgotPass: data.states.forgotPass, registerDisable: data.states.registerDisable, adminShowDisable: data.states.adminShowDisable, uploadSize: data.states.uploadSize, uploadPath: data.states.uploadPath, teamMode: data.states.teamMode, teamMaxSize: data.states.teamMaxSize })
             }
             else {
                 message.error({ content: "Oops. Unknown error" })
@@ -705,6 +785,17 @@ class AdminUsers extends React.Component {
 
                     <ChangePasswordForm username={this.state.username} setState={this.setState.bind(this)} />
                 </Modal>
+
+                <Modal
+                    title={"Changing Category For: " + this.state.username}
+                    visible={this.state.categoryChangeModal}
+                    footer={null}
+                    onCancel={() => { this.setState({ categoryChangeModal: false }) }}
+                >
+
+                    <SelectParticipantCategoryForm fillTableData={this.fillTableData.bind(this)} categoryList={this.state.categoryList} username={this.state.username} participantCategory={this.state.participantCategory} />
+                </Modal>
+
                 <Modal
                     title={"Changing Email For: " + this.state.username}
                     visible={this.state.emailChangeModal}
@@ -894,6 +985,13 @@ class AdminUsers extends React.Component {
                                             Change Email <MailOutlined />
                                         </span>
                                     </Menu.Item>
+                                    <Menu.Item onClick={() => {
+                                        this.setState({ categoryChangeModal: true, username: record.username, participantCategory: record.category })
+                                    }}>
+                                        <span>
+                                            Change Category <ApartmentOutlined />
+                                        </span>
+                                    </Menu.Item>
                                 </Menu>
                             } placement="bottomCenter">
                                 <Button>Actions</Button>
@@ -955,15 +1053,12 @@ class AdminUsers extends React.Component {
                         <h3>User Category Management <UserOutlined /></h3>
                         <Space direction="vertical">
                             {this.state.categoryList.map((category) => {
-                                if (category !== "none") {
-                                    return (
-                                        <div style={{ display: 'flex', alignItems: "center" }}>
-                                            <Input disabled value={category} />
-                                            <MinusCircleOutlined onClick={() => { this.removeCategory(category) }} style={{ cursor: "pointer", marginLeft: "1ch", color: "#f5222d" }} />
-                                        </div>
-                                    )
-
-                                }
+                                return (
+                                    <div style={{ display: 'flex', alignItems: "center" }}>
+                                        <Input disabled value={category} />
+                                         <MinusCircleOutlined onClick={() => { this.removeCategory(category) }} style={{ cursor: "pointer", marginLeft: "1ch", color: "#f5222d" }} />
+                                    </div>
+                                )
                             })}
                             <div style={{ display: "flex" }}>
                                 <Input value={this.state.newCategoryValue} onChange={(e) => { this.setState({ newCategoryValue: e.target.value }) }} />

@@ -49,23 +49,49 @@ const getSettings = async (req, res) => {
 const changeCategory = async (req, res) => {
     const collections = Connection.collections
 
-    if (NodeCacheObj.get("categorySwitchDisable")) {
-        res.send({success: false, error: "switching-disabled"})
+    if (req.locals.perms < 2) {
+        if (NodeCacheObj.get("categorySwitchDisable")) {
+            res.send({ success: false, error: "switching-disabled" })
+        }
+        else {
+            if (req.body.category && req.body.category.length > 0) {
+                const userCategories = NodeCacheObj.get("userCategories")
+                if (req.body.category === "none") {
+                    if ((await collections.users.updateOne({ username: req.locals.username }, { $unset: { category: false } })).matchedCount > 0) {
+                        res.send({ success: true })
+                    }
+                    userCategories[req.locals.username] = "none"
+                }
+                else {
+                    if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { category: req.body.category } })).matchedCount > 0) {
+                        res.send({ success: true })
+                    }
+                    userCategories[req.locals.username] = req.body.category
+                }
+                let latestUserCategoryUpdateID = NodeCacheObj.get("latestUserCategoryUpdateID")
+                latestUserCategoryUpdateID += 1
+                NodeCacheObj.set("latestUserCategoryUpdateID", latestUserCategoryUpdateID)
+                broadCastNewCategoryChange()
+            }
+            else res.send({ success: false, error: "empty-category" })
+        }
     }
     else {
         if (req.body.category && req.body.category.length > 0) {
+            let username = req.locals.username
+            if (req.body.username) username = req.body.username
             const userCategories = NodeCacheObj.get("userCategories")
             if (req.body.category === "none") {
-                if ((await collections.users.updateOne({ username: req.locals.username }, { $unset: { category: false } })).matchedCount > 0) {
+                if ((await collections.users.updateOne({ username: username }, { $unset: { category: false } })).matchedCount > 0) {
                     res.send({ success: true })
                 }
-                userCategories[req.locals.username] = "none"
+                userCategories[username] = "none"
             }
             else {
-                if ((await collections.users.updateOne({ username: req.locals.username }, { $set: { category: req.body.category } })).matchedCount > 0) {
+                if ((await collections.users.updateOne({ username: username }, { $set: { category: req.body.category } })).matchedCount > 0) {
                     res.send({ success: true })
                 }
-                userCategories[req.locals.username] = req.body.category
+                userCategories[username] = req.body.category
             }
             let latestUserCategoryUpdateID = NodeCacheObj.get("latestUserCategoryUpdateID")
             latestUserCategoryUpdateID += 1
@@ -73,8 +99,10 @@ const changeCategory = async (req, res) => {
             broadCastNewCategoryChange()
         }
         else res.send({ success: false, error: "empty-category" })
+
     }
-    
+
+
 
 }
 
