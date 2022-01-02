@@ -3,6 +3,7 @@ const MongoDB = require('mongodb')
 const sharp = require('sharp');
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const sanitizeFile = require('sanitize-filename');
+const { checkUsernamePerms } = require('./../utils/permissionUtils.js')
 const DomPurify = require('dompurify')
 const path = require('path');
 const fs = require('fs')
@@ -368,19 +369,30 @@ const hint = async (req, res) => {
             lastChallengeID: latestSolveSubmissionID
         }
 
-        if ("originalAuthor" in insertDoc) {
-            transactionDoc.originalAuthor = insertDoc.originalAuthor
-            // Add hint to user's team transactions - this hint is new as above checks whether the team already owns this hint
-            if (insertDoc.author in transactionsCache) transactionsCache[insertDoc.author].changes.push(transactionDoc)
+        let isAdmin = false
+        if (NodeCacheObj.get("adminShowDisable")) {
+            if ("originalAuthor" in transactionDoc) {
+                if (await checkUsernamePerms(transactionDoc.originalAuthor) === 2) isAdmin = true
+            }
+            else if (await checkUsernamePerms(transactionDoc.author) === 2) isAdmin = true
         }
-        if (req.locals.username in transactionsCache) transactionsCache[req.locals.username].changes.push(transactionDoc)
-        broadCastNewSolve([{
-            _id: insertDoc._id,
-            author: "originalAuthor" in insertDoc ? insertDoc.author : req.locals.username,
-            timestamp: Gtimestamp,
-            points: -hints.hints[0].cost,
-            lastChallengeID: latestSolveSubmissionID
-        }])
+
+        if (!isAdmin) {
+            if ("originalAuthor" in insertDoc) {
+                transactionDoc.originalAuthor = insertDoc.originalAuthor
+                // Add hint to user's team transactions - this hint is new as above checks whether the team already owns this hint
+                if (insertDoc.author in transactionsCache) transactionsCache[insertDoc.author].changes.push(transactionDoc)
+            }
+            if (req.locals.username in transactionsCache) transactionsCache[req.locals.username].changes.push(transactionDoc)
+            broadCastNewSolve([{
+                _id: insertDoc._id,
+                author: "originalAuthor" in insertDoc ? insertDoc.author : req.locals.username,
+                timestamp: Gtimestamp,
+                points: -hints.hints[0].cost,
+                lastChallengeID: latestSolveSubmissionID
+            }])
+        }
+
     }
 
     res.send({
@@ -536,10 +548,22 @@ const submit = async (req, res) => {
                 lastChallengeID: insertDocument.lastChallengeID,
             }
             if ("originalAuthor" in insertDocument) transactionDoc.originalAuthor = insertDocument.originalAuthor
-            // Push new solve to user's transactions
-            transactionsCache[req.locals.username].changes.push(transactionDoc)
-            // Push new solve to team's transactions. Duplicate solves would already have been filtered out
-            if (req.locals.username in usernameTeamCache) transactionsCache[insertDocument.author].changes.push(transactionDoc)
+
+            let isAdmin = false
+            if (NodeCacheObj.get("adminShowDisable")) {
+                if ("originalAuthor" in transactionDoc) {
+                    if (await checkUsernamePerms(transactionDoc.originalAuthor) === 2) isAdmin = true
+                }
+                else if (await checkUsernamePerms(transactionDoc.author) === 2) isAdmin = true
+            }
+
+            if (!isAdmin) {
+                // Push new solve to user's transactions
+                transactionsCache[req.locals.username].changes.push(transactionDoc)
+                // Push new solve to team's transactions. Duplicate solves would already have been filtered out
+                if (req.locals.username in usernameTeamCache) transactionsCache[insertDocument.author].changes.push(transactionDoc)
+                broadCastNewSolve(transactionDocumentsUpdated) // send list of updated transaction records via live update
+            }
         }
 
         // update latestSolveSubmissionID to reflect that there is a new transaction
@@ -565,7 +589,7 @@ const submit = async (req, res) => {
 
             await insertTransaction(true);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            broadCastNewSolve(transactionDocumentsUpdated) // send list of updated transaction records via live update
+            
             res.send({
                 success: true,
                 data: 'correct'
