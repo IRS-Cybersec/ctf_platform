@@ -185,7 +185,11 @@ const login = async (req, res) => {
         let user = null
         if (/^[a-zA-Z0-9_]+$/.test(req.body.username)) user = await collections.users.findOne({ username: req.body.username.toLowerCase() });
         else user = await collections.users.findOne({ email: req.body.username.toLowerCase() });
+
+        if (req.body.password.length > 200 || req.body.password.length < 1) throw new Error('WrongDetails');
+
         if (!user) throw new Error('WrongDetails');
+
         else if (await argon2.verify(user.password, req.body.password)) {
             if (NodeCacheObj.get("emailVerify") && "code" in user) {
                 res.send({ success: false, error: "need-verify", emailVerify: user.email })
@@ -242,9 +246,13 @@ const create = async (req, res) => {
         }
 
         if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(req.body.email)) throw new Error('BadEmail');
-        if (!/^[a-zA-Z0-9_]+$/.test(req.body.username)) return res.send({
+        if (!/^[a-zA-Z0-9_]{1,50}$/.test(req.body.username)) return res.send({
             success: false,
             error: "bad-username"
+        })
+        if (req.body.password.length > 200 || req.body.password.length < 1)  return res.send({
+            success: false,
+            error: "bad-password"
         })
         let responseObj = { success: true }
         let insertObj = {

@@ -404,7 +404,7 @@ class Login extends React.Component {
                                     <Form.Item
                                         name="username"
                                         
-                                        rules={[{ required: true, message: 'Please enter a username' }, { message: "Please enter an alphanumeric username (without spaces)", pattern: /^[a-zA-Z0-9_]+$/ }]}
+                                        rules={[{ required: true, message: 'Please enter a username' }, { message: "Please enter an alphanumeric username (without spaces) <= 50 characters.", pattern: /^[a-zA-Z0-9_]{1,50}$/ }]}
                                     >
                                         <Input id="register-username" allowClear prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Enter a new username" />
                                     </Form.Item>
@@ -428,6 +428,7 @@ class Login extends React.Component {
                                                 required: true,
                                                 message: 'Please input your password!',
                                             },
+                                            { message: "Please enter a password that is >= 1 character and <= 200 characters", pattern: /^.{1,200}$/ }
                                         ]}
                                         hasFeedback
                                     >

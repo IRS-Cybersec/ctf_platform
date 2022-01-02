@@ -487,6 +487,14 @@ class ChallengesTagSort extends React.Component {
             duration: 3
           });
         }
+        else if (data.error === "InvalidFlagLength") {
+          notification["error"]({
+            message: 'Oops. Your flag is too long.',
+            description:
+              'Please do not spam the server with submissions that are too long.',
+            duration: 3
+          });
+        }
         else {
           console.log(data.error)
           message.error({ content: "Oops. Unknown error" })

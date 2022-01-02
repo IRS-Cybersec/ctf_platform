@@ -460,6 +460,7 @@ const submit = async (req, res) => {
                 type: 'submission'
             }) >= chall.max_attempts) throw new Error('Exceeded');
         }
+        if (req.body.flag.length > 1000) throw new Error('InvalidFlagLength');
         let submitted = false
         if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
             const team = usernameTeamCache[req.locals.username]
@@ -589,7 +590,7 @@ const submit = async (req, res) => {
 
             await insertTransaction(true);
             await collections.cache.updateOne({}, { '$set': { latestSolveSubmissionID: latestSolveSubmissionID } })
-            
+
             res.send({
                 success: true,
                 data: 'correct'
@@ -628,6 +629,13 @@ const submit = async (req, res) => {
                     error: 'exceeded'
                 });
                 return;
+            case 'InvalidFlagLength':
+                res.code(403);
+                res.send({
+                    success: false,
+                    error: 'InvalidFlagLength'
+                });
+                return;
             default:
                 throw new Error(err)
         }
@@ -656,6 +664,9 @@ const newChall = async (req, res) => {
             initial: req.body.initial,
             minSolves: req.body.minSolves
         };
+        for (let i = 0; i < req.body.flags.length; i++) {
+            if (!(req.body.flags[i].length <= 1000 && req.body.flags[i].length >= 1)) throw new Error('InvalidFlagLength');
+        }
         if (req.body.tags) doc.tags = req.body.tags;
         if (req.body.hints) {
             doc.hints = req.body.hints;
@@ -721,6 +732,13 @@ const newChall = async (req, res) => {
                 error: 'validation'
             });
         }
+        else if (err.message == 'InvalidFlagLength') {
+            res.code(400);
+            res.send({
+                success: false,
+                error: 'validation'
+            });
+        }
     }
 }
 
@@ -728,7 +746,9 @@ const edit = async (req, res) => {
     const collections = Connection.collections
     try {
         if (req.locals.perms < 2) throw new Error('Permissions');
-
+        for (let i = 0; i < req.body.flags.length; i++) {
+            if (!(req.body.flags[i].length <= 1000 && req.body.flags[i].length >= 1)) throw new Error('InvalidFlagLength');
+        }
 
         let updateObj = {};
         let unsetObj = {};
@@ -742,6 +762,7 @@ const edit = async (req, res) => {
                 }
             }
         }
+
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
@@ -798,6 +819,13 @@ const edit = async (req, res) => {
     }
     catch (err) {
         if (err.message == 'MissingHintCost') {
+            res.code(400);
+            res.send({
+                success: false,
+                error: 'validation'
+            });
+        }
+        else if (err.message == 'InvalidFlagLength') {
             res.code(400);
             res.send({
                 success: false,

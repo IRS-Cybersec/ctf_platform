@@ -272,7 +272,7 @@ const CreateChallengeForm = (props) => {
                                                 {...field}
                                                 name={[field.name]}
                                                 fieldKey={[field.fieldKey]}
-                                                rules={[{ required: true, message: 'Missing flag' }]}
+                                                rules={[{ required: true, message: 'Missing flag' }, { message: "Please enter a flag that is < 1000 characters", pattern: /^.{1,1000}$/ }]}
                                             >
                                                 <Input style={{ width: "50ch" }} placeholder="Flag" />
                                             </Form.Item>

@@ -29,7 +29,7 @@ const CreateChallengeForm = (props) => {
 
     //Render existing categories select options
 
-    useEffect(() =>  {
+    useEffect(() => {
         let existingCats = []
         for (let i = 0; i < props.allCat.length; i++) {
             existingCats.push(<Option key={props.allCat[i].key} value={props.allCat[i].key}>{props.allCat[i].key}</Option>)
@@ -297,7 +297,7 @@ const CreateChallengeForm = (props) => {
                                                 {...field}
                                                 name={[field.name]}
                                                 fieldKey={[field.fieldKey]}
-                                                rules={[{ required: true, message: 'Missing flag' }]}
+                                                rules={[{ required: true, message: 'Missing flag' }, { message: "Please enter a flag that is < 1000 characters", pattern: /^.{1,1000}$/ }]}
                                             >
                                                 <Input style={{ width: "50ch" }} placeholder="Flag" />
                                             </Form.Item>
