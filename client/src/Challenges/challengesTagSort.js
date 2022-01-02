@@ -633,7 +633,7 @@ class ChallengesTagSort extends React.Component {
 
         <Divider />
         {this.state.tag && this.state.selectedTags.length > 0 ? (
-          <ChallengesTagSortList tag={this.state.tag} selectedTags={this.state.selectedTags} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
+          <ChallengesTagSortList tag={this.state.tag} selectedTags={this.state.selectedTags} permissions={this.props.permissions} loadChallengeDetails={this.loadChallengeDetails.bind(this)} loadingChallenge={this.state.loadingChallenge} currentChallenge={this.state.currentChallenge} />
         ) : (
           <List
             grid={{
