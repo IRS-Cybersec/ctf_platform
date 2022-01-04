@@ -35,7 +35,7 @@ const Oops = lazy(() => import("./Misc/oops.js"));
 const UserChallengeCreate = lazy(() => import("./Misc/userChallengeCreate.js"));
 
 window.ipAddress = process.env.NODE_ENV === "development" ? "http://localhost:20001" : window.location.origin + "/api"
-var ctfxVersion = "1.1"
+var ctfxVersion = "1.2"
 
 class App extends React.Component {
   constructor(props) {
