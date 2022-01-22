@@ -59,6 +59,6 @@
     "@testing-library/user-event": "^13.5.0",
     "cssnano": "^5.0.15",
     "source-map-explorer": "^2.5.2",
-    "style-loader": "^2.0.0"
+    "style-loader": "^3.3.1"
   }
 }
