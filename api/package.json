@@ -26,7 +26,7 @@
     "fastify": "^3.27.0",
     "fastify-cors": "^6.0.2",
     "fastify-file-upload": "^3.0.1",
-    "mongodb": "^4.3.0",
+    "mongodb": "^4.3.1",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.7.2",
     "reallydangerous": "^2.1.0",
