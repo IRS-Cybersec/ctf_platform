@@ -23,7 +23,7 @@
     "dayjs": "^1.10.7",
     "dompurify": "^2.3.6",
     "express-mongo-sanitize": "^2.2.0",
-    "fastify": "^3.27.2",
+    "fastify": "^3.27.4",
     "fastify-cors": "^6.0.3",
     "fastify-file-upload": "^3.0.1",
     "mongodb": "^4.4.0",
