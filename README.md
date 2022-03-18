@@ -10,7 +10,7 @@ The platform can be installed **in a few easy steps** using Docker. Simply check
 Please check out the [wiki](https://github.com/IRS-Cybersec/ctf_platform/wiki) for usage/API documentation!
 
 ## Demo 💻
-You can find a working copy of the platform [here](http://de.irscybersec.tk). Feel free to register a new account, or use one of the following pre-made accounts:
+You can find a working copy of the platform [here](http://de.irscybersec.ml). Feel free to register a new account, or use one of the following pre-made accounts:
 **Normal Account:**
 ```bash
 Username: user
