@@ -20,7 +20,7 @@
   "dependencies": {
     "argon2": "^0.28.5",
     "bson": "^4.6.4",
-    "dayjs": "^1.11.1",
+    "dayjs": "^1.11.2",
     "dompurify": "^2.3.8",
     "express-mongo-sanitize": "^2.2.0",
     "fastify": "^3.29.0",
