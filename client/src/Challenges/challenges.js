@@ -8,7 +8,7 @@ import {
 import { Link } from 'react-router-dom';
 import ChallengesTagSort from "./challengesTagSort.js";
 import { Ellipsis } from 'react-spinners-css';
-import { Transition, animated } from 'react-spring';
+import { Transition, animated } from '@react-spring/web';
 
 const { Meta } = Card;
 const { Option } = Select;

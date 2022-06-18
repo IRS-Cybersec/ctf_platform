@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons';
 import './App.min.css';
 import { NavLink, Switch, Route, withRouter } from 'react-router-dom';
-import { Transition, animated } from 'react-spring';
+import { Transition, animated } from '@react-spring/web';
 import { Ellipsis } from 'react-spinners-css';
 
 
