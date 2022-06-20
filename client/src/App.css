@@ -48,6 +48,8 @@
     box-shadow: 5px 5px 6px 3px rgba(0, 0, 0, .5);
     transition: .3s!important;
     overflow: hidden !important;
+    width: 100%;
+   
 }
 
 .card-design.solved {
@@ -55,11 +57,24 @@
 }
 
 .card-design-body {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+}
+
+.card-design > .ant-card-body {
+    width: 100% !important;
     display: flex;
     justify-items: center;
     flex-direction: column;
     text-align: center;
     align-items: center;
+}
+
+.card-design > .ant-card-body > .ant-card-meta, .card-design > .ant-card-body > .ant-card-meta > .ant-card-meta-detail, .card-design > .ant-card-body > .ant-card-meta > .ant-card-meta-description {
+    width: 100%;
 }
 
 .card-design.hover:hover {

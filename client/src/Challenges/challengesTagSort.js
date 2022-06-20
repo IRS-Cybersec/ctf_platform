@@ -87,6 +87,7 @@ class ChallengesTagSort extends React.Component {
   }
 
   componentDidMount() {
+
     if (this.props.foundChallenge !== false) {
       this.sortByTags(this.props.foundChallenge._id)
       this.loadChallengeDetails(this.props.foundChallenge._id, this.props.foundChallenge.solved)
@@ -117,6 +118,7 @@ class ChallengesTagSort extends React.Component {
   }
 
   sortByTags(findNOpenTag = false) {
+    console.log(this.props.originalData)
     let originalData = this.props.currentCategoryChallenges
     let tag = {}
     this.setState({ loadingTag: true })
@@ -127,6 +129,7 @@ class ChallengesTagSort extends React.Component {
         for (let x = 0; x < currentCat.length; x++) { //loop through each challenge
 
           if ("requires" in currentCat[x]) {
+            // it needs to iterate through other catgories as well
             const requires = currentCat.find((value) => value._id === currentCat[x].requires)
             if (requires) {
               if (requires.solved) currentCat[x].requiresSolved = true
@@ -134,6 +137,24 @@ class ChallengesTagSort extends React.Component {
                 currentCat[x].requiresSolved = false
                 if ("name" in requires) currentCat[x].requiresName = requires.name
                 else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
+              }
+            }
+            else {
+              for (const [innerCurrentCategory, value] of Object.entries(this.props.originalData)) {
+                if (innerCurrentCategory !== key) { // avoid searching current cat again
+                  const currentInnerCategory = this.props.originalData[innerCurrentCategory]
+                  for (let i = 0; i < currentInnerCategory.length; i++) {
+                    if (currentInnerCategory[i]._id === currentCat[x].requires) {
+                      if (currentInnerCategory[i].solved) currentCat[x].requiresSolved = true
+                      else {
+                        currentCat[x].requiresSolved = false
+                        if ("name" in currentInnerCategory[i]) currentCat[x].requiresName = currentInnerCategory[i].name
+                        else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
+                      }
+                      break
+                    }
+                  }
+                }
               }
             }
           }
@@ -180,7 +201,30 @@ class ChallengesTagSort extends React.Component {
                 else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
               }
             }
+            else {
+              for (const [innerCurrentCategory, value] of Object.entries(this.props.originalData)) {
+                if (innerCurrentCategory !== key) { // avoid searching current cat again
+                  const currentInnerCategory = this.props.originalData[innerCurrentCategory]
+                  for (let i = 0; i < currentInnerCategory.length; i++) {
+                    console.log(currentInnerCategory[i])
+                    console.log(currentCat[x].requires)
+                    if (currentInnerCategory[i]._id === currentCat[x].requires) {
+                      console.log("found!")
+                      if (currentInnerCategory[i].solved) currentCat[x].requiresSolved = true
+                      else {
+                        currentCat[x].requiresSolved = false
+                        console.log(currentInnerCategory[i].name)
+                        if ("name" in currentInnerCategory[i]) currentCat[x].requiresName = currentInnerCategory[i].name
+                        else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
+                      }
+                      break
+                    }
+                  }
+                }
+              }
+            }
           }
+
           if ("tags" in currentCat[x]) {
             const firstTag = currentCat[x].tags[0] //grab the first tag of each challenge as the tag it will use in categorising
             if (firstTag.toLowerCase() in tag) {
@@ -253,7 +297,6 @@ class ChallengesTagSort extends React.Component {
       if (data.success === true) {
         message.success({ content: "Purchashed hint " + String(id + 1) + " successfully!" })
         let challengeHints = this.state.challengeHints
-        console.log(challengeHints)
         challengeHints[id] = (
           <Button type="primary" key={"hint" + String(id) + challID} style={{ marginBottom: "1.5vh", backgroundColor: "#49aa19" }} onClick={() => { this.handleHint(id, challID, true) }}>Hint {id + 1} - Purchased</Button>
         )
@@ -556,10 +599,10 @@ class ChallengesTagSort extends React.Component {
                   <h1 style={{ fontSize: "150%", maxWidth: "35ch", whiteSpace: "initial" }}>{this.state.viewingChallengeDetails.name}
                     <Tooltip title="Copy challenge link to clipboard.">
                       <LinkOutlined style={{ color: "#1890ff", marginLeft: "0.5ch" }} onClick={
-                      async () => {
-                        await navigator.clipboard.writeText(window.location.href);
-                        message.success("Challenge link copied to clipboard.")
-                      }} /></Tooltip>
+                        async () => {
+                          await navigator.clipboard.writeText(window.location.href);
+                          message.success("Challenge link copied to clipboard.")
+                        }} /></Tooltip>
                   </h1>
                 </div>
                 <div>

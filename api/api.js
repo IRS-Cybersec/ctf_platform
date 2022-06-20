@@ -169,7 +169,7 @@ const main = async () => {
 
 	if (process.env.NODE_ENV === "development") {
 		console.log("Development mode: CORS enabled")
-		const cors = require("fastify-cors");
+		const cors = require("@fastify/cors");
 		await fastify.register(cors)
 	}
 

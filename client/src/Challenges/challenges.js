@@ -264,7 +264,7 @@ class Challenges extends React.Component {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignContent: "center", marginBottom: "10px", textAlign: "center" }}>
 
-          <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ currentCategory: false, foundChallenge: false }) }} size="large">Back</Button>
+          <Button size="large" disabled={!this.state.currentCategory} icon={<LeftCircleOutlined />} style={{ backgroundColor: "#1f1f1f" }} onClick={() => { this.props.history.push("/Challenges"); this.setState({ currentCategory: false, foundChallenge: false }) }}>Back</Button>
 
           {this.state.currentCategory && this.state.countDownTimerStrings[this.state.currentCategory] && (
             <h1 style={{
@@ -378,7 +378,7 @@ class Challenges extends React.Component {
                   )}
 
                   {this.state.currentCategory && (
-                    <ChallengesTagSort permissions={this.props.permissions} disableNonCatFB={this.state.disableNonCatFB} userCategories={this.state.userCategories} obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory} currentCategoryChallenges={this.state.currentCategoryChallenges}></ChallengesTagSort>
+                    <ChallengesTagSort originalData={this.state.originalData} permissions={this.props.permissions} disableNonCatFB={this.state.disableNonCatFB} userCategories={this.state.userCategories} obtainScore={this.props.obtainScore.bind(this)} match={this.props.match} history={this.props.history} foundChallenge={this.state.foundChallenge} currentCategoryChallenges={this.state.currentCategoryChallenges} handleRefresh={this.handleRefresh.bind(this)} ref={this.tagSortRef} category={this.state.currentCategory}></ChallengesTagSort>
                   )}
                 </animated.div>)
               }
