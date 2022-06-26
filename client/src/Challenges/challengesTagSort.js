@@ -118,7 +118,6 @@ class ChallengesTagSort extends React.Component {
   }
 
   sortByTags(findNOpenTag = false) {
-    console.log(this.props.originalData)
     let originalData = this.props.currentCategoryChallenges
     let tag = {}
     this.setState({ loadingTag: true })
@@ -206,14 +205,10 @@ class ChallengesTagSort extends React.Component {
                 if (innerCurrentCategory !== key) { // avoid searching current cat again
                   const currentInnerCategory = this.props.originalData[innerCurrentCategory]
                   for (let i = 0; i < currentInnerCategory.length; i++) {
-                    console.log(currentInnerCategory[i])
-                    console.log(currentCat[x].requires)
                     if (currentInnerCategory[i]._id === currentCat[x].requires) {
-                      console.log("found!")
                       if (currentInnerCategory[i].solved) currentCat[x].requiresSolved = true
                       else {
                         currentCat[x].requiresSolved = false
-                        console.log(currentInnerCategory[i].name)
                         if ("name" in currentInnerCategory[i]) currentCat[x].requiresName = currentInnerCategory[i].name
                         else currentCat[x].requiresName = "REQUIRED-CHALLENGE-NOT-FOUND"
                       }
