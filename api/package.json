@@ -19,7 +19,7 @@
   "homepage": "https://github.com/IRS-Cybersec/ctf_platform",
   "dependencies": {
     "@fastify/cors": "^8.0.0",
-    "argon2": "^0.28.5",
+    "argon2": "^0.28.7",
     "bson": "^4.6.4",
     "dayjs": "^1.11.3",
     "dompurify": "^2.3.8",
