@@ -28,7 +28,7 @@
     "fastify-file-upload": "^4.0.0",
     "mongodb": "^4.8.1",
     "node-cache": "^5.1.2",
-    "nodemailer": "^6.7.5",
+    "nodemailer": "^6.7.7",
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "sharp": "^0.30.7",
