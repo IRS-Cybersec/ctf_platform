@@ -20,7 +20,7 @@
   "dependencies": {
     "@fastify/cors": "^8.1.0",
     "argon2": "^0.28.7",
-    "bson": "^4.6.4",
+    "bson": "^4.7.0",
     "dayjs": "^1.11.4",
     "dompurify": "^2.3.10",
     "express-mongo-sanitize": "^2.2.0",
