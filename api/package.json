@@ -24,7 +24,7 @@
     "dayjs": "^1.11.4",
     "dompurify": "^2.3.12",
     "express-mongo-sanitize": "^2.2.0",
-    "fastify": "^4.5.2",
+    "fastify": "^4.6.0",
     "fastify-file-upload": "^4.0.0",
     "mongodb": "^4.9.0",
     "node-cache": "^5.1.2",
