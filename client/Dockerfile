@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:lts-bullseye AS builder
+FROM node:16.18-bullseye AS builder
 WORKDIR /usr/src/app
 COPY package*.json ./
 
