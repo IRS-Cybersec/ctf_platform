@@ -127,9 +127,9 @@ const listCategories = async (req, res) => {
     });
 }
 
-const listCategoryInfo = async (req, res) => {
+const refreshCategoryMetaData = async () => {
     const collections = Connection.collections
-    if (req.locals.perms < 2) throw new Error('Permissions');
+
     const categoryMeta = NodeCacheObj.get("categoryMeta")
     let newCategoryMeta = {}
     const categories = await collections.challs.distinct('category')
@@ -140,7 +140,16 @@ const listCategoryInfo = async (req, res) => {
         if (categories[i] in categoryMeta) newCategoryMeta[categories[i]] = categoryMeta[categories[i]]
         else newCategoryMeta[categories[i]] = { visibility: true }
     }
+    NodeCacheObj.set("categoryMeta", newCategoryMeta)
     await collections.cache.updateOne({}, { '$set': { categoryMeta: newCategoryMeta } })
+
+    return newCategoryMeta
+}
+
+const listCategoryInfo = async (req, res) => {
+   
+    if (req.locals.perms < 2) throw new Error('Permissions');
+    const newCategoryMeta = await refreshCategoryMetaData()
     res.send({
         success: true,
         categories: newCategoryMeta
@@ -699,6 +708,7 @@ const newChall = async (req, res) => {
         let challengeCache = NodeCacheObj.get("challengeCache")
         await collections.challs.insertOne(doc);
         challengeCache[doc._id] = { solves: [] }
+        await refreshCategoryMetaData()
         res.send({ success: true });
     }
     catch (err) {
