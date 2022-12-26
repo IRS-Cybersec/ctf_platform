@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Layout, Divider, Modal, message, InputNumber, Button, Select, Space, Form, Input, Tabs, Tag, Switch, Card } from 'antd';
 import {
     MinusCircleOutlined,
@@ -19,8 +19,8 @@ const { TabPane } = Tabs;
 
 const CreateChallengeForm = (props) => {
     const [form] = Form.useForm();
-    const [editorValue, setEditorValue] = React.useState("")
-    const [existingCats, setExistingCats] = React.useState([])
+    const [editorValue, setEditorValue] = useState("")
+    const [existingCats, setExistingCats] = useState([])
 
     useEffect(() => {
         var currentValues = form.getFieldsValue()
