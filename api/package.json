@@ -29,7 +29,7 @@
     "jsdom": "^20.0.3",
     "mongodb": "^4.10.0",
     "node-cache": "^5.1.2",
-    "nodemailer": "^6.7.8",
+    "nodemailer": "^6.8.0",
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "sharp": "^0.30.7",
