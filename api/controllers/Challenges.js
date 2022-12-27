@@ -4,10 +4,13 @@ const sharp = require('sharp');
 const { broadCastNewSolve } = require('./../controllers/Sockets.js')
 const sanitizeFile = require('sanitize-filename');
 const { checkUsernamePerms } = require('./../utils/permissionUtils.js')
-const DomPurify = require('dompurify')
+const createDOMPurify = require('dompurify');
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
+const { JSDOM } = require('jsdom');
 
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 const disableStates = async (req, res) => {
     if (req.locals.perms < 2) throw new Error('Permissions');
@@ -659,7 +662,7 @@ const newChall = async (req, res) => {
         let doc = {
             name: req.body.name,
             category: req.body.category.trim(),
-            description: req.locals.perms <= 1 ? DomPurify.sanitize(req.body.description) : req.body.description,
+            description: req.locals.perms <= 1 ? DOMPurify.sanitize(req.body.description) : req.body.description,
             points: req.body.dynamic ? req.body.initial : parseInt(req.body.points),
             flags: req.body.flags,
 
@@ -712,6 +715,7 @@ const newChall = async (req, res) => {
         res.send({ success: true });
     }
     catch (err) {
+        console.log(err)
         if (err.name == 'MongoServerError') {
             switch (err.code) {
                 case 11000:
