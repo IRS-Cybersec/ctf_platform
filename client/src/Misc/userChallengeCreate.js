@@ -22,17 +22,33 @@ const CreateChallengeForm = (props) => {
     const [editorValue, setEditorValue] = useState("")
     const [existingCats, setExistingCats] = useState([])
 
-    useEffect(() => {
+    const handleStartup = async () => {
         var currentValues = form.getFieldsValue()
         currentValues.flags = [""]
 
-        form.setFieldsValue(currentValues)
-        let existCats = []
+        await fetch(window.ipAddress + "/v1/challenge/listCategoryInfo", {
+            method: 'get',
+            headers: { 'Content-Type': 'application/json', "Authorization": window.IRSCTFToken },
+        }).then((results) => {
+            return results.json(); //return data in JSON (since its JSON data)
+        }).then((data) => {
+            if (data.success === true) {
+                let allCat = []
+                for (const cat in data.categories) {
+                    allCat.push(<Option key={cat} value={cat}>{cat}</Option>)
+                }
+                setExistingCats(allCat)
+            } 
+            else message.error({ content: "Oops. Unknown error" })
+        }).catch((error) => {
+            console.log(error)
+            message.error({ content: "Oops. There was an issue connecting with the server" });
+        })
 
-        for (let i = 0; i < props.allCat.length; i++) {
-            existCats.push(<Option key={props.allCat[i]} value={props.allCat[i]}>{props.allCat[i]}</Option>)
-        }
-        setExistingCats(existCats)
+       
+    }
+    useEffect(() => { 
+        handleStartup()
     }, [])
 
 

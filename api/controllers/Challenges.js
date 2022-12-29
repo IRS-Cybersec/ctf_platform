@@ -151,7 +151,7 @@ const refreshCategoryMetaData = async () => {
 
 const listCategoryInfo = async (req, res) => {
    
-    if (req.locals.perms < 2) throw new Error('Permissions');
+    if (req.locals.perms < 1) throw new Error('Permissions');
     const newCategoryMeta = await refreshCategoryMetaData()
     res.send({
         success: true,
