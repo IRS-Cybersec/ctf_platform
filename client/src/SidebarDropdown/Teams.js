@@ -73,8 +73,8 @@ const CreateTeamForm = (props) => {
                 rules={[
                     {
                         required: true,
-                        message: 'Please input a valid team name that is alphanumeric with spaces or underscores',
-                        pattern: /^[a-zA-Z0-9_ ]+$/
+                        message: 'Please input a valid team name that is alphanumeric with spaces or underscores and is less < 15 characters',
+                        pattern: /^[a-zA-Z0-9_ ]{1,25}$/
                     },
                 ]}
             >
@@ -113,7 +113,7 @@ class Teams extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (window.location.pathname.toLowerCase() === "/Team" && prevProps.team !== this.props.team) {
+        if (window.location.pathname.toLowerCase() === "/team" && prevProps.team !== this.props.team) {
             if (this.props.team === false) {
                 this.setState({ loading: false })
             }
@@ -134,7 +134,9 @@ class Teams extends React.Component {
             else if (this.props.team && this.props.team != "loading") { // Load own team if user is in a team
                 this.loadTeamDetails(this.props.team)
             } // User is not in any team
-            else if (this.props.team != "loading") this.setState({ loading: false })
+            else if (this.props.team === false) {
+                this.setState({ loading: false })
+            }
         }
     }
 
