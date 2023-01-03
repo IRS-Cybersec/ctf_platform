@@ -73,7 +73,7 @@ const CreateTeamForm = (props) => {
                 rules={[
                     {
                         required: true,
-                        message: 'Please input a valid team name that is alphanumeric with spaces or underscores and is less < 15 characters',
+                        message: 'Please input a valid team name that is alphanumeric with spaces or underscores and is less <= 25 characters',
                         pattern: /^[a-zA-Z0-9_ ]{1,25}$/
                     },
                 ]}
