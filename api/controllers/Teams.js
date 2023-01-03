@@ -36,7 +36,8 @@ const get = async (req, res) => {
 
         if (teamName in teamList) {
             const team = teamList[teamName]
-            let changes = transactionsCache[teamName].changes
+            let changes = []
+            if (transactionsCache[teamName]) changes = transactionsCache[teamName].changes // in case it is a hidden admin team
             // if own team, send invite code as well
             if (team.members.includes(req.locals.username)) {
                 return res.send({
