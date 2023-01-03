@@ -153,7 +153,7 @@ const join = async (req, res) => {
                 })
             }
             // Is current team full?
-            if (currentTeam.members.length > NodeCacheObj.get("teamMaxSize")) {
+            if (currentTeam.members.length >= NodeCacheObj.get("teamMaxSize")) {
                 return res.send({
                     success: false,
                     error: "team-full"
