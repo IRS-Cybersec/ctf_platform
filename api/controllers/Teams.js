@@ -179,6 +179,9 @@ const join = async (req, res) => {
                 userTransactions[i].author = currentTeam.name
                 userTransactions[i].originalAuthor = req.locals.username
 
+                transactionCache[req.locals.username].changes[i].author = currentTeam.name
+                transactionCache[req.locals.username].changes[i].originalAuthor = req.locals.username
+
                 // Add this user's transactions to the team's transactions, and also check for duplicates
                 let replacedDuplicateWithOlderSolve = false
                 let duplicate = false
