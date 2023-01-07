@@ -808,7 +808,7 @@ const edit = async (req, res) => {
         if (updateObj.dynamic === true) {
             calculatedPoints = (((updateObj.minimum - updateObj.initial) / (updateObj.minSolves ** 2)) * (challengeCache[req.body.id].solves.length ** 2)) + updateObj.initial
             calculatedPoints = Math.ceil(calculatedPoints)
-            if (calculatedPoints < updateObj.minimum) calculatedPoints = chall.minimum
+            if (calculatedPoints < updateObj.minimum) calculatedPoints = updateObj.minimum
             updateObj.points = calculatedPoints
         }
         else {
