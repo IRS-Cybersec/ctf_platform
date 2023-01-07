@@ -466,16 +466,24 @@ const submit = async (req, res) => {
 
         }
         if (chall.max_attempts != 0) {
-            let count = await collections.transactions.countDocuments({
-                author: req.locals.username.toLowerCase(),
-                _id: MongoDB.ObjectId(req.body.chall),
-                type: 'submission'
-            })
-            if (count === 0) await collections.transactions.countDocuments({
-                originalAuthor: req.locals.username.toLowerCase(),
-                _id: MongoDB.ObjectId(req.body.chall),
-                type: 'submission'
-            })
+            console.log(chall.max_attempts)
+            let count = 0
+            if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+                console.log(req.body.chall)
+                count = await collections.transactions.countDocuments({
+                    originalAuthor: req.locals.username.toLowerCase(),
+                    challengeID: MongoDB.ObjectId(req.body.chall),
+                    type: 'submission'
+                })
+            }
+            else {
+                count = await collections.transactions.countDocuments({
+                    author: req.locals.username.toLowerCase(),
+                    challengeID: MongoDB.ObjectId(req.body.chall),
+                    type: 'submission'
+                })
+            }
+            console.log(count)
             if (count >= chall.max_attempts) throw new Error('Exceeded');
         }
         if (req.body.flag.length > 1000) throw new Error('InvalidFlagLength');
