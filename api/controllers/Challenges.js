@@ -150,7 +150,7 @@ const refreshCategoryMetaData = async () => {
 }
 
 const listCategoryInfo = async (req, res) => {
-   
+
     if (req.locals.perms < 1) throw new Error('Permissions');
     const newCategoryMeta = await refreshCategoryMetaData()
     res.send({
@@ -248,12 +248,24 @@ const show = async (req, res) => {
             if (chall.solves.find(element => element === req.locals.username) === undefined) chall.writeup = "CompleteFirst"
         }
     }
-    if (chall.max_attempts != 0)
-        chall.used_attempts = await collections.transactions.countDocuments({
-            author: req.locals.username,
-            challengeID: MongoDB.ObjectId(req.params.chall),
-            type: 'submission'
-        }, { limit: chall.max_attempts });
+    if (chall.max_attempts != 0) {
+        if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
+            chall.used_attempts = await collections.transactions.countDocuments({
+                originalAuthor: req.locals.username,
+                challengeID: MongoDB.ObjectId(req.params.chall),
+                type: 'submission'
+            });
+        }
+        else {
+            chall.used_attempts = await collections.transactions.countDocuments({
+                author: req.locals.username,
+                challengeID: MongoDB.ObjectId(req.params.chall),
+                type: 'submission'
+            });
+        }
+    }
+     
+   
     res.send({
         success: true,
         chall: chall

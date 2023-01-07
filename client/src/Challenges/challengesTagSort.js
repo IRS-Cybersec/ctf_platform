@@ -474,6 +474,7 @@ class ChallengesTagSort extends React.Component {
               'It seems like you submitted an incorrect flag "' + values.flag + '" for "' + this.state.viewingChallengeDetails.name + '".',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
       }
       else {
@@ -484,6 +485,7 @@ class ChallengesTagSort extends React.Component {
               'It seems like you have execeeded the maximum number of attempts for "' + this.state.viewingChallengeDetails.name + '". Contact an admin if you need more tries.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else if (data.error === "submitted") {
           notification["error"]({
@@ -492,6 +494,7 @@ class ChallengesTagSort extends React.Component {
               'Your teammate might have already solved the challenge. Please refresh the page to see the latest solve status.',
             duration: 3
           });
+          await this.props.handleRefresh()
         }
         else if (data.error === "admin-hidden") {
           notification["error"]({
@@ -500,6 +503,7 @@ class ChallengesTagSort extends React.Component {
               'Submission has been disabled as this challenge is hidden even for admins. This is to prevent challenge leakages.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else if (data.error === "required-challenge-not-completed") {
           notification["error"]({
@@ -508,6 +512,7 @@ class ChallengesTagSort extends React.Component {
               'It seems like you have not completed the required challenge before doing this challenge.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else if (data.error === "required-challenge-not-found") {
           notification["error"]({
@@ -516,6 +521,7 @@ class ChallengesTagSort extends React.Component {
               'This is likely an error in the challenge settings. Please contact an admin.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else if (data.error === "submission-disabled") {
           notification["error"]({
@@ -524,6 +530,7 @@ class ChallengesTagSort extends React.Component {
               'New flag submissions have been disabled. The competition might have ended/is not running.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else if (data.error === "InvalidFlagLength") {
           notification["error"]({
@@ -532,6 +539,7 @@ class ChallengesTagSort extends React.Component {
               'Please do not spam the server with submissions that are too long.',
             duration: 3
           });
+          this.loadChallengeDetails(this.state.currentChallenge, false)
         }
         else {
           console.log(data.error)
