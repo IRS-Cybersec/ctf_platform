@@ -275,7 +275,7 @@ const show = async (req, res) => {
 const showDetailed = async (req, res) => {
     const collections = Connection.collections
     if (req.locals.perms < 2) throw new Error('Permissions');
-    const chall = await collections.challs.findOne({ _id: MongoDB.ObjectId(req.params.chall) }, null);
+    const chall = await collections.challs.findOne({ _id: MongoDB.ObjectId(req.params.chall) });
     if (!chall) {
         res.code(400);
         res.send({
@@ -356,13 +356,21 @@ const hint = async (req, res) => {
 
 
     if (!purchased) {
-        await collections.challs.updateOne({
+        console.log("not purchased")
+        const result = await collections.challs.updateOne({
             _id: MongoDB.ObjectId(req.body.chall)
         }, {
             $push: {
                 [`hints.${req.body.id}.purchased`]: req.locals.username
             }
         });
+        if (result.matchedCount === 0 ) {
+            console.log("Hint failed to update for: " + req.body.chall)
+            return res.send({
+                success: false,
+                error: "hint-not-updated"
+            })
+        } 
         let latestSolveSubmissionID = NodeCacheObj.get("latestSolveSubmissionID")
         latestSolveSubmissionID += 1
         NodeCacheObj.set("latestSolveSubmissionID", latestSolveSubmissionID)
@@ -787,6 +795,8 @@ const edit = async (req, res) => {
             if (!(req.body.flags[i].length <= 1000 && req.body.flags[i].length >= 1)) throw new Error('InvalidFlagLength');
         }
 
+        const challenge = await collections.challs.findOne({_id: MongoDB.ObjectId(req.body.id)})
+
         let updateObj = {};
         let unsetObj = {};
         const editables = ['name', 'category', 'description', 'points', 'flags', 'tags', 'hints', 'max_attempts', 'visibility', 'writeup', 'writeupComplete', 'requires', 'dynamic', 'initial', 'minSolves', 'minimum'];
@@ -836,11 +846,13 @@ const edit = async (req, res) => {
 
         broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
-            console.log(updateObj.hints)
-            updateObj.hints.forEach(hint => {
+            updateObj.hints.forEach((hint, index) => {
                 if (hint.cost == undefined) throw new Error('MissingHintCost');
                 hint.cost = parseInt(hint.cost);
-                hint.purchased = hint.purchased != undefined ? hint.purchased : [];
+                if (challenge.hints[index]) {
+                    hint.purchased = challenge.hints[index].purchased
+                }
+                else hint.purchased = []
             });
         }
         if ((await collections.challs.updateOne(
@@ -856,6 +868,7 @@ const edit = async (req, res) => {
         res.send({ success: true });
     }
     catch (err) {
+        console.log(err)
         if (err.message == 'MissingHintCost') {
             res.code(400);
             res.send({
