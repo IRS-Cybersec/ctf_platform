@@ -466,11 +466,17 @@ const submit = async (req, res) => {
 
         }
         if (chall.max_attempts != 0) {
-            if (await collections.transactions.countDocuments({
+            let count = await collections.transactions.countDocuments({
                 author: req.locals.username.toLowerCase(),
                 _id: MongoDB.ObjectId(req.body.chall),
                 type: 'submission'
-            }) >= chall.max_attempts) throw new Error('Exceeded');
+            })
+            if (count === 0) await collections.transactions.countDocuments({
+                originalAuthor: req.locals.username.toLowerCase(),
+                _id: MongoDB.ObjectId(req.body.chall),
+                type: 'submission'
+            })
+            if (count >= chall.max_attempts) throw new Error('Exceeded');
         }
         if (req.body.flag.length > 1000) throw new Error('InvalidFlagLength');
         let submitted = false
