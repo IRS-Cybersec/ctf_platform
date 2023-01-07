@@ -480,7 +480,6 @@ const submit = async (req, res) => {
         if (chall.max_attempts != 0) {
             let count = 0
             if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
-                console.log(req.body.chall)
                 count = await collections.transactions.countDocuments({
                     originalAuthor: req.locals.username.toLowerCase(),
                     challengeID: MongoDB.ObjectId(req.body.chall),
@@ -837,6 +836,7 @@ const edit = async (req, res) => {
 
         broadCastNewSolve(transactionDocumentsUpdated)
         if (updateObj.hints) {
+            console.log(updateObj.hints)
             updateObj.hints.forEach(hint => {
                 if (hint.cost == undefined) throw new Error('MissingHintCost');
                 hint.cost = parseInt(hint.cost);
@@ -889,6 +889,14 @@ const edit = async (req, res) => {
                     });
                     throw new Error(err)
             }
+        }
+        else {
+            console.log(err)
+            res.code(500)
+            res.send({
+                success: false,
+                error: err
+            })
         }
     }
 }
