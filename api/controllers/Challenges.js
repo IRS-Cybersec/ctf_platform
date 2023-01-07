@@ -466,7 +466,6 @@ const submit = async (req, res) => {
 
         }
         if (chall.max_attempts != 0) {
-            console.log(chall.max_attempts)
             let count = 0
             if (NodeCacheObj.get("teamMode") && req.locals.username in usernameTeamCache) {
                 console.log(req.body.chall)
@@ -483,7 +482,6 @@ const submit = async (req, res) => {
                     type: 'submission'
                 })
             }
-            console.log(count)
             if (count >= chall.max_attempts) throw new Error('Exceeded');
         }
         if (req.body.flag.length > 1000) throw new Error('InvalidFlagLength');
