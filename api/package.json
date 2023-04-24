@@ -32,7 +32,7 @@
     "nodemailer": "^6.7.8",
     "reallydangerous": "^2.1.0",
     "sanitize-filename": "^1.6.3",
-    "sharp": "^0.30.7",
+    "sharp": "^0.31.3",
     "ws": "^8.11.0"
   }
 }
